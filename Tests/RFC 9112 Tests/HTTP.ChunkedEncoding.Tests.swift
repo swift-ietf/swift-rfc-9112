@@ -4,11 +4,11 @@
 import Testing
 @testable import RFC_9112
 
-@Suite("HTTP.ChunkedEncoding Tests")
-struct HTTPChunkedEncodingTests {
+@Suite
+struct `HTTP.ChunkedEncoding Tests` {
 
-    @Test("Encode - simple data")
-    func encodeSimple() async throws {
+    @Test
+    func `Encode - simple data`() async throws {
         let data = Data("Hello, World!".utf8)
         let chunked = try HTTP.ChunkedEncoding.encode(data)
 
@@ -16,8 +16,8 @@ struct HTTPChunkedEncodingTests {
         #expect(String(data: chunked, encoding: .utf8) == expected)
     }
 
-    @Test("Encode - empty data")
-    func encodeEmpty() async throws {
+    @Test
+    func `Encode - empty data`() async throws {
         let data = Data()
         let chunked = try HTTP.ChunkedEncoding.encode(data)
 
@@ -25,8 +25,8 @@ struct HTTPChunkedEncodingTests {
         #expect(String(data: chunked, encoding: .utf8) == expected)
     }
 
-    @Test("Encode - multiple chunks")
-    func encodeMultipleChunks() async throws {
+    @Test
+    func `Encode - multiple chunks`() async throws {
         let data = Data("Hello, World! This is a longer message.".utf8)
         let chunked = try HTTP.ChunkedEncoding.encode(data, chunkSize: 10)
 
@@ -34,8 +34,8 @@ struct HTTPChunkedEncodingTests {
         #expect(decoded.data == data)
     }
 
-    @Test("Encode - with trailers")
-    func encodeWithTrailers() async throws {
+    @Test
+    func `Encode - with trailers`() async throws {
         let data = Data("Hello".utf8)
         let trailers = [
             try HTTP.Header.Field(name: "X-Checksum", value: "abc123")
@@ -48,8 +48,8 @@ struct HTTPChunkedEncodingTests {
         #expect(decoded.trailers[0].name.rawValue == "X-Checksum")
     }
 
-    @Test("Decode - simple data")
-    func decodeSimple() async throws {
+    @Test
+    func `Decode - simple data`() async throws {
         let chunked = Data("d\r\nHello, World!\r\n0\r\n\r\n".utf8)
         let result = try HTTP.ChunkedEncoding.decode(chunked)
         let decoded = result.data
@@ -59,8 +59,8 @@ struct HTTPChunkedEncodingTests {
         #expect(trailers.isEmpty)
     }
 
-    @Test("Decode - empty data")
-    func decodeEmpty() async throws {
+    @Test
+    func `Decode - empty data`() async throws {
         let chunked = Data("0\r\n\r\n".utf8)
         let result = try HTTP.ChunkedEncoding.decode(chunked)
         let decoded = result.data
@@ -70,8 +70,8 @@ struct HTTPChunkedEncodingTests {
         #expect(trailers.isEmpty)
     }
 
-    @Test("Decode - multiple chunks")
-    func decodeMultipleChunks() async throws {
+    @Test
+    func `Decode - multiple chunks`() async throws {
         let chunked = Data("5\r\nHello\r\n8\r\n, World!\r\n0\r\n\r\n".utf8)
         let result = try HTTP.ChunkedEncoding.decode(chunked)
         let decoded = result.data
@@ -81,8 +81,8 @@ struct HTTPChunkedEncodingTests {
         #expect(trailers.isEmpty)
     }
 
-    @Test("Decode - with trailers")
-    func decodeWithTrailers() async throws {
+    @Test
+    func `Decode - with trailers`() async throws {
         let chunked = Data("5\r\nHello\r\n0\r\nX-Checksum: abc123\r\n\r\n".utf8)
         let result = try HTTP.ChunkedEncoding.decode(chunked)
         let decoded = result.data
@@ -94,8 +94,8 @@ struct HTTPChunkedEncodingTests {
         #expect(trailers[0].value.rawValue == "abc123")
     }
 
-    @Test("Decode - multiple trailers")
-    func decodeMultipleTrailers() async throws {
+    @Test
+    func `Decode - multiple trailers`() async throws {
         let chunked = Data("5\r\nHello\r\n0\r\nX-Checksum: abc123\r\nX-Signature: xyz\r\n\r\n".utf8)
         let result = try HTTP.ChunkedEncoding.decode(chunked)
         let decoded = result.data
@@ -105,8 +105,8 @@ struct HTTPChunkedEncodingTests {
         #expect(trailers.count == 2)
     }
 
-    @Test("Decode - invalid format")
-    func decodeInvalidFormat() async throws {
+    @Test
+    func `Decode - invalid format`() async throws {
         let chunked = Data("invalid".utf8)
 
         #expect(throws: HTTP.ChunkedEncoding.ChunkedDecodingError.invalidFormat) {
@@ -114,8 +114,8 @@ struct HTTPChunkedEncodingTests {
         }
     }
 
-    @Test("Decode - invalid chunk size")
-    func decodeInvalidChunkSize() async throws {
+    @Test
+    func `Decode - invalid chunk size`() async throws {
         let chunked = Data("xyz\r\ndata\r\n0\r\n\r\n".utf8)
 
         #expect(throws: HTTP.ChunkedEncoding.ChunkedDecodingError.invalidChunkSize) {
@@ -123,8 +123,8 @@ struct HTTPChunkedEncodingTests {
         }
     }
 
-    @Test("Decode - incomplete chunk")
-    func decodeIncompleteChunk() async throws {
+    @Test
+    func `Decode - incomplete chunk`() async throws {
         let chunked = Data("10\r\nshort".utf8) // Says 16 bytes but only has 5
 
         #expect(throws: HTTP.ChunkedEncoding.ChunkedDecodingError.incompleteChunk) {
@@ -132,8 +132,8 @@ struct HTTPChunkedEncodingTests {
         }
     }
 
-    @Test("Decode - missing CRLF")
-    func decodeMissingCRLF() async throws {
+    @Test
+    func `Decode - missing CRLF`() async throws {
         let chunked = Data("5\r\nHelloXX0\r\n\r\n".utf8) // Missing CRLF after chunk
 
         #expect(throws: HTTP.ChunkedEncoding.ChunkedDecodingError.missingCRLF) {
@@ -141,8 +141,8 @@ struct HTTPChunkedEncodingTests {
         }
     }
 
-    @Test("Round trip - simple")
-    func roundTripSimple() async throws {
+    @Test
+    func `Round trip - simple`() async throws {
         let original = Data("Hello, World!".utf8)
         let chunked = try HTTP.ChunkedEncoding.encode(original)
         let decoded = try HTTP.ChunkedEncoding.decode(chunked).data
@@ -150,8 +150,8 @@ struct HTTPChunkedEncodingTests {
         #expect(decoded == original)
     }
 
-    @Test("Round trip - large data")
-    func roundTripLarge() async throws {
+    @Test
+    func `Round trip - large data`() async throws {
         let original = Data(repeating: 0x41, count: 100000) // 100KB of 'A'
         let chunked = try HTTP.ChunkedEncoding.encode(original, chunkSize: 8192)
         let decoded = try HTTP.ChunkedEncoding.decode(chunked).data
@@ -159,8 +159,8 @@ struct HTTPChunkedEncodingTests {
         #expect(decoded == original)
     }
 
-    @Test("Round trip - with trailers")
-    func roundTripWithTrailers() async throws {
+    @Test
+    func `Round trip - with trailers`() async throws {
         let original = Data("Test data".utf8)
         let originalTrailers = [
             try HTTP.Header.Field(name: "X-Test", value: "value")
@@ -175,8 +175,8 @@ struct HTTPChunkedEncodingTests {
         #expect(decodedTrailers.count == originalTrailers.count)
     }
 
-    @Test("ChunkedDecodingError - Equatable")
-    func chunkedDecodingErrorEquatable() async throws {
+    @Test
+    func `ChunkedDecodingError - Equatable`() async throws {
         #expect(HTTP.ChunkedEncoding.ChunkedDecodingError.invalidFormat == .invalidFormat)
         #expect(HTTP.ChunkedEncoding.ChunkedDecodingError.invalidFormat != .invalidChunkSize)
     }

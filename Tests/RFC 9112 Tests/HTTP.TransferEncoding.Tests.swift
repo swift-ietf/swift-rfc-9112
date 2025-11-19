@@ -4,11 +4,11 @@
 import Testing
 @testable import RFC_9112
 
-@Suite("HTTP.TransferEncoding Tests")
-struct HTTPTransferEncodingTests {
+@Suite
+struct `HTTP.TransferEncoding Tests` {
 
-    @Test("TransferEncoding - chunked")
-    func transferEncodingChunked() async throws {
+    @Test
+    func `TransferEncoding - chunked`() async throws {
         let te = HTTP.TransferEncoding.chunked
 
         #expect(te.headerValue == "chunked")
@@ -17,8 +17,8 @@ struct HTTPTransferEncodingTests {
         #expect(te.isChunkedFinal == true)
     }
 
-    @Test("TransferEncoding - gzip")
-    func transferEncodingGzip() async throws {
+    @Test
+    func `TransferEncoding - gzip`() async throws {
         let te = HTTP.TransferEncoding.gzip
 
         #expect(te.headerValue == "gzip")
@@ -26,29 +26,29 @@ struct HTTPTransferEncodingTests {
         #expect(te.hasChunked == false)
     }
 
-    @Test("TransferEncoding - compress")
-    func transferEncodingCompress() async throws {
+    @Test
+    func `TransferEncoding - compress`() async throws {
         let te = HTTP.TransferEncoding.compress
 
         #expect(te.headerValue == "compress")
     }
 
-    @Test("TransferEncoding - deflate")
-    func transferEncodingDeflate() async throws {
+    @Test
+    func `TransferEncoding - deflate`() async throws {
         let te = HTTP.TransferEncoding.deflate
 
         #expect(te.headerValue == "deflate")
     }
 
-    @Test("TransferEncoding - custom")
-    func transferEncodingCustom() async throws {
+    @Test
+    func `TransferEncoding - custom`() async throws {
         let te = HTTP.TransferEncoding.custom("custom-encoding")
 
         #expect(te.headerValue == "custom-encoding")
     }
 
-    @Test("TransferEncoding - list")
-    func transferEncodingList() async throws {
+    @Test
+    func `TransferEncoding - list`() async throws {
         let te = HTTP.TransferEncoding.list([.gzip, .chunked])
 
         #expect(te.headerValue == "gzip, chunked")
@@ -56,64 +56,64 @@ struct HTTPTransferEncodingTests {
         #expect(te.isChunkedFinal == true)
     }
 
-    @Test("TransferEncoding - list with chunked not final")
-    func transferEncodingListChunkedNotFinal() async throws {
+    @Test
+    func `TransferEncoding - list with chunked not final`() async throws {
         let te = HTTP.TransferEncoding.list([.chunked, .gzip])
 
         #expect(te.hasChunked == true)
         #expect(te.isChunkedFinal == false) // Invalid per RFC 9112
     }
 
-    @Test("Parse - chunked")
-    func parseChunked() async throws {
+    @Test
+    func `Parse - chunked`() async throws {
         let parsed = HTTP.TransferEncoding.parse("chunked")
 
         #expect(parsed == .chunked)
     }
 
-    @Test("Parse - gzip, chunked")
-    func parseGzipChunked() async throws {
+    @Test
+    func `Parse - gzip, chunked`() async throws {
         let parsed = HTTP.TransferEncoding.parse("gzip, chunked")
 
         #expect(parsed == .list([.gzip, .chunked]))
     }
 
-    @Test("Parse - case insensitive")
-    func parseCaseInsensitive() async throws {
+    @Test
+    func `Parse - case insensitive`() async throws {
         let parsed = HTTP.TransferEncoding.parse("CHUNKED")
 
         #expect(parsed == .chunked)
     }
 
-    @Test("Parse - with whitespace")
-    func parseWithWhitespace() async throws {
+    @Test
+    func `Parse - with whitespace`() async throws {
         let parsed = HTTP.TransferEncoding.parse("  gzip  ,  chunked  ")
 
         #expect(parsed == .list([.gzip, .chunked]))
     }
 
-    @Test("Parse - x-compress")
-    func parseXCompress() async throws {
+    @Test
+    func `Parse - x-compress`() async throws {
         let parsed = HTTP.TransferEncoding.parse("x-compress")
 
         #expect(parsed == .compress)
     }
 
-    @Test("Parse - empty")
-    func parseEmpty() async throws {
+    @Test
+    func `Parse - empty`() async throws {
         #expect(HTTP.TransferEncoding.parse("") == nil)
         #expect(HTTP.TransferEncoding.parse("  ") == nil)
     }
 
-    @Test("Equality")
-    func equality() async throws {
+    @Test
+    func `Equality`() async throws {
         #expect(HTTP.TransferEncoding.chunked == .chunked)
         #expect(HTTP.TransferEncoding.gzip != .chunked)
         #expect(HTTP.TransferEncoding.list([.gzip, .chunked]) == .list([.gzip, .chunked]))
     }
 
-    @Test("Hashable")
-    func hashable() async throws {
+    @Test
+    func `Hashable`() async throws {
         var set: Set<HTTP.TransferEncoding> = []
 
         set.insert(.chunked)
@@ -123,8 +123,8 @@ struct HTTPTransferEncodingTests {
         #expect(set.count == 2)
     }
 
-    @Test("Codable")
-    func codable() async throws {
+    @Test
+    func `Codable`() async throws {
         let encoder = JSONEncoder()
         let decoder = JSONDecoder()
 
@@ -135,30 +135,30 @@ struct HTTPTransferEncodingTests {
         #expect(decoded == te)
     }
 
-    @Test("Description")
-    func description() async throws {
+    @Test
+    func `Description`() async throws {
         let te = HTTP.TransferEncoding.chunked
 
         #expect(te.description == "chunked")
     }
 
-    @Test("LosslessStringConvertible")
-    func losslessStringConvertible() async throws {
+    @Test
+    func `LosslessStringConvertible`() async throws {
         let te: HTTP.TransferEncoding? = HTTP.TransferEncoding("chunked")
 
         #expect(te != nil)
         #expect(te == .chunked)
     }
 
-    @Test("ExpressibleByStringLiteral")
-    func expressibleByStringLiteral() async throws {
+    @Test
+    func `ExpressibleByStringLiteral`() async throws {
         let te: HTTP.TransferEncoding = "chunked"
 
         #expect(te == .chunked)
     }
 
-    @Test("Round trip - format and parse")
-    func roundTrip() async throws {
+    @Test
+    func `Round trip - format and parse`() async throws {
         let original = HTTP.TransferEncoding.list([.gzip, .chunked])
         let headerValue = original.headerValue
         let parsed = HTTP.TransferEncoding.parse(headerValue)

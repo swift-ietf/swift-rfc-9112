@@ -4,11 +4,11 @@
 import Testing
 @testable import RFC_9112
 
-@Suite("HTTP.Message.Parser Tests")
-struct HTTPMessageParserTests {
+@Suite
+struct `HTTP.Message.Parser Tests` {
 
-    @Test("Parse lines with CRLF terminators")
-    func parseLinesCRLF() async throws {
+    @Test
+    func `Parse lines with CRLF terminators`() async throws {
         let data = "Line 1\r\nLine 2\r\nLine 3\r\n".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
 
@@ -21,8 +21,8 @@ struct HTTPMessageParserTests {
         #expect(lines[2].terminator == .crlf)
     }
 
-    @Test("Parse lines with LF terminators")
-    func parseLinesLF() async throws {
+    @Test
+    func `Parse lines with LF terminators`() async throws {
         let data = "Line 1\nLine 2\nLine 3\n".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
 
@@ -33,8 +33,8 @@ struct HTTPMessageParserTests {
         #expect(lines[1].terminator == .lf)
     }
 
-    @Test("Parse lines with mixed terminators")
-    func parseLinesMixed() async throws {
+    @Test
+    func `Parse lines with mixed terminators`() async throws {
         let data = "Line 1\r\nLine 2\nLine 3\r\n".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
 
@@ -44,8 +44,8 @@ struct HTTPMessageParserTests {
         #expect(lines[2].terminator == .crlf)
     }
 
-    @Test("Parse empty line (CRLF only)")
-    func parseEmptyLineCRLF() async throws {
+    @Test
+    func `Parse empty line (CRLF only)`() async throws {
         let data = "\r\n".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
 
@@ -54,8 +54,8 @@ struct HTTPMessageParserTests {
         #expect(lines[0].terminator == .crlf)
     }
 
-    @Test("Parse empty line (LF only)")
-    func parseEmptyLineLF() async throws {
+    @Test
+    func `Parse empty line (LF only)`() async throws {
         let data = "\n".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
 
@@ -64,8 +64,8 @@ struct HTTPMessageParserTests {
         #expect(lines[0].terminator == .lf)
     }
 
-    @Test("Parse last line without terminator")
-    func parseLastLineNoTerminator() async throws {
+    @Test
+    func `Parse last line without terminator`() async throws {
         let data = "Line 1\r\nLine 2".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
 
@@ -76,8 +76,8 @@ struct HTTPMessageParserTests {
         #expect(lines[1].terminator == .none)
     }
 
-    @Test("Parse bare CR rejection")
-    func parseBareCarriageReturn() async throws {
+    @Test
+    func `Parse bare CR rejection`() async throws {
         // Bare CR (CR not followed by LF) should be rejected per RFC 9112 Section 2.2
         let data = "Line 1\rLine 2\r\n".data(using: .utf8)!
 
@@ -86,8 +86,8 @@ struct HTTPMessageParserTests {
         }
     }
 
-    @Test("Find header-body separator")
-    func findHeaderBodySeparator() async throws {
+    @Test
+    func `Find header-body separator`() async throws {
         let data = "Line 1\r\nLine 2\r\n\r\nBody".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
 
@@ -97,8 +97,8 @@ struct HTTPMessageParserTests {
         #expect(lines[2].string == "")
     }
 
-    @Test("Find header-body separator - not found")
-    func findHeaderBodySeparatorNotFound() async throws {
+    @Test
+    func `Find header-body separator - not found`() async throws {
         let data = "Line 1\r\nLine 2\r\nLine 3".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
 
@@ -107,8 +107,8 @@ struct HTTPMessageParserTests {
         #expect(separatorIndex == nil)
     }
 
-    @Test("Parse HTTP request with headers and body")
-    func parseHTTPRequest() async throws {
+    @Test
+    func `Parse HTTP request with headers and body`() async throws {
         let request = "GET /path HTTP/1.1\r\nHost: example.com\r\nContent-Length: 5\r\n\r\nHello".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: request)
 
@@ -122,8 +122,8 @@ struct HTTPMessageParserTests {
         #expect(separatorIndex == 3)
     }
 
-    @Test("Parse HTTP response with headers")
-    func parseHTTPResponse() async throws {
+    @Test
+    func `Parse HTTP response with headers`() async throws {
         let response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: response)
 
@@ -133,16 +133,16 @@ struct HTTPMessageParserTests {
         #expect(lines[2].string == "")
     }
 
-    @Test("Parse empty data")
-    func parseEmptyData() async throws {
+    @Test
+    func `Parse empty data`() async throws {
         let data = Data()
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
 
         #expect(lines.isEmpty)
     }
 
-    @Test("Line numbers are assigned correctly")
-    func lineNumbers() async throws {
+    @Test
+    func `Line numbers are assigned correctly`() async throws {
         let data = "Line 1\r\nLine 2\r\nLine 3\r\n".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
 
@@ -151,8 +151,8 @@ struct HTTPMessageParserTests {
         #expect(lines[2].lineNumber == 3)
     }
 
-    @Test("Parse long line")
-    func parseLongLine() async throws {
+    @Test
+    func `Parse long line`() async throws {
         let longLine = String(repeating: "a", count: 10000)
         let data = "\(longLine)\r\n".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
@@ -161,8 +161,8 @@ struct HTTPMessageParserTests {
         #expect(lines[0].string == longLine)
     }
 
-    @Test("Parse UTF-8 content")
-    func parseUTF8() async throws {
+    @Test
+    func `Parse UTF-8 content`() async throws {
         let data = "Header: 日本語\r\n\r\n".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
 
@@ -170,8 +170,8 @@ struct HTTPMessageParserTests {
         #expect(lines[0].string == "Header: 日本語")
     }
 
-    @Test("Parse binary data with valid terminators")
-    func parseBinaryData() async throws {
+    @Test
+    func `Parse binary data with valid terminators`() async throws {
         var data = Data()
         data.append(contentsOf: [0xFF, 0xFE, 0xFD]) // Binary content
         data.append(contentsOf: [0x0D, 0x0A]) // CRLF
@@ -187,8 +187,8 @@ struct HTTPMessageParserTests {
         #expect(lines[1].terminator == .crlf)
     }
 
-    @Test("LineTerminator equality")
-    func lineTerminatorEquality() async throws {
+    @Test
+    func `LineTerminator equality`() async throws {
         #expect(RFC_9110.MessageParser.LineTerminator.crlf == .crlf)
         #expect(RFC_9110.MessageParser.LineTerminator.lf == .lf)
         #expect(RFC_9110.MessageParser.LineTerminator.none == .none)
@@ -197,8 +197,8 @@ struct HTTPMessageParserTests {
         #expect(RFC_9110.MessageParser.LineTerminator.lf != .none)
     }
 
-    @Test("Line sendable conformance")
-    func lineSendable() async throws {
+    @Test
+    func `Line sendable conformance`() async throws {
         let line = RFC_9110.MessageParser.Line(
             content: Data("test".utf8),
             terminator: .crlf,
@@ -211,8 +211,8 @@ struct HTTPMessageParserTests {
         }.value
     }
 
-    @Test("Multiple consecutive empty lines")
-    func multipleEmptyLines() async throws {
+    @Test
+    func `Multiple consecutive empty lines`() async throws {
         let data = "\r\n\r\n\r\n".data(using: .utf8)!
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
 

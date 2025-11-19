@@ -4,11 +4,11 @@
 import Testing
 @testable import RFC_9112
 
-@Suite("HTTP.Connection Tests")
-struct HTTPConnectionTests {
+@Suite
+struct `HTTP.Connection Tests` {
 
-    @Test("Connection - close")
-    func connectionClose() async throws {
+    @Test
+    func `Connection - close`() async throws {
         let conn = HTTP.Connection.close
 
         #expect(conn.headerValue == "close")
@@ -17,8 +17,8 @@ struct HTTPConnectionTests {
         #expect(conn.shouldPersist() == false)
     }
 
-    @Test("Connection - keep-alive")
-    func connectionKeepAlive() async throws {
+    @Test
+    func `Connection - keep-alive`() async throws {
         let conn = HTTP.Connection.keepAlive
 
         #expect(conn.headerValue == "keep-alive")
@@ -27,8 +27,8 @@ struct HTTPConnectionTests {
         #expect(conn.shouldPersist() == true)
     }
 
-    @Test("Connection - multiple options")
-    func connectionMultipleOptions() async throws {
+    @Test
+    func `Connection - multiple options`() async throws {
         let conn = HTTP.Connection(options: ["close", "custom"])
 
         let value = conn.headerValue
@@ -36,84 +36,84 @@ struct HTTPConnectionTests {
         #expect(value.contains("custom"))
     }
 
-    @Test("Parse - close")
-    func parseClose() async throws {
+    @Test
+    func `Parse - close`() async throws {
         let parsed = HTTP.Connection.parse("close")
 
         #expect(parsed == .close)
     }
 
-    @Test("Parse - keep-alive")
-    func parseKeepAlive() async throws {
+    @Test
+    func `Parse - keep-alive`() async throws {
         let parsed = HTTP.Connection.parse("keep-alive")
 
         #expect(parsed == .keepAlive)
     }
 
-    @Test("Parse - multiple options")
-    func parseMultiple() async throws {
+    @Test
+    func `Parse - multiple options`() async throws {
         let parsed = HTTP.Connection.parse("close, custom")
 
         #expect(parsed?.options == Set(["close", "custom"]))
     }
 
-    @Test("Parse - case insensitive")
-    func parseCaseInsensitive() async throws {
+    @Test
+    func `Parse - case insensitive`() async throws {
         let parsed = HTTP.Connection.parse("CLOSE")
 
         #expect(parsed == .close)
     }
 
-    @Test("Parse - with whitespace")
-    func parseWithWhitespace() async throws {
+    @Test
+    func `Parse - with whitespace`() async throws {
         let parsed = HTTP.Connection.parse("  close  ,  custom  ")
 
         #expect(parsed?.options == Set(["close", "custom"]))
     }
 
-    @Test("Parse - empty")
-    func parseEmpty() async throws {
+    @Test
+    func `Parse - empty`() async throws {
         #expect(HTTP.Connection.parse("") == nil)
         #expect(HTTP.Connection.parse("  ") == nil)
     }
 
-    @Test("shouldPersist - HTTP/1.1 defaults to true")
-    func shouldPersistHTTP11() async throws {
+    @Test
+    func `shouldPersist - HTTP/1.1 defaults to true`() async throws {
         let conn = HTTP.Connection(options: [])
 
         #expect(conn.shouldPersist(version: "HTTP/1.1") == true)
     }
 
-    @Test("shouldPersist - HTTP/1.1 with close")
-    func shouldPersistHTTP11WithClose() async throws {
+    @Test
+    func `shouldPersist - HTTP/1.1 with close`() async throws {
         let conn = HTTP.Connection.close
 
         #expect(conn.shouldPersist(version: "HTTP/1.1") == false)
     }
 
-    @Test("shouldPersist - HTTP/1.0 defaults to false")
-    func shouldPersistHTTP10() async throws {
+    @Test
+    func `shouldPersist - HTTP/1.0 defaults to false`() async throws {
         let conn = HTTP.Connection(options: [])
 
         #expect(conn.shouldPersist(version: "HTTP/1.0") == false)
     }
 
-    @Test("shouldPersist - HTTP/1.0 with keep-alive")
-    func shouldPersistHTTP10WithKeepAlive() async throws {
+    @Test
+    func `shouldPersist - HTTP/1.0 with keep-alive`() async throws {
         let conn = HTTP.Connection.keepAlive
 
         #expect(conn.shouldPersist(version: "HTTP/1.0") == true)
     }
 
-    @Test("Equality")
-    func equality() async throws {
+    @Test
+    func `Equality`() async throws {
         #expect(HTTP.Connection.close == .close)
         #expect(HTTP.Connection.keepAlive != .close)
         #expect(HTTP.Connection(options: ["close"]) == .close)
     }
 
-    @Test("Hashable")
-    func hashable() async throws {
+    @Test
+    func `Hashable`() async throws {
         var set: Set<HTTP.Connection> = []
 
         set.insert(.close)
@@ -123,8 +123,8 @@ struct HTTPConnectionTests {
         #expect(set.count == 2)
     }
 
-    @Test("Codable")
-    func codable() async throws {
+    @Test
+    func `Codable`() async throws {
         let encoder = JSONEncoder()
         let decoder = JSONDecoder()
 
@@ -135,30 +135,30 @@ struct HTTPConnectionTests {
         #expect(decoded == conn)
     }
 
-    @Test("Description")
-    func description() async throws {
+    @Test
+    func `Description`() async throws {
         let conn = HTTP.Connection.close
 
         #expect(conn.description == "close")
     }
 
-    @Test("LosslessStringConvertible")
-    func losslessStringConvertible() async throws {
+    @Test
+    func `LosslessStringConvertible`() async throws {
         let conn: HTTP.Connection? = HTTP.Connection("close")
 
         #expect(conn != nil)
         #expect(conn == .close)
     }
 
-    @Test("ExpressibleByStringLiteral")
-    func expressibleByStringLiteral() async throws {
+    @Test
+    func `ExpressibleByStringLiteral`() async throws {
         let conn: HTTP.Connection = "close"
 
         #expect(conn == .close)
     }
 
-    @Test("Round trip - format and parse")
-    func roundTrip() async throws {
+    @Test
+    func `Round trip - format and parse`() async throws {
         let original = HTTP.Connection.close
         let headerValue = original.headerValue
         let parsed = HTTP.Connection.parse(headerValue)

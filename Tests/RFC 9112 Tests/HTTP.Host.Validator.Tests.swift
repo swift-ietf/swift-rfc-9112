@@ -4,11 +4,11 @@
 import Testing
 @testable import RFC_9112
 
-@Suite("HTTP.Host.Validator Tests")
-struct HTTPHostValidatorTests {
+@Suite
+struct `HTTP.Host.Validator Tests` {
 
-    @Test("Validate request with single Host header")
-    func validateSingleHost() async throws {
+    @Test
+    func `Validate request with single Host header`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,
@@ -27,8 +27,8 @@ struct HTTPHostValidatorTests {
         try RFC_9110.Host.Validator.validate(request: request, version: .http11)
     }
 
-    @Test("Validate request with Host header including port")
-    func validateHostWithPort() async throws {
+    @Test
+    func `Validate request with Host header including port`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,
@@ -47,8 +47,8 @@ struct HTTPHostValidatorTests {
         try RFC_9110.Host.Validator.validate(request: request, version: .http11)
     }
 
-    @Test("Validate request with IPv6 Host")
-    func validateIPv6Host() async throws {
+    @Test
+    func `Validate request with IPv6 Host`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,
@@ -67,8 +67,8 @@ struct HTTPHostValidatorTests {
         try RFC_9110.Host.Validator.validate(request: request, version: .http11)
     }
 
-    @Test("Validate HTTP/1.1 request missing Host header")
-    func validateHTTP11MissingHost() async throws {
+    @Test
+    func `Validate HTTP/1.1 request missing Host header`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,
@@ -86,8 +86,8 @@ struct HTTPHostValidatorTests {
         }
     }
 
-    @Test("Validate HTTP/1.0 request missing Host header")
-    func validateHTTP10MissingHost() async throws {
+    @Test
+    func `Validate HTTP/1.0 request missing Host header`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,
@@ -104,8 +104,8 @@ struct HTTPHostValidatorTests {
         try RFC_9110.Host.Validator.validate(request: request, version: .http10)
     }
 
-    @Test("Validate request with multiple Host headers")
-    func validateMultipleHosts() async throws {
+    @Test
+    func `Validate request with multiple Host headers`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,
@@ -126,8 +126,8 @@ struct HTTPHostValidatorTests {
         }
     }
 
-    @Test("Validate request with case-insensitive Host header")
-    func validateCaseInsensitiveHost() async throws {
+    @Test
+    func `Validate request with case-insensitive Host header`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,
@@ -146,8 +146,8 @@ struct HTTPHostValidatorTests {
         try RFC_9110.Host.Validator.validate(request: request, version: .http11)
     }
 
-    @Test("Validate CONNECT request")
-    func validateConnectRequest() async throws {
+    @Test
+    func `Validate CONNECT request`() async throws {
         let request = try RFC_9110.Request(
             method: .connect,
             scheme: nil,
@@ -166,8 +166,8 @@ struct HTTPHostValidatorTests {
         try RFC_9110.Host.Validator.validate(request: request, version: .http11)
     }
 
-    @Test("Validate request with empty Host value")
-    func validateEmptyHost() async throws {
+    @Test
+    func `Validate request with empty Host value`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,
@@ -187,8 +187,8 @@ struct HTTPHostValidatorTests {
         }
     }
 
-    @Test("Validate request with whitespace-only Host")
-    func validateWhitespaceHost() async throws {
+    @Test
+    func `Validate request with whitespace-only Host`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,
@@ -208,8 +208,8 @@ struct HTTPHostValidatorTests {
         }
     }
 
-    @Test("Validate OPTIONS * request")
-    func validateOptionsAsterisk() async throws {
+    @Test
+    func `Validate OPTIONS * request`() async throws {
         let request = RFC_9110.Request(
             method: .options,
             target: .asterisk,
@@ -223,8 +223,8 @@ struct HTTPHostValidatorTests {
         try RFC_9110.Host.Validator.validate(request: request, version: .http11)
     }
 
-    @Test("Validate request with absolute-form target")
-    func validateAbsoluteForm() async throws {
+    @Test
+    func `Validate request with absolute-form target`() async throws {
         let uri = try RFC_3986.URI("http://example.com/path")
         let request = RFC_9110.Request(
             method: .get,
@@ -239,8 +239,8 @@ struct HTTPHostValidatorTests {
         try RFC_9110.Host.Validator.validate(request: request, version: .http11)
     }
 
-    @Test("Validate request with mismatched Host and target")
-    func validateMismatchedHost() async throws {
+    @Test
+    func `Validate request with mismatched Host and target`() async throws {
         let uri = try RFC_3986.URI("http://example.com/path")
         let request = RFC_9110.Request(
             method: .get,
@@ -256,8 +256,8 @@ struct HTTPHostValidatorTests {
         }
     }
 
-    @Test("Validate request with valid subdomain")
-    func validateSubdomain() async throws {
+    @Test
+    func `Validate request with valid subdomain`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,
@@ -276,8 +276,8 @@ struct HTTPHostValidatorTests {
         try RFC_9110.Host.Validator.validate(request: request, version: .http11)
     }
 
-    @Test("Validate request with IPv4 address")
-    func validateIPv4() async throws {
+    @Test
+    func `Validate request with IPv4 address`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,
@@ -296,8 +296,8 @@ struct HTTPHostValidatorTests {
         try RFC_9110.Host.Validator.validate(request: request, version: .http11)
     }
 
-    @Test("Validate request with localhost")
-    func validateLocalhost() async throws {
+    @Test
+    func `Validate request with localhost`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,
@@ -316,8 +316,8 @@ struct HTTPHostValidatorTests {
         try RFC_9110.Host.Validator.validate(request: request, version: .http11)
     }
 
-    @Test("Validate HTTP/2.0 request without Host")
-    func validateHTTP2NoHost() async throws {
+    @Test
+    func `Validate HTTP/2.0 request without Host`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,

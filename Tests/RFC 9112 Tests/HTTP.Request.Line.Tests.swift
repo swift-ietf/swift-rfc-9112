@@ -4,11 +4,11 @@
 import Testing
 @testable import RFC_9112
 
-@Suite("HTTP.Request.Line Tests")
-struct HTTPRequestLineTests {
+@Suite
+struct `HTTP.Request.Line Tests` {
 
-    @Test("Parse valid request line")
-    func parseValid() async throws {
+    @Test
+    func `Parse valid request line`() async throws {
         let line = "GET /path HTTP/1.1"
         let parsed = try RFC_9110.Request.Line.parse(line)
 
@@ -17,8 +17,8 @@ struct HTTPRequestLineTests {
         #expect(parsed.version == .http11)
     }
 
-    @Test("Parse with query")
-    func parseWithQuery() async throws {
+    @Test
+    func `Parse with query`() async throws {
         let line = "POST /api/users?page=1 HTTP/1.1"
         let parsed = try RFC_9110.Request.Line.parse(line)
 
@@ -27,8 +27,8 @@ struct HTTPRequestLineTests {
         #expect(parsed.version == .http11)
     }
 
-    @Test("Parse HTTP/1.0")
-    func parseHTTP10() async throws {
+    @Test
+    func `Parse HTTP/1.0`() async throws {
         let line = "GET / HTTP/1.0"
         let parsed = try RFC_9110.Request.Line.parse(line)
 
@@ -36,16 +36,16 @@ struct HTTPRequestLineTests {
         #expect(!parsed.version.isHTTP11)
     }
 
-    @Test("Parse custom method")
-    func parseCustomMethod() async throws {
+    @Test
+    func `Parse custom method`() async throws {
         let line = "CUSTOM /path HTTP/1.1"
         let parsed = try RFC_9110.Request.Line.parse(line)
 
         #expect(parsed.method.rawValue == "CUSTOM")
     }
 
-    @Test("Format request line")
-    func format() async throws {
+    @Test
+    func `Format request line`() async throws {
         let line = RFC_9110.Request.Line(
             method: .get,
             target: "/path?query=value",
@@ -55,36 +55,36 @@ struct HTTPRequestLineTests {
         #expect(line.formatted == "GET /path?query=value HTTP/1.1")
     }
 
-    @Test("Parse - invalid format")
-    func parseInvalidFormat() async throws {
+    @Test
+    func `Parse - invalid format`() async throws {
         #expect(throws: RFC_9110.Request.Line.ParsingError.self) {
             try RFC_9110.Request.Line.parse("GET /path")  // Missing version
         }
     }
 
-    @Test("Parse - empty method")
-    func parseEmptyMethod() async throws {
+    @Test
+    func `Parse - empty method`() async throws {
         #expect(throws: RFC_9110.Request.Line.ParsingError.emptyMethod) {
             try RFC_9110.Request.Line.parse(" /path HTTP/1.1")
         }
     }
 
-    @Test("Parse - empty target")
-    func parseEmptyTarget() async throws {
+    @Test
+    func `Parse - empty target`() async throws {
         #expect(throws: RFC_9110.Request.Line.ParsingError.emptyTarget) {
             try RFC_9110.Request.Line.parse("GET  HTTP/1.1")
         }
     }
 
-    @Test("Parse - whitespace in target")
-    func parseWhitespaceInTarget() async throws {
+    @Test
+    func `Parse - whitespace in target`() async throws {
         #expect(throws: RFC_9110.Request.Line.ParsingError.targetContainsWhitespace) {
             try RFC_9110.Request.Line.parse("GET /path with spaces HTTP/1.1")
         }
     }
 
-    @Test("Validate - line too long")
-    func validateLineTooLong() async throws {
+    @Test
+    func `Validate - line too long`() async throws {
         let longTarget = String(repeating: "a", count: 9000)
         let line = RFC_9110.Request.Line(
             method: .get,

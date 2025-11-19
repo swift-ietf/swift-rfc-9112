@@ -4,11 +4,11 @@
 import Testing
 @testable import RFC_9112
 
-@Suite("HTTP.Response.Validator Tests")
-struct HTTPResponseValidatorTests {
+@Suite
+struct `HTTP.Response.Validator Tests` {
 
-    @Test("Validate 200 OK response")
-    func validate200OK() async throws {
+    @Test
+    func `Validate 200 OK response`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(200),
             headers: [
@@ -22,8 +22,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate 404 Not Found response")
-    func validate404() async throws {
+    @Test
+    func `Validate 404 Not Found response`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(404),
             headers: [],
@@ -34,8 +34,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate 101 Switching Protocols")
-    func validate101() async throws {
+    @Test
+    func `Validate 101 Switching Protocols`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(101),
             headers: [
@@ -49,8 +49,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate 204 No Content")
-    func validate204() async throws {
+    @Test
+    func `Validate 204 No Content`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(204),
             headers: [],
@@ -61,8 +61,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate 304 Not Modified")
-    func validate304() async throws {
+    @Test
+    func `Validate 304 Not Modified`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(304),
             headers: [
@@ -75,8 +75,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate 101 with Transfer-Encoding")
-    func validate101WithTransferEncoding() async throws {
+    @Test
+    func `Validate 101 with Transfer-Encoding`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(101),
             headers: [
@@ -91,8 +91,8 @@ struct HTTPResponseValidatorTests {
         }
     }
 
-    @Test("Validate 204 with Transfer-Encoding")
-    func validate204WithTransferEncoding() async throws {
+    @Test
+    func `Validate 204 with Transfer-Encoding`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(204),
             headers: [
@@ -107,8 +107,8 @@ struct HTTPResponseValidatorTests {
         }
     }
 
-    @Test("Validate 304 with Transfer-Encoding")
-    func validate304WithTransferEncoding() async throws {
+    @Test
+    func `Validate 304 with Transfer-Encoding`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(304),
             headers: [
@@ -123,8 +123,8 @@ struct HTTPResponseValidatorTests {
         }
     }
 
-    @Test("Validate response with single Content-Length")
-    func validateSingleContentLength() async throws {
+    @Test
+    func `Validate response with single Content-Length`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(200),
             headers: [
@@ -137,8 +137,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate response with multiple identical Content-Length")
-    func validateMultipleIdenticalContentLength() async throws {
+    @Test
+    func `Validate response with multiple identical Content-Length`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(200),
             headers: [
@@ -152,8 +152,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate response with multiple different Content-Length")
-    func validateMultipleDifferentContentLength() async throws {
+    @Test
+    func `Validate response with multiple different Content-Length`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(200),
             headers: [
@@ -169,8 +169,8 @@ struct HTTPResponseValidatorTests {
         }
     }
 
-    @Test("Validate response with Transfer-Encoding and Content-Length")
-    func validateTransferEncodingWithContentLength() async throws {
+    @Test
+    func `Validate response with Transfer-Encoding and Content-Length`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(200),
             headers: [
@@ -186,8 +186,8 @@ struct HTTPResponseValidatorTests {
         }
     }
 
-    @Test("Validate response with invalid status code (too low)")
-    func validateInvalidStatusCodeLow() async throws {
+    @Test
+    func `Validate response with invalid status code (too low)`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(99),
             headers: [],
@@ -200,8 +200,8 @@ struct HTTPResponseValidatorTests {
         }
     }
 
-    @Test("Validate response with invalid status code (too high)")
-    func validateInvalidStatusCodeHigh() async throws {
+    @Test
+    func `Validate response with invalid status code (too high)`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(600),
             headers: [],
@@ -214,8 +214,8 @@ struct HTTPResponseValidatorTests {
         }
     }
 
-    @Test("Validate 1xx response")
-    func validate1xxResponse() async throws {
+    @Test
+    func `Validate 1xx response`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(100),
             headers: [],
@@ -226,8 +226,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate 2xx response")
-    func validate2xxResponse() async throws {
+    @Test
+    func `Validate 2xx response`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(201),
             headers: [
@@ -240,8 +240,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate 3xx response")
-    func validate3xxResponse() async throws {
+    @Test
+    func `Validate 3xx response`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(301),
             headers: [
@@ -254,8 +254,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate 4xx response")
-    func validate4xxResponse() async throws {
+    @Test
+    func `Validate 4xx response`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(400),
             headers: [],
@@ -266,8 +266,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate 5xx response")
-    func validate5xxResponse() async throws {
+    @Test
+    func `Validate 5xx response`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(500),
             headers: [],
@@ -278,8 +278,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate response with chunked encoding")
-    func validateChunkedEncoding() async throws {
+    @Test
+    func `Validate response with chunked encoding`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(200),
             headers: [
@@ -292,8 +292,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate response with gzip and chunked encoding")
-    func validateGzipChunkedEncoding() async throws {
+    @Test
+    func `Validate response with gzip and chunked encoding`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(200),
             headers: [
@@ -306,8 +306,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate response with custom status code")
-    func validateCustomStatusCode() async throws {
+    @Test
+    func `Validate response with custom status code`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(599),
             headers: [],
@@ -318,8 +318,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate response without headers")
-    func validateNoHeaders() async throws {
+    @Test
+    func `Validate response without headers`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(200),
             headers: [],
@@ -330,8 +330,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate response without body")
-    func validateNoBody() async throws {
+    @Test
+    func `Validate response without body`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(200),
             headers: [
@@ -344,8 +344,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate 206 Partial Content")
-    func validate206() async throws {
+    @Test
+    func `Validate 206 Partial Content`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(206),
             headers: [
@@ -359,8 +359,8 @@ struct HTTPResponseValidatorTests {
         try RFC_9110.Response.Validator.validate(response)
     }
 
-    @Test("Validate case-insensitive header names")
-    func validateCaseInsensitiveHeaders() async throws {
+    @Test
+    func `Validate case-insensitive header names`() async throws {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(200),
             headers: [

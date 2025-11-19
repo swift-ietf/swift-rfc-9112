@@ -4,11 +4,11 @@
 import Testing
 @testable import RFC_9112
 
-@Suite("HTTP.Request.Validator Tests")
-struct HTTPRequestValidatorTests {
+@Suite
+struct `HTTP.Request.Validator Tests` {
 
-    @Test("Validate request with Content-Length only")
-    func validateContentLengthOnly() async throws {
+    @Test
+    func `Validate request with Content-Length only`() async throws {
         let request = try RFC_9110.Request(
             method: .post,
             scheme: nil,
@@ -27,8 +27,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate request with Transfer-Encoding only")
-    func validateTransferEncodingOnly() async throws {
+    @Test
+    func `Validate request with Transfer-Encoding only`() async throws {
         let request = try RFC_9110.Request(
             method: .post,
             scheme: nil,
@@ -47,8 +47,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate request with Transfer-Encoding and Content-Length")
-    func validateBothEncodings() async throws {
+    @Test
+    func `Validate request with Transfer-Encoding and Content-Length`() async throws {
         let request = try RFC_9110.Request(
             method: .post,
             scheme: nil,
@@ -70,8 +70,8 @@ struct HTTPRequestValidatorTests {
         }
     }
 
-    @Test("Validate request with chunked as final encoding")
-    func validateChunkedFinal() async throws {
+    @Test
+    func `Validate request with chunked as final encoding`() async throws {
         let request = try RFC_9110.Request(
             method: .post,
             scheme: nil,
@@ -90,8 +90,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate request with chunked not final")
-    func validateChunkedNotFinal() async throws {
+    @Test
+    func `Validate request with chunked not final`() async throws {
         let request = try RFC_9110.Request(
             method: .post,
             scheme: nil,
@@ -111,8 +111,8 @@ struct HTTPRequestValidatorTests {
         }
     }
 
-    @Test("Validate request with multiple chunked encodings")
-    func validateDoubleChunked() async throws {
+    @Test
+    func `Validate request with multiple chunked encodings`() async throws {
         let request = try RFC_9110.Request(
             method: .post,
             scheme: nil,
@@ -132,8 +132,8 @@ struct HTTPRequestValidatorTests {
         }
     }
 
-    @Test("Validate GET request without body")
-    func validateGETNoBody() async throws {
+    @Test
+    func `Validate GET request without body`() async throws {
         let request = try RFC_9110.Request(
             method: .get,
             scheme: nil,
@@ -150,8 +150,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate HEAD request")
-    func validateHEAD() async throws {
+    @Test
+    func `Validate HEAD request`() async throws {
         let request = try RFC_9110.Request(
             method: .head,
             scheme: nil,
@@ -168,8 +168,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate DELETE request")
-    func validateDELETE() async throws {
+    @Test
+    func `Validate DELETE request`() async throws {
         let request = try RFC_9110.Request(
             method: .delete,
             scheme: nil,
@@ -186,8 +186,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate PUT request with body")
-    func validatePUTWithBody() async throws {
+    @Test
+    func `Validate PUT request with body`() async throws {
         let request = try RFC_9110.Request(
             method: .put,
             scheme: nil,
@@ -206,8 +206,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate PATCH request with body")
-    func validatePATCHWithBody() async throws {
+    @Test
+    func `Validate PATCH request with body`() async throws {
         let request = try RFC_9110.Request(
             method: .patch,
             scheme: nil,
@@ -226,8 +226,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate TRACE request")
-    func validateTRACE() async throws {
+    @Test
+    func `Validate TRACE request`() async throws {
         let request = try RFC_9110.Request(
             method: .trace,
             scheme: nil,
@@ -244,8 +244,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate OPTIONS request")
-    func validateOPTIONS() async throws {
+    @Test
+    func `Validate OPTIONS request`() async throws {
         let request = RFC_9110.Request(
             method: .options,
             target: .asterisk,
@@ -257,8 +257,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate CONNECT request")
-    func validateCONNECT() async throws {
+    @Test
+    func `Validate CONNECT request`() async throws {
         let authority = try RFC_3986.URI.Authority("example.com:443")
         let request = RFC_9110.Request(
             method: .connect,
@@ -271,8 +271,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate request with multiple Transfer-Encoding headers")
-    func validateMultipleTransferEncodingHeaders() async throws {
+    @Test
+    func `Validate request with multiple Transfer-Encoding headers`() async throws {
         let request = try RFC_9110.Request(
             method: .post,
             scheme: nil,
@@ -292,8 +292,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate request with identity encoding")
-    func validateIdentityEncoding() async throws {
+    @Test
+    func `Validate request with identity encoding`() async throws {
         let request = try RFC_9110.Request(
             method: .post,
             scheme: nil,
@@ -312,8 +312,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate request with compress encoding")
-    func validateCompressEncoding() async throws {
+    @Test
+    func `Validate request with compress encoding`() async throws {
         let request = try RFC_9110.Request(
             method: .post,
             scheme: nil,
@@ -332,8 +332,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate request with deflate encoding")
-    func validateDeflateEncoding() async throws {
+    @Test
+    func `Validate request with deflate encoding`() async throws {
         let request = try RFC_9110.Request(
             method: .post,
             scheme: nil,
@@ -352,8 +352,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate request with case-insensitive Transfer-Encoding")
-    func validateCaseInsensitiveTransferEncoding() async throws {
+    @Test
+    func `Validate request with case-insensitive Transfer-Encoding`() async throws {
         let request = try RFC_9110.Request(
             method: .post,
             scheme: nil,
@@ -372,8 +372,8 @@ struct HTTPRequestValidatorTests {
         try RFC_9110.Request.Validator.validate(request)
     }
 
-    @Test("Validate request with whitespace in Transfer-Encoding")
-    func validateTransferEncodingWhitespace() async throws {
+    @Test
+    func `Validate request with whitespace in Transfer-Encoding`() async throws {
         let request = try RFC_9110.Request(
             method: .post,
             scheme: nil,
