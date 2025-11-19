@@ -17,8 +17,8 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(path: "../swift-rfc-9110"),
-        .package(path: "../swift-standards")
+        .package(url: "https://github.com/swift-standards/swift-rfc-9110", from: "0.1.0"),
+        .package(url: "https://github.com/swift-standards/swift-standards", from: "0.1.0")
     ],
     targets: [
         .target(

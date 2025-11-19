@@ -210,7 +210,7 @@ let requestLength = HTTP.MessageBodyLength.calculate(for: request)
 
 ```swift
 dependencies: [
-    .package(path: "../swift-rfc-9112")
+    .package(url: "https://github.com/swift-standards/swift-rfc-9112", from: "0.1.0")
 ],
 targets: [
     .target(
