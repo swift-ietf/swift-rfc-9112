@@ -6,6 +6,7 @@
 //
 // Message body length determination for HTTP/1.1
 
+import INCITS_4_1986
 
 extension RFC_9110 {
     /// Message body length calculation utilities (RFC 9112 Section 6.3)
@@ -122,7 +123,7 @@ extension RFC_9110 {
                 }
 
                 // Parse single Content-Length value
-                if let clValue = clHeaders.first?.rawValue.trimming(.whitespaces),
+                if let clValue = clHeaders.first?.rawValue.trimming(.ascii.whitespaces),
                    let length = Int(clValue), length >= 0 {
                     return .length(length)
                 }
@@ -174,7 +175,7 @@ extension RFC_9110 {
                 }
 
                 // Parse single Content-Length value
-                if let clValue = clHeaders.first?.rawValue.trimming(.whitespaces),
+                if let clValue = clHeaders.first?.rawValue.trimming(.ascii.whitespaces),
                    let length = Int(clValue), length >= 0 {
                     return .length(length)
                 }

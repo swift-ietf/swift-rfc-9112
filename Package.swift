@@ -26,21 +26,28 @@ let package = Package(
             dependencies: [
                 .product(name: "RFC 9110", package: "swift-rfc-9110"),
                 .product(name: "Standards", package: "swift-standards")
-            ],
-            swiftSettings: [
-                .swiftLanguageMode(.v6),
-                .enableUpcomingFeature("ExistentialAny"),
-                .enableUpcomingFeature("InternalImportsByDefault")
             ]
         ),
         .testTarget(
-            name: "RFC 9112 Tests",
+            name: "RFC 9112".tests,
             dependencies: [
                 "RFC 9112"
-            ],
-            swiftSettings: [
-                .swiftLanguageMode(.v6)
             ]
         )
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )
+
+extension String {
+    var tests: Self { self + " Tests" }
+    var foundation: Self { self + " Foundation" }
+}
+
+for target in package.targets where ![.system, .binary, .plugin].contains(target.type) {
+    let existing = target.swiftSettings ?? []
+    target.swiftSettings = existing + [
+        .enableUpcomingFeature("ExistentialAny"),
+        .enableUpcomingFeature("InternalImportsByDefault"),
+        .enableUpcomingFeature("MemberImportVisibility")
+    ]
+}

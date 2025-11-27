@@ -92,12 +92,12 @@ extension RFC_9110 {
                 let parts = string.split(separator: ";", omittingEmptySubsequences: true)
 
                 for part in parts {
-                    let trimmed = part.trimming(.whitespaces)
+                    let trimmed = part.trimming(.ascii.whitespaces)
                     if trimmed.contains("=") {
                         let components = trimmed.split(separator: "=", maxSplits: 1)
                         if components.count == 2 {
-                            let name = String(components[0]).trimming(.whitespaces)
-                            var value = String(components[1]).trimming(.whitespaces)
+                            let name = String(components[0]).trimming(.ascii.whitespaces)
+                            var value = String(components[1]).trimming(.ascii.whitespaces)
 
                             // Remove quotes if present
                             if value.hasPrefix("\"") && value.hasSuffix("\"") {
@@ -228,7 +228,7 @@ extension RFC_9110 {
 
                 // Split into size and extensions
                 let components = sizeString.split(separator: ";", maxSplits: 1)
-                let sizeComponent = String(components[0]).trimming(.whitespaces)
+                let sizeComponent = String(components[0]).trimming(.ascii.whitespaces)
 
                 guard let size = Int(sizeComponent, radix: 16) else {
                     throw ChunkedDecodingError.invalidChunkSize
@@ -274,8 +274,8 @@ extension RFC_9110 {
                             // Parse trailer field
                             let parts = trailerString.split(separator: ":", maxSplits: 1)
                             if parts.count == 2 {
-                                let name = String(parts[0]).trimming(.whitespaces)
-                                let value = String(parts[1]).trimming(.whitespaces)
+                                let name = String(parts[0]).trimming(.ascii.whitespaces)
+                                let value = String(parts[1]).trimming(.ascii.whitespaces)
                                 do {
                                     let trailer = try HTTP.Header.Field(name: name, value: value)
                                     trailers.append(trailer)

@@ -30,13 +30,13 @@ extension RFC_9110 {
 
             // RFC 9112: Host header field MUST be present
             guard !hostHeaders.isEmpty else {
-                throw ValidationError.missingHost
+                throw Error.missingHost
             }
 
             // RFC 9112 Section 3.2.2: "A server MUST respond with a 400 (Bad Request)
             // if more than one Host header field is present"
             guard hostHeaders.count == 1 else {
-                throw ValidationError.multipleHostHeaders(count: hostHeaders.count)
+                throw Error.multipleHostHeaders(count: hostHeaders.count)
             }
 
             let hostValue = hostHeaders[0].value.rawValue
@@ -58,7 +58,7 @@ extension RFC_9110 {
             // Empty host value is invalid per RFC 9112
             // The Host header is required and must have a non-empty value
             if host.isEmpty {
-                throw ValidationError.invalidHostFormat(host, reason: "Host value cannot be empty")
+                throw Error.invalidHostFormat(host, reason: "Host value cannot be empty")
             }
 
             // Check for invalid characters
@@ -66,13 +66,13 @@ extension RFC_9110 {
             if host.hasPrefix("[") {
                 // IPv6 address - should end with ]
                 guard host.hasSuffix("]") || host.contains("]:") else {
-                    throw ValidationError.invalidHostFormat(host, reason: "IPv6 address must be bracketed")
+                    throw Error.invalidHostFormat(host, reason: "IPv6 address must be bracketed")
                 }
             }
 
             // Validate no whitespace
             guard !host.contains(where: \.isWhitespace) else {
-                throw ValidationError.invalidHostFormat(host, reason: "Host contains whitespace")
+                throw Error.invalidHostFormat(host, reason: "Host contains whitespace")
             }
 
             // If port present, validate it
@@ -82,7 +82,7 @@ extension RFC_9110 {
                 // If it's not an IPv6 address, validate port
                 if !host.hasPrefix("[") {
                     guard let port = Int(portString), port >= 0 && port <= 65535 else {
-                        throw ValidationError.invalidPort(String(portString))
+                        throw Error.invalidPort(String(portString))
                     }
                 }
             }
@@ -97,7 +97,7 @@ extension RFC_9110 {
             guard let host = uri.host else {
                 // No host in URI, Host should be empty or match
                 if !hostValue.isEmpty {
-                    throw ValidationError.hostMismatchesAuthority(
+                    throw Error.hostMismatchesAuthority(
                         host: hostValue,
                         authority: "(none)"
                     )
@@ -116,7 +116,7 @@ extension RFC_9110 {
             // Case-insensitive comparison for domain names
             // RFC 9112: Host is case-insensitive
             guard hostValue.lowercased() == expectedHost.lowercased() else {
-                throw ValidationError.hostMismatchesAuthority(
+                throw Error.hostMismatchesAuthority(
                     host: hostValue,
                     authority: expectedHost
                 )
@@ -152,7 +152,7 @@ extension RFC_9110 {
 
         // MARK: - Errors
 
-        public enum ValidationError: Error, Sendable, Equatable {
+        public enum Error: Swift.Error, Sendable, Equatable {
             case missingHost
             case multipleHostHeaders(count: Int)
             case invalidHostFormat(String, reason: String)

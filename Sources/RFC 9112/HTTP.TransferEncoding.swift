@@ -49,24 +49,52 @@ extension RFC_9110 {
     ///
     /// - [RFC 9112 Section 6: Transfer Codings](https://www.rfc-editor.org/rfc/rfc9112.html#section-6)
     /// - [RFC 9112 Section 6.1: Chunked](https://www.rfc-editor.org/rfc/rfc9112.html#section-6.1)
-    public enum TransferEncoding: Sendable, Equatable, Hashable {
+    public struct TransferEncoding: Sendable, Equatable, Hashable {
+        // MARK: - Storage
+
+        private enum Storage: Sendable, Equatable, Hashable {
+            case single(String)
+            case list([TransferEncoding])
+        }
+
+        private let storage: Storage
+
+        // MARK: - Initialization
+
+        /// Creates a transfer encoding with the specified coding name.
+        ///
+        /// - Parameter codingName: The transfer coding name
+        public init(codingName: String) {
+            self.storage = .single(codingName)
+        }
+
+        private init(storage: Storage) {
+            self.storage = storage
+        }
+
+        // MARK: - Static Factory Methods
+
         /// Chunked transfer coding
-        case chunked
+        public static let chunked = Self(codingName: "chunked")
 
         /// Gzip compression
-        case gzip
+        public static let gzip = Self(codingName: "gzip")
 
         /// Compress (LZW) compression
-        case compress
+        public static let compress = Self(codingName: "compress")
 
         /// Deflate compression
-        case deflate
-
-        /// Custom/extension transfer coding
-        case custom(String)
+        public static let deflate = Self(codingName: "deflate")
 
         /// Multiple transfer codings applied in sequence
-        case list([TransferEncoding])
+        ///
+        /// - Parameter encodings: The list of transfer encodings in order
+        /// - Returns: A transfer encoding representing the list
+        public static func list(_ encodings: [TransferEncoding]) -> Self {
+            Self(storage: .list(encodings))
+        }
+
+        // MARK: - Header Value
 
         /// The header value representation
         ///
@@ -79,21 +107,15 @@ extension RFC_9110 {
         /// TransferEncoding.list([.gzip, .chunked]).headerValue  // "gzip, chunked"
         /// ```
         public var headerValue: String {
-            switch self {
-            case .chunked:
-                return "chunked"
-            case .gzip:
-                return "gzip"
-            case .compress:
-                return "compress"
-            case .deflate:
-                return "deflate"
-            case .custom(let name):
+            switch storage {
+            case .single(let name):
                 return name
             case .list(let encodings):
                 return encodings.map { $0.headerValue }.joined(separator: ", ")
             }
         }
+
+        // MARK: - Parsing
 
         /// Parses a Transfer-Encoding header value
         ///
@@ -109,9 +131,9 @@ extension RFC_9110 {
         public static func parse(_ headerValue: String) -> TransferEncoding? {
             let encodings = headerValue
                 .components(separatedBy: ",")
-                .map { $0.trimming(.whitespaces).lowercased() }
+                .map { $0.trimming(.ascii.whitespaces).lowercased() }
                 .filter { !$0.isEmpty }
-                .compactMap { name -> TransferEncoding? in
+                .map { name -> TransferEncoding in
                     switch name {
                     case "chunked":
                         return .chunked
@@ -122,7 +144,7 @@ extension RFC_9110 {
                     case "deflate":
                         return .deflate
                     default:
-                        return .custom(name)
+                        return Self(codingName: name)
                     }
                 }
 
@@ -137,6 +159,8 @@ extension RFC_9110 {
             return .list(encodings)
         }
 
+        // MARK: - Chunked Helpers
+
         /// Returns true if this is chunked encoding
         ///
         /// ## Example
@@ -147,10 +171,12 @@ extension RFC_9110 {
         /// TransferEncoding.list([.gzip, .chunked]).isChunked  // false
         /// ```
         public var isChunked: Bool {
-            if case .chunked = self {
-                return true
+            switch storage {
+            case .single(let name):
+                return name == "chunked"
+            case .list:
+                return false
             }
-            return false
         }
 
         /// Returns true if chunked encoding is present (including in a list)
@@ -163,13 +189,11 @@ extension RFC_9110 {
         /// TransferEncoding.gzip.hasChunked  // false
         /// ```
         public var hasChunked: Bool {
-            switch self {
-            case .chunked:
-                return true
+            switch storage {
+            case .single(let name):
+                return name == "chunked"
             case .list(let encodings):
                 return encodings.contains { $0.isChunked }
-            default:
-                return false
             }
         }
 
@@ -185,13 +209,11 @@ extension RFC_9110 {
         /// TransferEncoding.list([.chunked, .gzip]).isChunkedFinal  // false (invalid!)
         /// ```
         public var isChunkedFinal: Bool {
-            switch self {
-            case .chunked:
-                return true
+            switch storage {
+            case .single(let name):
+                return name == "chunked"
             case .list(let encodings):
                 return encodings.last?.isChunked ?? false
-            default:
-                return false
             }
         }
 
@@ -207,13 +229,11 @@ extension RFC_9110 {
         /// TransferEncoding.list([.chunked, .chunked]).chunkedCount  // 2 (invalid!)
         /// ```
         public var chunkedCount: Int {
-            switch self {
-            case .chunked:
-                return 1
+            switch storage {
+            case .single(let name):
+                return name == "chunked" ? 1 : 0
             case .list(let encodings):
                 return encodings.filter { $0.isChunked }.count
-            default:
-                return 0
             }
         }
     }
@@ -274,6 +294,6 @@ extension RFC_9110.TransferEncoding: LosslessStringConvertible {
 
 extension RFC_9110.TransferEncoding: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
-        self = Self.parse(value) ?? .custom(value)
+        self = Self.parse(value) ?? Self(codingName: value)
     }
 }

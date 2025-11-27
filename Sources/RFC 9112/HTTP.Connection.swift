@@ -109,7 +109,7 @@ extension RFC_9110 {
         public static func parse(_ headerValue: String) -> Connection? {
             let opts = headerValue
                 .components(separatedBy: ",")
-                .map { $0.trimming(.whitespaces).lowercased() }
+                .map { $0.trimming(.ascii.whitespaces).lowercased() }
                 .filter { !$0.isEmpty }
 
             guard !opts.isEmpty else {

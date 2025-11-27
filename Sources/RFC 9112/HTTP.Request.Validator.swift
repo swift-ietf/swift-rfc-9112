@@ -22,7 +22,7 @@ extension RFC_9110.Request {
             let hasContentLength = headers.contains { $0.name.rawValue.lowercased() == "content-length" }
 
             if hasTransferEncoding && hasContentLength {
-                throw ValidationError.ambiguousMessageFraming(
+                throw Error.ambiguousMessageFraming(
                     reason: "Request contains both Transfer-Encoding and Content-Length"
                 )
             }
@@ -52,12 +52,12 @@ extension RFC_9110.Request {
             // Parse Transfer-Encoding value
             for header in transferEncodingHeaders {
                 guard let te = RFC_9110.TransferEncoding.parse(header.value.rawValue) else {
-                    throw ValidationError.invalidTransferEncoding(header.value.rawValue)
+                    throw Error.invalidTransferEncoding(header.value.rawValue)
                 }
 
                 // RFC 9112 Section 7: Chunked must be final encoding (if present in list)
                 if te.hasChunked && !te.isChunkedFinal {
-                    throw ValidationError.chunkedNotFinalEncoding
+                    throw Error.chunkedNotFinalEncoding
                 }
             }
 
@@ -71,7 +71,7 @@ extension RFC_9110.Request {
             }
 
             if chunkedCount > 1 {
-                throw ValidationError.chunkedAppliedMultipleTimes
+                throw Error.chunkedAppliedMultipleTimes
             }
         }
 
@@ -88,17 +88,17 @@ extension RFC_9110.Request {
             let values = contentLengthHeaders.compactMap { Int($0.value.rawValue) }
 
             guard values.count == contentLengthHeaders.count else {
-                throw ValidationError.invalidContentLength(reason: "Non-integer Content-Length value")
+                throw Error.invalidContentLength(reason: "Non-integer Content-Length value")
             }
 
             guard Set(values).count == 1 else {
-                throw ValidationError.multipleContentLengthValues(values)
+                throw Error.multipleContentLengthValues(values)
             }
         }
 
         // MARK: - Errors
 
-        public enum ValidationError: Error, Sendable, Equatable {
+        public enum Error: Swift.Error, Sendable, Equatable {
             case ambiguousMessageFraming(reason: String)
             case invalidTransferEncoding(String)
             case invalidContentLength(reason: String)

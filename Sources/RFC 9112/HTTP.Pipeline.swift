@@ -1,7 +1,8 @@
 // HTTP.Pipeline.swift
 // swift-rfc-9112
 
-public 
+import StandardTime
+
 extension RFC_9110 {
     /// HTTP/1.1 request/response pipelining support
     /// RFC 9112 Section 9.4: Pipelining
@@ -13,11 +14,13 @@ extension RFC_9110 {
         /// Pending request information
         private struct PendingRequest: Sendable {
             let method: RFC_9110.Method
-            let timestamp: Foundation.Date
+            let timestamp: HTTP.Date
 
             init(method: RFC_9110.Method) {
                 self.method = method
-                self.timestamp = Foundation.Date.now
+                fatalError()
+                // TODO: fix .now for HTTP.Date()
+//                self.timestamp = HTTP.Date()
             }
         }
 
@@ -108,15 +111,15 @@ extension RFC_9110 {
         // MARK: - Timeout Management
 
         /// Get age of oldest pending request
-        public func oldestRequestAge() -> TimeInterval? {
+        public func oldestRequestAge() -> Time.Interval? {
             guard let oldest = pendingRequests.first else {
                 return nil
             }
-            return Foundation.Date.now.timeIntervalSince(oldest.timestamp)
+            return HTTP.Date.now.timeIntervalSince(oldest.timestamp)
         }
 
         /// Check if any request has exceeded timeout
-        public func hasTimedOut(timeout: TimeInterval) -> Bool {
+        public func hasTimedOut(timeout: Time.Interval) -> Bool {
             guard let age = oldestRequestAge() else {
                 return false
             }

@@ -1,7 +1,8 @@
 // HTTP.Request.Line.swift
 // swift-rfc-9112
 
-public 
+import INCITS_4_1986
+
 extension RFC_9110.Request {
     /// HTTP/1.1 request-line parser implementing RFC 9112 Section 3
     /// Format: method SP request-target SP HTTP-version CRLF
@@ -46,7 +47,7 @@ extension RFC_9110.Request {
                 throw ParsingError.emptyTarget
             }
             // Validate target doesn't contain whitespace
-            guard !targetString.contains(where: \.isWhitespace) else {
+            guard !targetString.contains(where: \.ascii.isWhitespace) else {
                 throw ParsingError.targetContainsWhitespace
             }
 
@@ -58,11 +59,12 @@ extension RFC_9110.Request {
         }
 
         /// Parse request-line from data
-        public static func parse(_ data: Data) throws -> Line {
-            guard let string = String(data: data, encoding: .utf8) else {
-                throw ParsingError.invalidEncoding
-            }
-            return try parse(string)
+        public static func parse(_ data: [UInt8]) throws -> Line {
+            fatalError()
+//            guard let string = String(data: data, encoding: .utf8) else {
+//                throw ParsingError.invalidEncoding
+//            }
+//            return try parse(string)
         }
 
         // MARK: - Formatting
@@ -79,7 +81,7 @@ extension RFC_9110.Request {
         public func validate(maxLength: Int = 8000) throws {
             let formattedLength = formatted.utf8.count
             guard formattedLength <= maxLength else {
-                throw ValidationError.lineTooLong(length: formattedLength, max: maxLength)
+                throw Error.lineTooLong(length: formattedLength, max: maxLength)
             }
 
             // Validate method is known or server can handle it
@@ -103,7 +105,7 @@ extension RFC_9110.Request {
             case invalidVersion(String)
         }
 
-        public enum ValidationError: Error, Sendable, Equatable {
+        public enum Error: Swift.Error, Sendable, Equatable {
             case lineTooLong(length: Int, max: Int)
         }
     }

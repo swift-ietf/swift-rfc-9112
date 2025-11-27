@@ -24,7 +24,7 @@ extension RFC_9110.Response {
             // Check for invalid status codes
             // RFC 9112: Status code must be 3 digits (100-599)
             guard response.status.code >= 100 && response.status.code < 600 else {
-                throw ValidationError.invalidStatusCode(response.status.code)
+                throw Error.invalidStatusCode(response.status.code)
             }
 
             // Check for Transfer-Encoding with incompatible status codes
@@ -34,7 +34,7 @@ extension RFC_9110.Response {
             if hasTransferEncoding {
                 let code = response.status.code
                 if code / 100 == 1 || code == 204 || code == 304 {
-                    throw ValidationError.transferEncodingWithIncompatibleStatus(code)
+                    throw Error.transferEncodingWithIncompatibleStatus(code)
                 }
             }
 
@@ -44,7 +44,7 @@ extension RFC_9110.Response {
             if hasTransferEncoding {
                 let hasContentLength = headers.contains { $0.name.rawValue.lowercased() == "content-length" }
                 if hasContentLength {
-                    throw ValidationError.transferEncodingWithContentLength
+                    throw Error.transferEncodingWithContentLength
                 }
             }
         }
@@ -63,12 +63,12 @@ extension RFC_9110.Response {
             // Parse Transfer-Encoding value
             for header in transferEncodingHeaders {
                 guard let te = RFC_9110.TransferEncoding.parse(header.value.rawValue) else {
-                    throw ValidationError.invalidTransferEncoding(header.value.rawValue)
+                    throw Error.invalidTransferEncoding(header.value.rawValue)
                 }
 
                 // RFC 9112 Section 7: Chunked must be final encoding (if present in list)
                 if te.hasChunked && !te.isChunkedFinal {
-                    throw ValidationError.chunkedNotFinalEncoding
+                    throw Error.chunkedNotFinalEncoding
                 }
             }
 
@@ -78,7 +78,7 @@ extension RFC_9110.Response {
             }.count
 
             if chunkedCount > 1 {
-                throw ValidationError.chunkedAppliedMultipleTimes
+                throw Error.chunkedAppliedMultipleTimes
             }
         }
 
@@ -95,17 +95,17 @@ extension RFC_9110.Response {
             let values = contentLengthHeaders.compactMap { Int($0.value.rawValue) }
 
             guard values.count == contentLengthHeaders.count else {
-                throw ValidationError.invalidContentLength(reason: "Non-integer Content-Length value")
+                throw Error.invalidContentLength(reason: "Non-integer Content-Length value")
             }
 
             guard Set(values).count == 1 else {
-                throw ValidationError.multipleContentLengthValues(values)
+                throw Error.multipleContentLengthValues(values)
             }
         }
 
         // MARK: - Errors
 
-        public enum ValidationError: Error, Sendable, Equatable {
+        public enum Error: Swift.Error, Sendable, Equatable {
             case invalidTransferEncoding(String)
             case invalidContentLength(reason: String)
             case multipleContentLengthValues([Int])

@@ -44,7 +44,7 @@ extension RFC_9110.Header {
             var fieldValue = String(line[valueStartIndex...])
 
             // RFC 9112 Section 5.1: "field-value does not include leading or trailing whitespace"
-            fieldValue = fieldValue.trimming(.whitespaces)
+            fieldValue = fieldValue.trimming(.ascii.whitespaces)
 
             // Validate field value (allow visible chars, whitespace, obs-text)
             // RFC 9110 Section 5.5: field-value = *( field-content / obs-fold )
@@ -80,7 +80,7 @@ extension RFC_9110.Header {
 
                     // Optionally handle obs-fold by replacing with space
                     // RFC 9112: "or replace each received obs-fold with one or more SP octets"
-                    currentValue += " " + line.trimming(.whitespaces)
+                    currentValue += " " + line.trimming(.ascii.whitespaces)
 
                 } else {
                     // Save previous field if exists

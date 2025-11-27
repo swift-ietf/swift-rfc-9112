@@ -181,9 +181,9 @@ struct `HTTP.Message.Parser Tests` {
         let lines = try RFC_9110.MessageParser.parseLines(from: data)
 
         #expect(lines.count == 2)
-        #expect(lines[0].content == Data([0xFF, 0xFE, 0xFD]))
+        #expect(lines[0].content == [UInt8]([0xFF, 0xFE, 0xFD]))
         #expect(lines[0].terminator == .crlf)
-        #expect(lines[1].content == Data([0x00, 0x01, 0x02]))
+        #expect(lines[1].content == [UInt8]([0x00, 0x01, 0x02]))
         #expect(lines[1].terminator == .crlf)
     }
 
