@@ -110,20 +110,20 @@ extension RFC_9110 {
 
         // MARK: - Timeout Management
 
-        /// Get age of oldest pending request
-        public func oldestRequestAge() -> Time.Interval? {
+        /// Get age of oldest pending request in seconds
+        public func oldestRequestAge() -> Int? {
             guard let oldest = pendingRequests.first else {
                 return nil
             }
-            return HTTP.Date.now.timeIntervalSince(oldest.timestamp)
+            return HTTP.Date.now.secondsSinceEpoch - oldest.timestamp.secondsSinceEpoch
         }
 
         /// Check if any request has exceeded timeout
-        public func hasTimedOut(timeout: Time.Interval) -> Bool {
+        public func hasTimedOut(timeoutSeconds: Int) -> Bool {
             guard let age = oldestRequestAge() else {
                 return false
             }
-            return age > timeout
+            return age > timeoutSeconds
         }
     }
 }

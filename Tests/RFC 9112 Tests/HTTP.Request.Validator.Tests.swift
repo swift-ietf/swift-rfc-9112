@@ -65,7 +65,7 @@ struct `HTTP.Request.Validator Tests` {
         )
 
         // RFC 9112 Section 11.2: Request smuggling prevention
-        #expect(throws: RFC_9110.Request.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Request.Validator.Error.self) {
             try RFC_9110.Request.Validator.validate(request)
         }
     }
@@ -106,7 +106,7 @@ struct `HTTP.Request.Validator Tests` {
             body: Data()
         )
 
-        #expect(throws: RFC_9110.Request.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Request.Validator.Error.self) {
             try RFC_9110.Request.Validator.validate(request)
         }
     }
@@ -127,7 +127,7 @@ struct `HTTP.Request.Validator Tests` {
             body: Data()
         )
 
-        #expect(throws: RFC_9110.Request.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Request.Validator.Error.self) {
             try RFC_9110.Request.Validator.validate(request)
         }
     }

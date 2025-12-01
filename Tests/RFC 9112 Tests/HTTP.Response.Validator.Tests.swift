@@ -86,7 +86,7 @@ struct `HTTP.Response.Validator Tests` {
         )
 
         // 101 cannot have Transfer-Encoding
-        #expect(throws: RFC_9110.Response.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
     }
@@ -102,7 +102,7 @@ struct `HTTP.Response.Validator Tests` {
         )
 
         // 204 cannot have Transfer-Encoding
-        #expect(throws: RFC_9110.Response.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
     }
@@ -118,7 +118,7 @@ struct `HTTP.Response.Validator Tests` {
         )
 
         // 304 cannot have Transfer-Encoding
-        #expect(throws: RFC_9110.Response.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
     }
@@ -164,7 +164,7 @@ struct `HTTP.Response.Validator Tests` {
         )
 
         // Multiple different Content-Length values should be rejected
-        #expect(throws: RFC_9110.Response.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
     }
@@ -181,7 +181,7 @@ struct `HTTP.Response.Validator Tests` {
         )
 
         // Transfer-Encoding with Content-Length should be rejected
-        #expect(throws: RFC_9110.Response.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
     }
@@ -195,7 +195,7 @@ struct `HTTP.Response.Validator Tests` {
         )
 
         // Status code < 100 is invalid
-        #expect(throws: RFC_9110.Response.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
     }
@@ -209,7 +209,7 @@ struct `HTTP.Response.Validator Tests` {
         )
 
         // Status code >= 600 is invalid
-        #expect(throws: RFC_9110.Response.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
     }

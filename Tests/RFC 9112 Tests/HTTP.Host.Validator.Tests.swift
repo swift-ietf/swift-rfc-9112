@@ -81,7 +81,7 @@ struct `HTTP.Host.Validator Tests` {
             body: nil
         )
 
-        #expect(throws: RFC_9110.Host.Validator.ValidationError.missingHost) {
+        #expect(throws: RFC_9110.Host.Validator.Error.missingHost) {
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
     }
@@ -121,7 +121,7 @@ struct `HTTP.Host.Validator Tests` {
             body: nil
         )
 
-        #expect(throws: RFC_9110.Host.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Host.Validator.Error.self) {
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
     }
@@ -182,7 +182,7 @@ struct `HTTP.Host.Validator Tests` {
             body: nil
         )
 
-        #expect(throws: RFC_9110.Host.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Host.Validator.Error.self) {
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
     }
@@ -203,7 +203,7 @@ struct `HTTP.Host.Validator Tests` {
             body: nil
         )
 
-        #expect(throws: RFC_9110.Host.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Host.Validator.Error.self) {
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
     }
@@ -251,7 +251,7 @@ struct `HTTP.Host.Validator Tests` {
             body: nil
         )
 
-        #expect(throws: RFC_9110.Host.Validator.ValidationError.self) {
+        #expect(throws: RFC_9110.Host.Validator.Error.self) {
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
     }
@@ -336,7 +336,7 @@ struct `HTTP.Host.Validator Tests` {
 
         // Implementation-dependent: may not require Host for HTTP/2
         // This test documents expected behavior
-        #expect(throws: RFC_9110.Host.Validator.ValidationError.missingHost) {
+        #expect(throws: RFC_9110.Host.Validator.Error.missingHost) {
             try RFC_9110.Host.Validator.validate(request: request, version: http2)
         }
     }
