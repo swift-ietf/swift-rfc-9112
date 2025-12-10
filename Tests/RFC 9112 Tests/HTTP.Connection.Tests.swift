@@ -2,6 +2,7 @@
 // swift-rfc-9112
 
 import Testing
+
 @testable import RFC_9112
 
 @Suite
@@ -117,7 +118,7 @@ struct `HTTP.Connection Tests` {
         var set: Set<HTTP.Connection> = []
 
         set.insert(.close)
-        set.insert(.close) // Duplicate
+        set.insert(.close)  // Duplicate
         set.insert(.keepAlive)
 
         #expect(set.count == 2)

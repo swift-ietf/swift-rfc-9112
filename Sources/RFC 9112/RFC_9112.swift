@@ -7,6 +7,8 @@
 // This module implements the HTTP/1.1 message syntax and connection management
 // as defined in RFC 9112, which obsoletes parts of RFC 7230.
 
+@_exported import RFC_9110
+
 /// RFC 9112: HTTP/1.1
 ///
 /// This namespace contains types for HTTP/1.1 message syntax, transfer encodings,
@@ -25,5 +27,3 @@
 ///
 /// - [RFC 9112: HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112.html)
 public enum RFC_9112 {}
-
-@_exported import RFC_9110

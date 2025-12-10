@@ -16,7 +16,9 @@ extension RFC_9110.Response {
             try validateContentLength(headers: Array(headers))
 
             // Validate Transfer-Encoding
-            let hasTransferEncoding = headers.contains { $0.name.rawValue.lowercased() == "transfer-encoding" }
+            let hasTransferEncoding = headers.contains {
+                $0.name.rawValue.lowercased() == "transfer-encoding"
+            }
             if hasTransferEncoding {
                 try validateTransferEncoding(headers: Array(headers))
             }
@@ -42,7 +44,9 @@ extension RFC_9110.Response {
             // RFC 9112 Section 6.1: "A sender MUST NOT send a Content-Length header field
             // in any message that contains a Transfer-Encoding header field"
             if hasTransferEncoding {
-                let hasContentLength = headers.contains { $0.name.rawValue.lowercased() == "content-length" }
+                let hasContentLength = headers.contains {
+                    $0.name.rawValue.lowercased() == "content-length"
+                }
                 if hasContentLength {
                     throw Error.transferEncodingWithContentLength
                 }
@@ -54,7 +58,9 @@ extension RFC_9110.Response {
         /// Validate Transfer-Encoding header
         /// RFC 9112 Section 6.1
         private static func validateTransferEncoding(headers: [RFC_9110.Header.Field]) throws {
-            let transferEncodingHeaders = headers.filter { $0.name.rawValue.lowercased() == "transfer-encoding" }
+            let transferEncodingHeaders = headers.filter {
+                $0.name.rawValue.lowercased() == "transfer-encoding"
+            }
 
             guard !transferEncodingHeaders.isEmpty else {
                 return
@@ -85,7 +91,9 @@ extension RFC_9110.Response {
         /// Validate Content-Length header
         /// RFC 9112 Section 6.2
         private static func validateContentLength(headers: [RFC_9110.Header.Field]) throws {
-            let contentLengthHeaders = headers.filter { $0.name.rawValue.lowercased() == "content-length" }
+            let contentLengthHeaders = headers.filter {
+                $0.name.rawValue.lowercased() == "content-length"
+            }
 
             guard contentLengthHeaders.count > 1 else {
                 return

@@ -1,7 +1,6 @@
 // HTTP.Response.Line.swift
 // swift-rfc-9112
 
-public 
 extension RFC_9110.Response {
     /// HTTP/1.1 status-line parser implementing RFC 9112 Section 4
     /// Format: HTTP-version SP status-code SP [ reason-phrase ]
@@ -24,10 +23,16 @@ extension RFC_9110.Response {
         /// even if the reason-phrase is absent"
         public static func parse(_ line: String) throws -> Line {
             // Split into version and rest
-            let components = line.split(separator: " ", maxSplits: 2, omittingEmptySubsequences: false)
+            let components = line.split(
+                separator: " ",
+                maxSplits: 2,
+                omittingEmptySubsequences: false
+            )
 
             guard components.count >= 2 else {
-                throw ParsingError.invalidFormat(reason: "Expected at least version and status code")
+                throw ParsingError.invalidFormat(
+                    reason: "Expected at least version and status code"
+                )
             }
 
             // Parse version
@@ -58,11 +63,11 @@ extension RFC_9110.Response {
 
         /// Parse status-line from data
         public static func parse(_ data: [UInt8]) throws -> Line {
-            fatalError()
-//            guard let string = String(data: data, encoding: .utf8) else {
-//                throw ParsingError.invalidEncoding
-//            }
-//            return try parse(string)
+            fatalError("Not implemented")
+            //            guard let string = String(data: data, encoding: .utf8) else {
+            //                throw ParsingError.invalidEncoding
+            //            }
+            //            return try parse(string)
         }
 
         // MARK: - Formatting
@@ -86,7 +91,8 @@ extension RFC_9110.Response {
         }
 
         /// Create from RFC_9110.Status
-        public init(version: RFC_9110.Version, status: RFC_9110.Status, reasonPhrase: String? = nil) {
+        public init(version: RFC_9110.Version, status: RFC_9110.Status, reasonPhrase: String? = nil)
+        {
             self.version = version
             self.statusCode = status.code
             self.reasonPhrase = reasonPhrase ?? status.reasonPhrase

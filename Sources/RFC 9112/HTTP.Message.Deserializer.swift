@@ -10,7 +10,9 @@ extension RFC_9110.Request {
 
         /// Deserialize request from bytes
         /// Returns: (request, bytesConsumed)
-        public static func deserialize(_ data: [UInt8]) throws -> (request: RFC_9110.Request, bytesConsumed: Int) {
+        public static func deserialize(
+            _ data: [UInt8]
+        ) throws -> (request: RFC_9110.Request, bytesConsumed: Int) {
             // Parse lines
             let lines = try RFC_9110.MessageParser.parseLines(from: data)
 
@@ -19,7 +21,8 @@ extension RFC_9110.Request {
             }
 
             // Find header-body separator (blank line)
-            guard let separatorIndex = RFC_9110.MessageParser.findHeaderBodySeparator(in: lines) else {
+            guard let separatorIndex = RFC_9110.MessageParser.findHeaderBodySeparator(in: lines)
+            else {
                 throw DeserializationError.missingHeaderBodySeparator
             }
 
@@ -68,7 +71,10 @@ extension RFC_9110.Request {
             var body: [UInt8]?
             if let fixedLength = bodyLength.fixedLength {
                 guard data.count >= bytesConsumed + fixedLength else {
-                    throw DeserializationError.incompleteBody(expected: fixedLength, available: data.count - bytesConsumed)
+                    throw DeserializationError.incompleteBody(
+                        expected: fixedLength,
+                        available: data.count - bytesConsumed
+                    )
                 }
                 body = Array(data[bytesConsumed..<(bytesConsumed + fixedLength)])
                 bytesConsumed += fixedLength
@@ -99,7 +105,10 @@ extension RFC_9110.Request {
         }
 
         /// Parse target string into Target type
-        private static func parseTarget(_ targetString: String, method: RFC_9110.Method) throws -> RFC_9110.Request.Target {
+        private static func parseTarget(
+            _ targetString: String,
+            method: RFC_9110.Method
+        ) throws -> RFC_9110.Request.Target {
             // RFC 9112 Section 3.2: Request target forms
             if targetString == "*" {
                 return .asterisk
@@ -172,7 +181,8 @@ extension RFC_9110.Response {
             }
 
             // Find header-body separator (blank line)
-            guard let separatorIndex = RFC_9110.MessageParser.findHeaderBodySeparator(in: lines) else {
+            guard let separatorIndex = RFC_9110.MessageParser.findHeaderBodySeparator(in: lines)
+            else {
                 throw DeserializationError.missingHeaderBodySeparator
             }
 
@@ -221,7 +231,10 @@ extension RFC_9110.Response {
             var body: [UInt8]?
             if let fixedLength = bodyLength.fixedLength {
                 guard data.count >= bytesConsumed + fixedLength else {
-                    throw DeserializationError.incompleteBody(expected: fixedLength, available: data.count - bytesConsumed)
+                    throw DeserializationError.incompleteBody(
+                        expected: fixedLength,
+                        available: data.count - bytesConsumed
+                    )
                 }
                 body = Array(data[bytesConsumed..<(bytesConsumed + fixedLength)])
                 bytesConsumed += fixedLength

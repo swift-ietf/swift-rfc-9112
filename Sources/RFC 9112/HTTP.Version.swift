@@ -42,7 +42,8 @@ extension RFC_9110 {
             }
 
             guard let major = Int(versionParts[0]),
-                  let minor = Int(versionParts[1]) else {
+                let minor = Int(versionParts[1])
+            else {
                 throw ParsingError.invalidVersionNumber
             }
 

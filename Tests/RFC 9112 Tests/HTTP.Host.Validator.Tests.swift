@@ -2,6 +2,7 @@
 // swift-rfc-9112
 
 import Testing
+
 @testable import RFC_9112
 
 @Suite
@@ -116,7 +117,7 @@ struct `HTTP.Host.Validator Tests` {
             query: nil,
             headers: [
                 try RFC_9110.Header.Field(name: "Host", value: "example.com"),
-                try RFC_9110.Header.Field(name: "Host", value: "another.com")
+                try RFC_9110.Header.Field(name: "Host", value: "another.com"),
             ],
             body: nil
         )

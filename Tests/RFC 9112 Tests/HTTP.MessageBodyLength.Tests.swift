@@ -2,6 +2,7 @@
 // swift-rfc-9112
 
 import Testing
+
 @testable import RFC_9112
 
 @Suite
@@ -109,7 +110,7 @@ struct `HTTP.MessageBodyLength Tests` {
             status: .ok,
             headers: [
                 try .init(name: "Transfer-Encoding", value: "chunked"),
-                try .init(name: "Content-Length", value: "100")
+                try .init(name: "Content-Length", value: "100"),
             ]
         )
 
@@ -144,7 +145,7 @@ struct `HTTP.MessageBodyLength Tests` {
             status: .ok,
             headers: [
                 try .init(name: "Content-Length", value: "42"),
-                try .init(name: "Content-Length", value: "42")
+                try .init(name: "Content-Length", value: "42"),
             ]
         )
 
@@ -162,7 +163,7 @@ struct `HTTP.MessageBodyLength Tests` {
             status: .ok,
             headers: [
                 try .init(name: "Content-Length", value: "42"),
-                try .init(name: "Content-Length", value: "100")
+                try .init(name: "Content-Length", value: "100"),
             ]
         )
 

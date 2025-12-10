@@ -18,8 +18,12 @@ extension RFC_9110.Request {
             let headers = request.headers
 
             // Check for both Transfer-Encoding and Content-Length
-            let hasTransferEncoding = headers.contains { $0.name.rawValue.lowercased() == "transfer-encoding" }
-            let hasContentLength = headers.contains { $0.name.rawValue.lowercased() == "content-length" }
+            let hasTransferEncoding = headers.contains {
+                $0.name.rawValue.lowercased() == "transfer-encoding"
+            }
+            let hasContentLength = headers.contains {
+                $0.name.rawValue.lowercased() == "content-length"
+            }
 
             if hasTransferEncoding && hasContentLength {
                 throw Error.ambiguousMessageFraming(
@@ -43,7 +47,9 @@ extension RFC_9110.Request {
         /// Validate Transfer-Encoding header
         /// RFC 9112 Section 6.1
         private static func validateTransferEncoding(headers: [RFC_9110.Header.Field]) throws {
-            let transferEncodingHeaders = headers.filter { $0.name.rawValue.lowercased() == "transfer-encoding" }
+            let transferEncodingHeaders = headers.filter {
+                $0.name.rawValue.lowercased() == "transfer-encoding"
+            }
 
             guard !transferEncodingHeaders.isEmpty else {
                 return
@@ -78,7 +84,9 @@ extension RFC_9110.Request {
         /// Validate Content-Length header
         /// RFC 9112 Section 6.2
         private static func validateContentLength(headers: [RFC_9110.Header.Field]) throws {
-            let contentLengthHeaders = headers.filter { $0.name.rawValue.lowercased() == "content-length" }
+            let contentLengthHeaders = headers.filter {
+                $0.name.rawValue.lowercased() == "content-length"
+            }
 
             guard contentLengthHeaders.count > 1 else {
                 return

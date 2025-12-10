@@ -6,7 +6,6 @@
 //
 // Connection header for HTTP/1.1 connection management
 
-
 extension RFC_9110 {
     /// HTTP Connection header (RFC 9112 Section 9.6)
     ///
@@ -107,7 +106,8 @@ extension RFC_9110 {
         /// Connection.parse("close, custom")  // Connection(options: ["close", "custom"])
         /// ```
         public static func parse(_ headerValue: String) -> Connection? {
-            let opts = headerValue
+            let opts =
+                headerValue
                 .components(separatedBy: ",")
                 .map { $0.trimming(.ascii.whitespaces).lowercased() }
                 .filter { !$0.isEmpty }

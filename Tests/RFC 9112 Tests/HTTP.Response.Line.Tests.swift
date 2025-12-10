@@ -2,6 +2,7 @@
 // swift-rfc-9112
 
 import Testing
+
 @testable import RFC_9112
 
 @Suite

@@ -19,7 +19,13 @@ extension RFC_9110 {
             var lineNumber = 1
 
             while currentIndex < data.endIndex {
-                guard let line = try parseLine(from: data, startingAt: &currentIndex, lineNumber: lineNumber) else {
+                guard
+                    let line = try parseLine(
+                        from: data,
+                        startingAt: &currentIndex,
+                        lineNumber: lineNumber
+                    )
+                else {
                     break
                 }
                 lines.append(line)
@@ -48,7 +54,7 @@ extension RFC_9110 {
                 let byte = data[index]
 
                 switch byte {
-                case 0x0D: // CR
+                case 0x0D:  // CR
                     foundCR = true
                     index = data.index(after: index)
 
@@ -62,7 +68,7 @@ extension RFC_9110 {
                         throw ParsingError.bareCR(lineNumber: lineNumber)
                     }
 
-                case 0x0A: // LF
+                case 0x0A:  // LF
                     // LF without CR - RFC 9112: "MAY recognize a single LF"
                     index = data.index(after: index)
                     return Line(content: content, terminator: .lf, lineNumber: lineNumber)
@@ -120,7 +126,7 @@ extension RFC_9110 {
         /// Line terminator types
         public enum LineTerminator: Sendable, Equatable {
             case crlf  // Standard: CR LF (0x0D 0x0A)
-            case lf    // Lenient: Single LF (0x0A)
+            case lf  // Lenient: Single LF (0x0A)
             case none  // No terminator (end of data)
         }
 

@@ -121,7 +121,11 @@ extension RFC_9110 {
             public let chunkExtensions: [[Extension]]  // Extensions for each chunk
             public let trailers: [HTTP.Header.Field]
 
-            public init(data: [UInt8], chunkExtensions: [[Extension]], trailers: [HTTP.Header.Field]) {
+            public init(
+                data: [UInt8],
+                chunkExtensions: [[Extension]],
+                trailers: [HTTP.Header.Field]
+            ) {
                 self.data = data
                 self.chunkExtensions = chunkExtensions
                 self.trailers = trailers
@@ -166,11 +170,11 @@ extension RFC_9110 {
                 if !chunkExtensions.isEmpty {
                     result.append(contentsOf: extensionsString.utf8)
                 }
-                result.append(contentsOf: [0x0D, 0x0A]) // CRLF
+                result.append(contentsOf: [0x0D, 0x0A])  // CRLF
 
                 // chunk-data + CRLF
                 result.append(contentsOf: chunkData)
-                result.append(contentsOf: [0x0D, 0x0A]) // CRLF
+                result.append(contentsOf: [0x0D, 0x0A])  // CRLF
 
                 offset = end
             }
@@ -180,7 +184,7 @@ extension RFC_9110 {
             if !chunkExtensions.isEmpty {
                 result.append(contentsOf: extensionsString.utf8)
             }
-            result.append(contentsOf: [0x0D, 0x0A]) // CRLF
+            result.append(contentsOf: [0x0D, 0x0A])  // CRLF
 
             // trailer-section
             for trailer in trailers {
@@ -217,8 +221,9 @@ extension RFC_9110 {
             while offset < data.count {
                 // Find CRLF for chunk-size line
                 guard let crlfIndex = data[offset...].firstIndex(of: 0x0D),
-                      crlfIndex + 1 < data.count,
-                      data[crlfIndex + 1] == 0x0A else {
+                    crlfIndex + 1 < data.count,
+                    data[crlfIndex + 1] == 0x0A
+                else {
                     throw ChunkedDecodingError.invalidFormat
                 }
 
@@ -254,17 +259,18 @@ extension RFC_9110 {
                     // Parse trailer section
                     while offset < data.count {
                         // Check for final CRLF
-                        if offset + 1 < data.count &&
-                           data[offset] == 0x0D &&
-                           data[offset + 1] == 0x0A {
+                        if offset + 1 < data.count && data[offset] == 0x0D
+                            && data[offset + 1] == 0x0A
+                        {
                             // End of message
                             break
                         }
 
                         // Find next CRLF for trailer line
                         guard let nextCrlf = data[offset...].firstIndex(of: 0x0D),
-                              nextCrlf + 1 < data.count,
-                              data[nextCrlf + 1] == 0x0A else {
+                            nextCrlf + 1 < data.count,
+                            data[nextCrlf + 1] == 0x0A
+                        else {
                             throw ChunkedDecodingError.invalidFormat
                         }
 
@@ -305,7 +311,8 @@ extension RFC_9110 {
 
                 // Verify CRLF after chunk data
                 guard data[offset + size] == 0x0D,
-                      data[offset + size + 1] == 0x0A else {
+                    data[offset + size + 1] == 0x0A
+                else {
                     throw ChunkedDecodingError.missingCRLF
                 }
 
@@ -313,7 +320,11 @@ extension RFC_9110 {
                 offset += size + 2
             }
 
-            return DecodeResult(data: result, chunkExtensions: allChunkExtensions, trailers: trailers)
+            return DecodeResult(
+                data: result,
+                chunkExtensions: allChunkExtensions,
+                trailers: trailers
+            )
         }
 
         /// Errors that can occur during chunked decoding

@@ -6,7 +6,6 @@
 //
 // Transfer codings for HTTP/1.1 message framing
 
-
 extension RFC_9110 {
     /// HTTP Transfer-Encoding header (RFC 9112 Section 6)
     ///
@@ -129,7 +128,8 @@ extension RFC_9110 {
         /// TransferEncoding.parse("gzip, chunked")  // .list([.gzip, .chunked])
         /// ```
         public static func parse(_ headerValue: String) -> TransferEncoding? {
-            let encodings = headerValue
+            let encodings =
+                headerValue
                 .components(separatedBy: ",")
                 .map { $0.trimming(.ascii.whitespaces).lowercased() }
                 .filter { !$0.isEmpty }

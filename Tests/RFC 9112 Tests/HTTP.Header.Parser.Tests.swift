@@ -2,6 +2,7 @@
 // swift-rfc-9112
 
 import Testing
+
 @testable import RFC_9112
 
 @Suite
@@ -31,7 +32,7 @@ struct `HTTP.Header.Parser Tests` {
         let (name, value) = try RFC_9110.Header.Parser.parseFieldLine(line)
 
         #expect(name == "X-Custom-Header")
-        #expect(value == "")
+        #expect(value.isEmpty)
     }
 
     @Test
@@ -48,7 +49,7 @@ struct `HTTP.Header.Parser Tests` {
         let lines = [
             "Content-Type: text/html",
             "Content-Length: 1234",
-            "Cache-Control: max-age=3600"
+            "Cache-Control: max-age=3600",
         ]
 
         let fields = try RFC_9110.Header.Parser.parseFieldLines(lines)
@@ -204,7 +205,7 @@ struct `HTTP.Header.Parser Tests` {
         let lines = [
             "Content-Type: text/html",
             "InvalidLine",
-            "Content-Length: 1234"
+            "Content-Length: 1234",
         ]
 
         #expect(throws: RFC_9110.Header.Parser.ParsingError.missingColon) {
@@ -238,7 +239,7 @@ struct `HTTP.Header.Parser Tests` {
         let (name, value) = try RFC_9110.Header.Parser.parseFieldLine(line)
 
         #expect(name == "X-Custom")
-        #expect(value == "")
+        #expect(value.isEmpty)
     }
 
     @Test
@@ -249,7 +250,7 @@ struct `HTTP.Header.Parser Tests` {
             "Accept: text/html",
             "Accept-Language: en-US,en;q=0.9",
             "Accept-Encoding: gzip, deflate, br",
-            "Connection: keep-alive"
+            "Connection: keep-alive",
         ]
 
         let fields = try RFC_9110.Header.Parser.parseFieldLines(lines)

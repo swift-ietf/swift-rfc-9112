@@ -2,6 +2,7 @@
 // swift-rfc-9112
 
 import Testing
+
 @testable import RFC_9112
 
 @Suite
@@ -125,7 +126,7 @@ struct `HTTP.ChunkedEncoding Tests` {
 
     @Test
     func `Decode - incomplete chunk`() async throws {
-        let chunked = Data("10\r\nshort".utf8) // Says 16 bytes but only has 5
+        let chunked = Data("10\r\nshort".utf8)  // Says 16 bytes but only has 5
 
         #expect(throws: HTTP.ChunkedEncoding.ChunkedDecodingError.incompleteChunk) {
             try HTTP.ChunkedEncoding.decode(chunked)
@@ -134,7 +135,7 @@ struct `HTTP.ChunkedEncoding Tests` {
 
     @Test
     func `Decode - missing CRLF`() async throws {
-        let chunked = Data("5\r\nHelloXX0\r\n\r\n".utf8) // Missing CRLF after chunk
+        let chunked = Data("5\r\nHelloXX0\r\n\r\n".utf8)  // Missing CRLF after chunk
 
         #expect(throws: HTTP.ChunkedEncoding.ChunkedDecodingError.missingCRLF) {
             try HTTP.ChunkedEncoding.decode(chunked)
@@ -152,7 +153,7 @@ struct `HTTP.ChunkedEncoding Tests` {
 
     @Test
     func `Round trip - large data`() async throws {
-        let original = Data(repeating: 0x41, count: 100000) // 100KB of 'A'
+        let original = Data(repeating: 0x41, count: 100000)  // 100KB of 'A'
         let chunked = try HTTP.ChunkedEncoding.encode(original, chunkSize: 8192)
         let decoded = try HTTP.ChunkedEncoding.decode(chunked).data
 

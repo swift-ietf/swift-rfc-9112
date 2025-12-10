@@ -18,9 +18,9 @@ extension RFC_9110 {
 
             init(method: RFC_9110.Method) {
                 self.method = method
-                fatalError()
+                fatalError("Not implemented")
                 // TODO: fix .now for HTTP.Date()
-//                self.timestamp = HTTP.Date()
+                //                self.timestamp = HTTP.Date()
             }
         }
 

@@ -35,7 +35,8 @@ extension RFC_9110.Header {
 
             // Validate field name contains only allowed characters
             // RFC 9110 Section 5.1: field-name = token
-            guard fieldName.allSatisfy({ $0.isASCII && !$0.isWhitespace && !isSeparator($0) }) else {
+            guard fieldName.allSatisfy({ $0.isASCII && !$0.isWhitespace && !isSeparator($0) })
+            else {
                 throw ParsingError.invalidFieldName(fieldName)
             }
 
@@ -62,7 +63,9 @@ extension RFC_9110.Header {
         /// Parse multiple field-lines from lines
         /// Handles obsolete line folding (obs-fold)
         /// RFC 9112 Section 5.2: "obs-fold = OWS CRLF RWS"
-        public static func parseFieldLines(_ lines: [String]) throws -> [(name: String, value: String)] {
+        public static func parseFieldLines(
+            _ lines: [String]
+        ) throws -> [(name: String, value: String)] {
             var fields: [(name: String, value: String)] = []
             var currentName: String?
             var currentValue = ""
@@ -140,7 +143,7 @@ extension RFC_9110.Header {
         private static func isSeparator(_ char: Character) -> Bool {
             switch char {
             case "(", ")", "<", ">", "@", ",", ";", ":", "\\", "\"", "/",
-                 "[", "]", "?", "=", "{", "}", " ", "\t":
+                "[", "]", "?", "=", "{", "}", " ", "\t":
                 return true
             default:
                 return false
@@ -151,9 +154,9 @@ extension RFC_9110.Header {
 
         /// Handling policy for obsolete line folding
         public enum ObsFoldPolicy {
-            case reject       // Return error (recommended for servers)
+            case reject  // Return error (recommended for servers)
             case replaceWithSpace  // Replace with single space
-            case discard      // Remove the obs-fold entirely
+            case discard  // Remove the obs-fold entirely
         }
 
         /// Parse field-lines with specific obs-fold handling policy

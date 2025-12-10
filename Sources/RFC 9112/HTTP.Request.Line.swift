@@ -60,11 +60,11 @@ extension RFC_9110.Request {
 
         /// Parse request-line from data
         public static func parse(_ data: [UInt8]) throws -> Line {
-            fatalError()
-//            guard let string = String(data: data, encoding: .utf8) else {
-//                throw ParsingError.invalidEncoding
-//            }
-//            return try parse(string)
+            fatalError("Not implemented")
+            //            guard let string = String(data: data, encoding: .utf8) else {
+            //                throw ParsingError.invalidEncoding
+            //            }
+            //            return try parse(string)
         }
 
         // MARK: - Formatting

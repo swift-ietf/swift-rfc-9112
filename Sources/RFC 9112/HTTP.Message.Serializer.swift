@@ -19,17 +19,17 @@ extension RFC_9110.Request {
             // Request line
             let requestLine = try formatRequestLine(request, version: version)
             data.append(contentsOf: requestLine.utf8)
-            data.append(contentsOf: [0x0D, 0x0A]) // CRLF
+            data.append(contentsOf: [0x0D, 0x0A])  // CRLF
 
             // Header fields
             for header in request.headers {
                 let fieldLine = "\(header.name.rawValue): \(header.value.rawValue)"
                 data.append(contentsOf: fieldLine.utf8)
-                data.append(contentsOf: [0x0D, 0x0A]) // CRLF
+                data.append(contentsOf: [0x0D, 0x0A])  // CRLF
             }
 
             // Empty line separating headers from body
-            data.append(contentsOf: [0x0D, 0x0A]) // CRLF
+            data.append(contentsOf: [0x0D, 0x0A])  // CRLF
 
             // Message body (if present)
             if let body = request.body {
@@ -92,19 +92,23 @@ extension RFC_9110.Response {
             var data = [UInt8]()
 
             // Status line
-            let statusLine = formatStatusLine(response, version: version, includeReasonPhrase: includeReasonPhrase)
+            let statusLine = formatStatusLine(
+                response,
+                version: version,
+                includeReasonPhrase: includeReasonPhrase
+            )
             data.append(contentsOf: statusLine.utf8)
-            data.append(contentsOf: [0x0D, 0x0A]) // CRLF
+            data.append(contentsOf: [0x0D, 0x0A])  // CRLF
 
             // Header fields
             for header in response.headers {
                 let fieldLine = "\(header.name.rawValue): \(header.value.rawValue)"
                 data.append(contentsOf: fieldLine.utf8)
-                data.append(contentsOf: [0x0D, 0x0A]) // CRLF
+                data.append(contentsOf: [0x0D, 0x0A])  // CRLF
             }
 
             // Empty line separating headers from body
-            data.append(contentsOf: [0x0D, 0x0A]) // CRLF
+            data.append(contentsOf: [0x0D, 0x0A])  // CRLF
 
             // Message body (if present)
             if let body = response.body {

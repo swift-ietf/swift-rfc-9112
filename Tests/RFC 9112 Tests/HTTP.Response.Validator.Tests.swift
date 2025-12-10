@@ -2,6 +2,7 @@
 // swift-rfc-9112
 
 import Testing
+
 @testable import RFC_9112
 
 @Suite
@@ -13,7 +14,7 @@ struct `HTTP.Response.Validator Tests` {
             status: RFC_9110.Status(200),
             headers: [
                 try RFC_9110.Header.Field(name: "Content-Type", value: "text/plain"),
-                try RFC_9110.Header.Field(name: "Content-Length", value: "5")
+                try RFC_9110.Header.Field(name: "Content-Length", value: "5"),
             ],
             body: Data("Hello".utf8)
         )
@@ -40,7 +41,7 @@ struct `HTTP.Response.Validator Tests` {
             status: RFC_9110.Status(101),
             headers: [
                 try RFC_9110.Header.Field(name: "Upgrade", value: "websocket"),
-                try RFC_9110.Header.Field(name: "Connection", value: "Upgrade")
+                try RFC_9110.Header.Field(name: "Connection", value: "Upgrade"),
             ],
             body: nil
         )
@@ -143,7 +144,7 @@ struct `HTTP.Response.Validator Tests` {
             status: RFC_9110.Status(200),
             headers: [
                 try RFC_9110.Header.Field(name: "Content-Length", value: "10"),
-                try RFC_9110.Header.Field(name: "Content-Length", value: "10")
+                try RFC_9110.Header.Field(name: "Content-Length", value: "10"),
             ],
             body: Data(repeating: 0, count: 10)
         )
@@ -158,7 +159,7 @@ struct `HTTP.Response.Validator Tests` {
             status: RFC_9110.Status(200),
             headers: [
                 try RFC_9110.Header.Field(name: "Content-Length", value: "10"),
-                try RFC_9110.Header.Field(name: "Content-Length", value: "20")
+                try RFC_9110.Header.Field(name: "Content-Length", value: "20"),
             ],
             body: Data(repeating: 0, count: 10)
         )
@@ -175,7 +176,7 @@ struct `HTTP.Response.Validator Tests` {
             status: RFC_9110.Status(200),
             headers: [
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "chunked"),
-                try RFC_9110.Header.Field(name: "Content-Length", value: "10")
+                try RFC_9110.Header.Field(name: "Content-Length", value: "10"),
             ],
             body: Data()
         )
@@ -350,7 +351,7 @@ struct `HTTP.Response.Validator Tests` {
             status: RFC_9110.Status(206),
             headers: [
                 try RFC_9110.Header.Field(name: "Content-Range", value: "bytes 0-99/1000"),
-                try RFC_9110.Header.Field(name: "Content-Length", value: "100")
+                try RFC_9110.Header.Field(name: "Content-Length", value: "100"),
             ],
             body: Data(repeating: 0, count: 100)
         )
@@ -365,7 +366,7 @@ struct `HTTP.Response.Validator Tests` {
             status: RFC_9110.Status(200),
             headers: [
                 try RFC_9110.Header.Field(name: "content-length", value: "10"),
-                try RFC_9110.Header.Field(name: "CONTENT-LENGTH", value: "10")
+                try RFC_9110.Header.Field(name: "CONTENT-LENGTH", value: "10"),
             ],
             body: Data(repeating: 0, count: 10)
         )

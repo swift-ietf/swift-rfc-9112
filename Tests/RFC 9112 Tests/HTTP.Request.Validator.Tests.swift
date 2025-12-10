@@ -2,6 +2,7 @@
 // swift-rfc-9112
 
 import Testing
+
 @testable import RFC_9112
 
 @Suite
@@ -59,7 +60,7 @@ struct `HTTP.Request.Validator Tests` {
             query: nil,
             headers: [
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "chunked"),
-                try RFC_9110.Header.Field(name: "Content-Length", value: "10")
+                try RFC_9110.Header.Field(name: "Content-Length", value: "10"),
             ],
             body: Data()
         )
@@ -283,7 +284,7 @@ struct `HTTP.Request.Validator Tests` {
             query: nil,
             headers: [
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "gzip"),
-                try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "chunked")
+                try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "chunked"),
             ],
             body: Data()
         )
