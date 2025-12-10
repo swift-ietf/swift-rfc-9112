@@ -91,8 +91,7 @@ extension RFC_9110.Response {
         }
 
         /// Create from RFC_9110.Status
-        public init(version: RFC_9110.Version, status: RFC_9110.Status, reasonPhrase: String? = nil)
-        {
+        public init(version: RFC_9110.Version, status: RFC_9110.Status, reasonPhrase: String? = nil) {
             self.version = version
             self.statusCode = status.code
             self.reasonPhrase = reasonPhrase ?? status.reasonPhrase

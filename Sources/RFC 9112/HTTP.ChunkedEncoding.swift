@@ -260,8 +260,7 @@ extension RFC_9110 {
                     while offset < data.count {
                         // Check for final CRLF
                         if offset + 1 < data.count && data[offset] == 0x0D
-                            && data[offset + 1] == 0x0A
-                        {
+                            && data[offset + 1] == 0x0A {
                             // End of message
                             break
                         }

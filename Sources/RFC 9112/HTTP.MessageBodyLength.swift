@@ -89,22 +89,19 @@ extension RFC_9110 {
 
             // Rule 1: 1xx, 204, and 304 responses never have a body
             if response.status.code < 200 || response.status.code == 204
-                || response.status.code == 304
-            {
+                || response.status.code == 304 {
                 return .none
             }
 
             // Rule 2: Successful CONNECT creates a tunnel (no body in initial response)
             if requestMethod == .connect && response.status.code >= 200
-                && response.status.code < 300
-            {
+                && response.status.code < 300 {
                 return .none
             }
 
             // Rule 3-4: Check Transfer-Encoding
             if let teHeader = response.headers["Transfer-Encoding"]?.first?.rawValue,
-                let te = TransferEncoding.parse(teHeader)
-            {
+                let te = TransferEncoding.parse(teHeader) {
                 // Transfer-Encoding takes precedence
                 if te.hasChunked {
                     return .chunked
@@ -127,8 +124,7 @@ extension RFC_9110 {
 
                 // Parse single Content-Length value
                 if let clValue = clHeaders.first?.rawValue.trimming(.ascii.whitespaces),
-                    let length = Int(clValue), length >= 0
-                {
+                    let length = Int(clValue), length >= 0 {
                     return .length(length)
                 }
 
@@ -160,8 +156,7 @@ extension RFC_9110 {
         public static func calculate(for request: HTTP.Request) -> MessageBodyLength {
             // Check Transfer-Encoding
             if let teHeader = request.headers["Transfer-Encoding"]?.first?.rawValue,
-                let te = TransferEncoding.parse(teHeader)
-            {
+                let te = TransferEncoding.parse(teHeader) {
                 if te.hasChunked {
                     return .chunked
                 }
@@ -181,8 +176,7 @@ extension RFC_9110 {
 
                 // Parse single Content-Length value
                 if let clValue = clHeaders.first?.rawValue.trimming(.ascii.whitespaces),
-                    let length = Int(clValue), length >= 0
-                {
+                    let length = Int(clValue), length >= 0 {
                     return .length(length)
                 }
 
