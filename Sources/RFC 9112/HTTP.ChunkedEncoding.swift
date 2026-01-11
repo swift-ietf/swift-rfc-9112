@@ -6,7 +6,7 @@
 //
 // Chunked transfer encoding encode/decode utilities
 
-import Standards
+import Standard_Library_Extensions
 
 extension RFC_9110 {
     /// Chunked transfer encoding utilities (RFC 9112 Section 7.1)

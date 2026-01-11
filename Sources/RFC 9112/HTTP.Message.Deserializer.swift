@@ -1,7 +1,7 @@
 // HTTP.Message.Deserializer.swift
 // swift-rfc-9112
 
-import Standards
+import Standard_Library_Extensions
 
 extension RFC_9110.Request {
     /// Deserialize HTTP/1.1 request from wire format

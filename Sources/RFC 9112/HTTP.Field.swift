@@ -1,7 +1,7 @@
 // HTTP.Field.swift
 // swift-rfc-9112
 
-import Standards
+import Standard_Library_Extensions
 
 extension RFC_9110.Header {
     /// Field-line parser implementing RFC 9112 Section 5

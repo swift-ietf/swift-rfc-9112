@@ -17,15 +17,15 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-standards/swift-rfc-9110", from: "0.0.2"),
-        .package(url: "https://github.com/swift-standards/swift-standards", from: "0.10.0")
+        .package(path: "../swift-rfc-9110"),
+        .package(path: "../../swift-primitives/swift-standard-library-extensions")
     ],
     targets: [
         .target(
             name: "RFC 9112",
             dependencies: [
                 .product(name: "RFC 9110", package: "swift-rfc-9110"),
-                .product(name: "Standards", package: "swift-standards")
+                .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions")
             ]
         ),
         .testTarget(

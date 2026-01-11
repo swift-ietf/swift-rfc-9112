@@ -1,7 +1,7 @@
 // HTTP.Message.Serializer.swift
 // swift-rfc-9112
 
-import Standards
+import Standard_Library_Extensions
 
 extension RFC_9110.Request {
     /// Serialize HTTP/1.1 request to wire format

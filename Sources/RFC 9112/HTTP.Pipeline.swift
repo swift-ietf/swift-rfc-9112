@@ -1,7 +1,7 @@
 // HTTP.Pipeline.swift
 // swift-rfc-9112
 
-import StandardTime
+import Time_Primitives
 
 extension RFC_9110 {
     /// HTTP/1.1 request/response pipelining support
