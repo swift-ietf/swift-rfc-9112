@@ -27,7 +27,13 @@ let package = Package(
                 .product(name: "RFC 9110", package: "swift-rfc-9110"),
                 .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions")
     ]
-        )
+        ),
+        .testTarget(
+            name: "RFC 9112 Tests",
+            dependencies: [
+                "RFC 9112",
+            ]
+        ),
     ],
     swiftLanguageModes: [.v6]
 )
@@ -43,6 +49,7 @@ for target in package.targets where ![.system, .binary, .plugin, .macro].contain
         .enableUpcomingFeature("ExistentialAny"),
         .enableUpcomingFeature("InternalImportsByDefault"),
         .enableUpcomingFeature("MemberImportVisibility"),
+        .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
         .enableExperimentalFeature("Lifetimes"),
         .enableExperimentalFeature("SuppressedAssociatedTypes"),
         .enableExperimentalFeature("SuppressedAssociatedTypesWithDefaults"),
