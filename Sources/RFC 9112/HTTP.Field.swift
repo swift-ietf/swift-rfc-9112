@@ -12,7 +12,7 @@ extension RFC_9110.Header {
         /// Parse a field-line from string
         /// RFC 9112 Section 5.1: field-line = field-name ":" OWS field-value OWS
         /// RFC 9112: "No whitespace is allowed between the field name and colon"
-        public static func parseFieldLine(_ line: String) throws -> (name: String, value: String) {
+        public static func parseFieldLine(_ line: String) throws(ParsingError) -> (name: String, value: String) {
             // Find colon separator
             guard let colonIndex = line.firstIndex(of: ":") else {
                 throw ParsingError.missingColon
@@ -55,7 +55,7 @@ extension RFC_9110.Header {
         }
 
         /// Parse field-line from data
-        public static func parseFieldLine(_ data: [UInt8]) throws -> (name: String, value: String) {
+        public static func parseFieldLine(_ data: [UInt8]) throws(ParsingError) -> (name: String, value: String) {
             let string = String(decoding: data, as: UTF8.self)
             return try parseFieldLine(string)
         }
@@ -65,7 +65,7 @@ extension RFC_9110.Header {
         /// RFC 9112 Section 5.2: "obs-fold = OWS CRLF RWS"
         public static func parseFieldLines(
             _ lines: [String]
-        ) throws -> [(name: String, value: String)] {
+        ) throws(ParsingError) -> [(name: String, value: String)] {
             var fields: [(name: String, value: String)] = []
             var currentName: String?
             var currentValue = ""
@@ -113,7 +113,7 @@ extension RFC_9110.Header {
         /// field-content = field-vchar [ 1*( SP / HTAB / field-vchar ) field-vchar ]
         /// field-vchar = VCHAR / obs-text
         /// Note: We allow UTF-8 characters (> 0xFF) for modern HTTP usage
-        private static func validateFieldValue(_ value: String) throws {
+        private static func validateFieldValue(_ value: String) throws(ParsingError) {
             for char in value {
                 let scalar = char.unicodeScalars.first!
                 let value = scalar.value
@@ -163,7 +163,7 @@ extension RFC_9110.Header {
         public static func parseFieldLines(
             _ lines: [String],
             obsFoldPolicy: ObsFoldPolicy = .reject
-        ) throws -> [(name: String, value: String)] {
+        ) throws(ParsingError) -> [(name: String, value: String)] {
             switch obsFoldPolicy {
             case .reject:
                 // Default behavior - will throw error on obs-fold

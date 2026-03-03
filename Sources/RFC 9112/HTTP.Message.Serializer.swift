@@ -13,11 +13,11 @@ extension RFC_9110.Request {
         public static func serialize(
             _ request: RFC_9110.Request,
             version: RFC_9110.Version = .http11
-        ) throws -> [UInt8] {
+        ) -> [UInt8] {
             var data = [UInt8]()
 
             // Request line
-            let requestLine = try formatRequestLine(request, version: version)
+            let requestLine = formatRequestLine(request, version: version)
             data.append(contentsOf: requestLine.utf8)
             data.append(contentsOf: [0x0D, 0x0A])  // CRLF
 
@@ -43,7 +43,7 @@ extension RFC_9110.Request {
         private static func formatRequestLine(
             _ request: RFC_9110.Request,
             version: RFC_9110.Version
-        ) throws -> String {
+        ) -> String {
             let method = request.method.rawValue
             let target = formatTarget(request.target)
             let versionString = version.formatted
@@ -88,7 +88,7 @@ extension RFC_9110.Response {
             _ response: RFC_9110.Response,
             version: RFC_9110.Version = .http11,
             includeReasonPhrase: Bool = true
-        ) throws -> [UInt8] {
+        ) -> [UInt8] {
             var data = [UInt8]()
 
             // Status line

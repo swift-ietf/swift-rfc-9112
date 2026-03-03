@@ -14,7 +14,7 @@ extension RFC_9110.Request {
         /// Transfer-Encoding or process such a request in accordance with the Transfer-Encoding
         /// alone. Regardless, the server MUST close the connection after responding to such a
         /// request to avoid the potential attacks."
-        public static func validate(_ request: RFC_9110.Request) throws {
+        public static func validate(_ request: RFC_9110.Request) throws(Error) {
             let headers = request.headers
 
             // Check for both Transfer-Encoding and Content-Length
@@ -46,7 +46,7 @@ extension RFC_9110.Request {
 
         /// Validate Transfer-Encoding header
         /// RFC 9112 Section 6.1
-        private static func validateTransferEncoding(headers: [RFC_9110.Header.Field]) throws {
+        private static func validateTransferEncoding(headers: [RFC_9110.Header.Field]) throws(Error) {
             let transferEncodingHeaders = headers.filter {
                 $0.name.rawValue.lowercased() == "transfer-encoding"
             }
@@ -83,7 +83,7 @@ extension RFC_9110.Request {
 
         /// Validate Content-Length header
         /// RFC 9112 Section 6.2
-        private static func validateContentLength(headers: [RFC_9110.Header.Field]) throws {
+        private static func validateContentLength(headers: [RFC_9110.Header.Field]) throws(Error) {
             let contentLengthHeaders = headers.filter {
                 $0.name.rawValue.lowercased() == "content-length"
             }

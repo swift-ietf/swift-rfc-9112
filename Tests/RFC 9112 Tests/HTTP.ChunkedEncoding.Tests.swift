@@ -11,7 +11,7 @@ struct `HTTP.ChunkedEncoding Tests` {
     @Test
     func `Encode - simple data`() async throws {
         let data = Data("Hello, World!".utf8)
-        let chunked = try HTTP.ChunkedEncoding.encode(data)
+        let chunked = HTTP.ChunkedEncoding.encode(data)
 
         let expected = "d\r\nHello, World!\r\n0\r\n\r\n"
         #expect(String(data: chunked, encoding: .utf8) == expected)
@@ -20,7 +20,7 @@ struct `HTTP.ChunkedEncoding Tests` {
     @Test
     func `Encode - empty data`() async throws {
         let data = Data()
-        let chunked = try HTTP.ChunkedEncoding.encode(data)
+        let chunked = HTTP.ChunkedEncoding.encode(data)
 
         let expected = "0\r\n\r\n"
         #expect(String(data: chunked, encoding: .utf8) == expected)
@@ -29,7 +29,7 @@ struct `HTTP.ChunkedEncoding Tests` {
     @Test
     func `Encode - multiple chunks`() async throws {
         let data = Data("Hello, World! This is a longer message.".utf8)
-        let chunked = try HTTP.ChunkedEncoding.encode(data, chunkSize: 10)
+        let chunked = HTTP.ChunkedEncoding.encode(data, chunkSize: 10)
 
         let decoded = try HTTP.ChunkedEncoding.decode(chunked)
         #expect(decoded.data == data)
@@ -41,7 +41,7 @@ struct `HTTP.ChunkedEncoding Tests` {
         let trailers = [
             try HTTP.Header.Field(name: "X-Checksum", value: "abc123")
         ]
-        let chunked = try HTTP.ChunkedEncoding.encode(data, trailers: trailers)
+        let chunked = HTTP.ChunkedEncoding.encode(data, trailers: trailers)
 
         let decoded = try HTTP.ChunkedEncoding.decode(chunked)
         #expect(decoded.data == data)
@@ -145,7 +145,7 @@ struct `HTTP.ChunkedEncoding Tests` {
     @Test
     func `Round trip - simple`() async throws {
         let original = Data("Hello, World!".utf8)
-        let chunked = try HTTP.ChunkedEncoding.encode(original)
+        let chunked = HTTP.ChunkedEncoding.encode(original)
         let decoded = try HTTP.ChunkedEncoding.decode(chunked).data
 
         #expect(decoded == original)
@@ -154,7 +154,7 @@ struct `HTTP.ChunkedEncoding Tests` {
     @Test
     func `Round trip - large data`() async throws {
         let original = Data(repeating: 0x41, count: 100000)  // 100KB of 'A'
-        let chunked = try HTTP.ChunkedEncoding.encode(original, chunkSize: 8192)
+        let chunked = HTTP.ChunkedEncoding.encode(original, chunkSize: 8192)
         let decoded = try HTTP.ChunkedEncoding.decode(chunked).data
 
         #expect(decoded == original)
@@ -167,7 +167,7 @@ struct `HTTP.ChunkedEncoding Tests` {
             try HTTP.Header.Field(name: "X-Test", value: "value")
         ]
 
-        let chunked = try HTTP.ChunkedEncoding.encode(original, trailers: originalTrailers)
+        let chunked = HTTP.ChunkedEncoding.encode(original, trailers: originalTrailers)
         let result = try HTTP.ChunkedEncoding.decode(chunked)
         let decoded = result.data
         let decodedTrailers = result.trailers

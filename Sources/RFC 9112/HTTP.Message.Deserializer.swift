@@ -108,7 +108,7 @@ extension RFC_9110.Request {
         private static func parseTarget(
             _ targetString: String,
             method: RFC_9110.Method
-        ) throws -> RFC_9110.Request.Target {
+        ) throws(DeserializationError) -> RFC_9110.Request.Target {
             // RFC 9112 Section 3.2: Request target forms
             if targetString == "*" {
                 return .asterisk
@@ -151,7 +151,7 @@ extension RFC_9110.Request {
 
         // MARK: - Errors
 
-        public enum DeserializationError: Error, Sendable, Equatable {
+        public enum DeserializationError: Swift.Error, Sendable, Equatable {
             case emptyMessage
             case missingHeaderBodySeparator
             case invalidEncoding

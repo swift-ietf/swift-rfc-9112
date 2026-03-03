@@ -21,7 +21,7 @@ extension RFC_9110.Request {
 
         /// Parse request-line from string
         /// RFC 9112 Section 3: "request-line = method SP request-target SP HTTP-version"
-        public static func parse(_ line: String) throws -> Line {
+        public static func parse(_ line: String) throws(ParsingError) -> Line {
             // Find first space (after method)
             guard let firstSpace = line.firstIndex(of: " ") else {
                 throw ParsingError.invalidFormat(reason: "Missing space after method")
@@ -53,13 +53,18 @@ extension RFC_9110.Request {
 
             // Parse version (everything after the space before HTTP/)
             let versionString = String(line[line.index(after: httpRange.lowerBound)...])
-            let version = try RFC_9110.Version.parse(versionString)
+            let version: RFC_9110.Version
+            do {
+                version = try RFC_9110.Version.parse(versionString)
+            } catch {
+                throw ParsingError.invalidVersion(versionString)
+            }
 
             return Line(method: method, target: targetString, version: version)
         }
 
         /// Parse request-line from data
-        public static func parse(_ data: [UInt8]) throws -> Line {
+        public static func parse(_ data: [UInt8]) -> Line {
             fatalError("Not implemented")
             //            guard let string = String(data: data, encoding: .utf8) else {
             //                throw ParsingError.invalidEncoding
@@ -78,7 +83,7 @@ extension RFC_9110.Request {
 
         /// Validate the request-line components
         /// RFC 9112 Section 3: Servers SHOULD be able to handle at least 8000 octets
-        public func validate(maxLength: Int = 8000) throws {
+        public func validate(maxLength: Int = 8000) throws(Error) {
             let formattedLength = formatted.utf8.count
             guard formattedLength <= maxLength else {
                 throw Error.lineTooLong(length: formattedLength, max: maxLength)
@@ -96,7 +101,7 @@ extension RFC_9110.Request {
 
         // MARK: - Errors
 
-        public enum ParsingError: Error, Sendable, Equatable {
+        public enum ParsingError: Swift.Error, Sendable, Equatable {
             case invalidFormat(reason: String)
             case emptyMethod
             case emptyTarget

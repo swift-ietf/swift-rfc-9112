@@ -9,7 +9,7 @@ extension RFC_9110.Response {
 
         /// Validate response for potential splitting attacks
         /// RFC 9112 Section 11.1: Response Splitting
-        public static func validate(_ response: RFC_9110.Response) throws {
+        public static func validate(_ response: RFC_9110.Response) throws(Error) {
             let headers = response.headers
 
             // Check for multiple Content-Length headers with different values
@@ -57,7 +57,7 @@ extension RFC_9110.Response {
 
         /// Validate Transfer-Encoding header
         /// RFC 9112 Section 6.1
-        private static func validateTransferEncoding(headers: [RFC_9110.Header.Field]) throws {
+        private static func validateTransferEncoding(headers: [RFC_9110.Header.Field]) throws(Error) {
             let transferEncodingHeaders = headers.filter {
                 $0.name.rawValue.lowercased() == "transfer-encoding"
             }
@@ -90,7 +90,7 @@ extension RFC_9110.Response {
 
         /// Validate Content-Length header
         /// RFC 9112 Section 6.2
-        private static func validateContentLength(headers: [RFC_9110.Header.Field]) throws {
+        private static func validateContentLength(headers: [RFC_9110.Header.Field]) throws(Error) {
             let contentLengthHeaders = headers.filter {
                 $0.name.rawValue.lowercased() == "content-length"
             }

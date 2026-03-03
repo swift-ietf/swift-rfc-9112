@@ -13,7 +13,7 @@ extension RFC_9110 {
         /// RFC 9112 Section 2.2: "Each line ending with CRLF"
         /// Robustness: "A recipient that receives whitespace between the start-line and the first header field
         /// MUST either reject the message as invalid or consume each whitespace-preceded line without further processing"
-        public static func parseLines(from data: [UInt8]) throws -> [Line] {
+        public static func parseLines(from data: [UInt8]) throws(ParsingError) -> [Line] {
             var lines: [Line] = []
             var currentIndex = data.startIndex
             var lineNumber = 1
@@ -43,7 +43,7 @@ extension RFC_9110 {
             from data: [UInt8],
             startingAt index: inout Array<UInt8>.Index,
             lineNumber: Int
-        ) throws -> Line? {
+        ) throws(ParsingError) -> Line? {
             guard index < data.endIndex else { return nil }
 
             let startIndex = index

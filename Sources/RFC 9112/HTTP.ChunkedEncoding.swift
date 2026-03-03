@@ -152,7 +152,7 @@ extension RFC_9110 {
             chunkSize: Int = 8192,
             chunkExtensions: [Extension] = [],
             trailers: [HTTP.Header.Field] = []
-        ) throws -> [UInt8] {
+        ) -> [UInt8] {
             var result = [UInt8]()
 
             // Format chunk extensions once
@@ -212,7 +212,7 @@ extension RFC_9110 {
         /// // result.data == Array("Hello, World!".utf8)
         /// // result.trailers == []
         /// ```
-        public static func decode(_ data: [UInt8]) throws -> DecodeResult {
+        public static func decode(_ data: [UInt8]) throws(ChunkedDecodingError) -> DecodeResult {
             var result = [UInt8]()
             var allChunkExtensions: [[Extension]] = []
             var trailers: [HTTP.Header.Field] = []

@@ -19,7 +19,7 @@ extension RFC_9110 {
             public static func validate(
                 request: RFC_9110.Request,
                 version: RFC_9110.Version
-            ) throws {
+            ) throws(Error) {
                 // Only required for HTTP/1.1
                 guard version.isHTTP11OrHigher else {
                     return
@@ -54,7 +54,7 @@ extension RFC_9110 {
 
             /// Validate Host header format
             /// RFC 9112 Section 3.2.2: Host = uri-host [ ":" port ]
-            private static func validateHostFormat(_ host: String) throws {
+            private static func validateHostFormat(_ host: String) throws(Error) {
                 // Empty host value is invalid per RFC 9112
                 // The Host header is required and must have a non-empty value
                 if host.isEmpty {
@@ -96,7 +96,7 @@ extension RFC_9110 {
             private static func validateHostMatchesAuthority(
                 hostValue: String,
                 uri: RFC_3986.URI
-            ) throws {
+            ) throws(Error) {
                 guard let host = uri.host else {
                     // No host in URI, Host should be empty or match
                     if !hostValue.isEmpty {

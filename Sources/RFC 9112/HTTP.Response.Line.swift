@@ -21,7 +21,7 @@ extension RFC_9110.Response {
         /// RFC 9112 Section 4: "status-line = HTTP-version SP status-code SP [ reason-phrase ]"
         /// RFC 9112: "the space that separates the status-code from the reason-phrase is required
         /// even if the reason-phrase is absent"
-        public static func parse(_ line: String) throws -> Line {
+        public static func parse(_ line: String) throws(ParsingError) -> Line {
             // Split into version and rest
             let components = line.split(
                 separator: " ",
@@ -37,7 +37,12 @@ extension RFC_9110.Response {
 
             // Parse version
             let versionString = String(components[0])
-            let version = try RFC_9110.Version.parse(versionString)
+            let version: RFC_9110.Version
+            do {
+                version = try RFC_9110.Version.parse(versionString)
+            } catch {
+                throw ParsingError.invalidFormat(reason: "Invalid HTTP version: \(versionString)")
+            }
 
             // Parse status code
             let statusString = String(components[1])
@@ -62,7 +67,7 @@ extension RFC_9110.Response {
         }
 
         /// Parse status-line from data
-        public static func parse(_ data: [UInt8]) throws -> Line {
+        public static func parse(_ data: [UInt8]) -> Line {
             fatalError("Not implemented")
             //            guard let string = String(data: data, encoding: .utf8) else {
             //                throw ParsingError.invalidEncoding

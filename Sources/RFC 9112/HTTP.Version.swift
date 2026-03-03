@@ -23,7 +23,7 @@ extension RFC_9110 {
 
         /// Parse HTTP version from string
         /// RFC 9112 Section 2.3: "HTTP-name is case-sensitive"
-        public static func parse(_ string: String) throws -> Version {
+        public static func parse(_ string: String) throws(ParsingError) -> Version {
             // Expected format: HTTP/1.1
             let parts = string.split(separator: "/")
             guard parts.count == 2 else {
