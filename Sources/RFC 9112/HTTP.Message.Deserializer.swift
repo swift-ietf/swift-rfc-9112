@@ -12,32 +12,39 @@ extension RFC_9110.Request {
         /// Returns: (request, bytesConsumed)
         public static func deserialize(
             _ data: [UInt8]
-        ) throws -> (request: RFC_9110.Request, bytesConsumed: Int) {
+        ) throws(Error) -> (request: RFC_9110.Request, bytesConsumed: Int) {
             // Parse lines
-            let lines = try RFC_9110.MessageParser.parseLines(from: data)
+            let lines: [RFC_9110.MessageParser.Line]
+            do { lines = try RFC_9110.MessageParser.parseLines(from: data) }
+            catch { throw .messageParsing(error) }
 
             guard !lines.isEmpty else {
-                throw DeserializationError.emptyMessage
+                throw .emptyMessage
             }
 
             // Find header-body separator (blank line)
             guard let separatorIndex = RFC_9110.MessageParser.findHeaderBodySeparator(in: lines)
             else {
-                throw DeserializationError.missingHeaderBodySeparator
+                throw .missingHeaderBodySeparator
             }
 
             // Parse request line (first line)
             let requestLineString = lines[0].string
-            let requestLine = try RFC_9110.Request.Line.parse(requestLineString)
+            let requestLine: RFC_9110.Request.Line
+            do { requestLine = try RFC_9110.Request.Line.parse(requestLineString) }
+            catch { throw .requestLine(error) }
 
             // Parse header fields (lines between request-line and separator)
             let headerLines = lines[1..<separatorIndex].map { $0.string }
-            let headerPairs = try RFC_9110.Header.Parser.parseFieldLines(headerLines)
+            let headerPairs: [(name: String, value: String)]
+            do { headerPairs = try RFC_9110.Header.Parser.parseFieldLines(headerLines) }
+            catch { throw .headerParsing(error) }
 
             // Create header fields
             var headers: [RFC_9110.Header.Field] = []
             for (name, value) in headerPairs {
-                headers.append(try RFC_9110.Header.Field(name: name, value: value))
+                do { headers.append(try RFC_9110.Header.Field(name: name, value: value)) }
+                catch { throw .headerValidation(error) }
             }
 
             // Parse target into Target type
@@ -71,7 +78,7 @@ extension RFC_9110.Request {
             var body: [UInt8]?
             if let fixedLength = bodyLength.fixedLength {
                 guard data.count >= bytesConsumed + fixedLength else {
-                    throw DeserializationError.incompleteBody(
+                    throw .incompleteBody(
                         expected: fixedLength,
                         available: data.count - bytesConsumed
                     )
@@ -82,7 +89,9 @@ extension RFC_9110.Request {
             } else if bodyLength.isChunked {
                 // Decode chunked body
                 let chunkedData = data[bytesConsumed...]
-                let result = try RFC_9110.ChunkedEncoding.decode(Array(chunkedData))
+                let result: RFC_9110.ChunkedEncoding.DecodeResult
+                do { result = try RFC_9110.ChunkedEncoding.decode(Array(chunkedData)) }
+                catch { throw .chunkedDecoding(error) }
                 body = result.data
                 // Add trailer headers if present
                 for trailer in result.trailers {
@@ -108,7 +117,7 @@ extension RFC_9110.Request {
         private static func parseTarget(
             _ targetString: String,
             method: RFC_9110.Method
-        ) throws(DeserializationError) -> RFC_9110.Request.Target {
+        ) throws(Error) -> RFC_9110.Request.Target {
             // RFC 9112 Section 3.2: Request target forms
             if targetString == "*" {
                 return .asterisk
@@ -117,7 +126,7 @@ extension RFC_9110.Request {
             // Check for absolute-form (starts with scheme)
             if targetString.contains("://") {
                 guard let uri = try? RFC_3986.URI(targetString) else {
-                    throw DeserializationError.invalidTarget(targetString)
+                    throw .invalidTarget(targetString)
                 }
                 return .absolute(uri)
             }
@@ -125,7 +134,7 @@ extension RFC_9110.Request {
             // Check for authority-form (CONNECT method)
             if method == .connect {
                 guard let authority = try? RFC_3986.URI.Authority(targetString) else {
-                    throw DeserializationError.invalidTarget(targetString)
+                    throw .invalidTarget(targetString)
                 }
                 return .authority(authority)
             }
@@ -135,7 +144,7 @@ extension RFC_9110.Request {
             let pathString = String(components[0])
 
             guard let path = try? RFC_3986.URI.Path(pathString) else {
-                throw DeserializationError.invalidTarget(targetString)
+                throw .invalidTarget(targetString)
             }
 
             let query: RFC_3986.URI.Query?
@@ -151,12 +160,17 @@ extension RFC_9110.Request {
 
         // MARK: - Errors
 
-        public enum DeserializationError: Swift.Error, Sendable, Equatable {
+        public enum Error: Swift.Error, Sendable {
             case emptyMessage
             case missingHeaderBodySeparator
             case invalidEncoding
             case invalidTarget(String)
             case incompleteBody(expected: Int, available: Int)
+            case messageParsing(RFC_9110.MessageParser.ParsingError)
+            case requestLine(RFC_9110.Request.Line.ParsingError)
+            case headerParsing(RFC_9110.Header.Parser.ParsingError)
+            case headerValidation(RFC_9110.Header.Field.Error)
+            case chunkedDecoding(RFC_9110.ChunkedEncoding.ChunkedDecodingError)
         }
     }
 }
@@ -172,32 +186,39 @@ extension RFC_9110.Response {
         public static func deserialize(
             _ data: [UInt8],
             requestMethod: RFC_9110.Method
-        ) throws -> (response: RFC_9110.Response, bytesConsumed: Int) {
+        ) throws(Error) -> (response: RFC_9110.Response, bytesConsumed: Int) {
             // Parse lines
-            let lines = try RFC_9110.MessageParser.parseLines(from: data)
+            let lines: [RFC_9110.MessageParser.Line]
+            do { lines = try RFC_9110.MessageParser.parseLines(from: data) }
+            catch { throw .messageParsing(error) }
 
             guard !lines.isEmpty else {
-                throw DeserializationError.emptyMessage
+                throw .emptyMessage
             }
 
             // Find header-body separator (blank line)
             guard let separatorIndex = RFC_9110.MessageParser.findHeaderBodySeparator(in: lines)
             else {
-                throw DeserializationError.missingHeaderBodySeparator
+                throw .missingHeaderBodySeparator
             }
 
             // Parse status line (first line)
             let statusLineString = lines[0].string
-            let statusLine = try RFC_9110.Response.Line.parse(statusLineString)
+            let statusLine: RFC_9110.Response.Line
+            do { statusLine = try RFC_9110.Response.Line.parse(statusLineString) }
+            catch { throw .responseLine(error) }
 
             // Parse header fields
             let headerLines = lines[1..<separatorIndex].map { $0.string }
-            let headerPairs = try RFC_9110.Header.Parser.parseFieldLines(headerLines)
+            let headerPairs: [(name: String, value: String)]
+            do { headerPairs = try RFC_9110.Header.Parser.parseFieldLines(headerLines) }
+            catch { throw .headerParsing(error) }
 
             // Create header fields
             var headers: [RFC_9110.Header.Field] = []
             for (name, value) in headerPairs {
-                headers.append(try RFC_9110.Header.Field(name: name, value: value))
+                do { headers.append(try RFC_9110.Header.Field(name: name, value: value)) }
+                catch { throw .headerValidation(error) }
             }
 
             // Calculate bytes consumed (up to and including separator line)
@@ -231,7 +252,7 @@ extension RFC_9110.Response {
             var body: [UInt8]?
             if let fixedLength = bodyLength.fixedLength {
                 guard data.count >= bytesConsumed + fixedLength else {
-                    throw DeserializationError.incompleteBody(
+                    throw .incompleteBody(
                         expected: fixedLength,
                         available: data.count - bytesConsumed
                     )
@@ -242,7 +263,9 @@ extension RFC_9110.Response {
             } else if bodyLength.isChunked {
                 // Decode chunked body
                 let chunkedData = data[bytesConsumed...]
-                let result = try RFC_9110.ChunkedEncoding.decode(Array(chunkedData))
+                let result: RFC_9110.ChunkedEncoding.DecodeResult
+                do { result = try RFC_9110.ChunkedEncoding.decode(Array(chunkedData)) }
+                catch { throw .chunkedDecoding(error) }
                 body = result.data
                 // Add trailer headers if present
                 for trailer in result.trailers {
@@ -268,11 +291,16 @@ extension RFC_9110.Response {
 
         // MARK: - Errors
 
-        public enum DeserializationError: Error, Sendable, Equatable {
+        public enum Error: Swift.Error, Sendable {
             case emptyMessage
             case missingHeaderBodySeparator
             case invalidEncoding
             case incompleteBody(expected: Int, available: Int)
+            case messageParsing(RFC_9110.MessageParser.ParsingError)
+            case responseLine(RFC_9110.Response.Line.ParsingError)
+            case headerParsing(RFC_9110.Header.Parser.ParsingError)
+            case headerValidation(RFC_9110.Header.Field.Error)
+            case chunkedDecoding(RFC_9110.ChunkedEncoding.ChunkedDecodingError)
         }
     }
 }
