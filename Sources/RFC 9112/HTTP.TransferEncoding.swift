@@ -129,22 +129,14 @@ extension RFC_9110 {
         /// ```
         public static func parse(_ headerValue: String) -> TransferEncoding? {
             let encodings =
-                headerValue
-                .components(separatedBy: ",")
-                .map { $0.trimming(.ascii.whitespaces).lowercased() }
-                .filter { !$0.isEmpty }
+                HTTP.Parse.tokens(in: headerValue)
                 .map { name -> TransferEncoding in
-                    switch name {
-                    case "chunked":
-                        return .chunked
-                    case "gzip":
-                        return .gzip
-                    case "compress", "x-compress":
-                        return .compress
-                    case "deflate":
-                        return .deflate
-                    default:
-                        return Self(codingName: name)
+                    switch name.lowercased() {
+                    case "chunked": return .chunked
+                    case "gzip": return .gzip
+                    case "compress", "x-compress": return .compress
+                    case "deflate": return .deflate
+                    default: return Self(codingName: name)
                     }
                 }
 
