@@ -1,0 +1,9 @@
+# .github/metadata.yaml
+# Triaged by AI-assisted bulk pass (2026-04-29).
+description: "Swift implementation of RFC 9112: HTTP/1.1."
+topics:
+  - standards
+  - rfc
+  - rfc-9112
+  - http
+homepage: "https://swift-institute.org"
