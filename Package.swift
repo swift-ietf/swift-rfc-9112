@@ -17,8 +17,8 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(path: "../swift-rfc-9110"),
-        .package(path: "../../swift-primitives/swift-standard-library-extensions")
+        .package(url: "https://github.com/swift-ietf/swift-rfc-9110.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-standard-library-extensions.git", branch: "main")
     ],
     targets: [
         .target(
