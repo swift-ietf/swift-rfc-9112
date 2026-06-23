@@ -124,7 +124,7 @@ struct `HTTP.Response.Line Tests` {
 
     @Test
     func `Parse - invalid format (missing version)`() async throws {
-        #expect(throws: RFC_9110.Version.ParsingError.self) {
+        #expect(throws: RFC_9110.Response.Line.ParsingError.self) {
             try RFC_9110.Response.Line.parse("200 OK")
         }
     }
@@ -138,7 +138,7 @@ struct `HTTP.Response.Line Tests` {
 
     @Test
     func `Parse - invalid version`() async throws {
-        #expect(throws: RFC_9110.Version.ParsingError.self) {
+        #expect(throws: RFC_9110.Response.Line.ParsingError.self) {
             try RFC_9110.Response.Line.parse("HTTP/X.Y 200 OK")
         }
     }

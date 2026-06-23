@@ -2,6 +2,7 @@
 // swift-rfc-9112
 
 import Standard_Library_Extensions
+public import Byte_Primitives
 
 extension RFC_9110.Request {
     /// Deserialize HTTP/1.1 request from wire format
@@ -11,7 +12,7 @@ extension RFC_9110.Request {
         /// Deserialize request from bytes
         /// Returns: (request, bytesConsumed)
         public static func deserialize(
-            _ data: [UInt8]
+            _ data: [Byte]
         ) throws(Error) -> (request: RFC_9110.Request, bytesConsumed: Int) {
             // Parse lines
             let lines: [RFC_9110.MessageParser.Line]
@@ -75,7 +76,7 @@ extension RFC_9110.Request {
             )
 
             // Read body based on determined length
-            var body: [UInt8]?
+            var body: [Byte]?
             if let fixedLength = bodyLength.fixedLength {
                 guard data.count >= bytesConsumed + fixedLength else {
                     throw .incompleteBody(
@@ -184,7 +185,7 @@ extension RFC_9110.Response {
         /// Returns: (response, bytesConsumed)
         /// Note: Requires request method to properly determine body length
         public static func deserialize(
-            _ data: [UInt8],
+            _ data: [Byte],
             requestMethod: RFC_9110.Method
         ) throws(Error) -> (response: RFC_9110.Response, bytesConsumed: Int) {
             // Parse lines
@@ -249,7 +250,7 @@ extension RFC_9110.Response {
             )
 
             // Read body based on determined length
-            var body: [UInt8]?
+            var body: [Byte]?
             if let fixedLength = bodyLength.fixedLength {
                 guard data.count >= bytesConsumed + fixedLength else {
                     throw .incompleteBody(

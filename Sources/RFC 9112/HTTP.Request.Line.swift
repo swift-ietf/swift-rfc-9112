@@ -2,6 +2,7 @@
 // swift-rfc-9112
 
 import INCITS_4_1986
+public import Byte_Primitives
 
 extension RFC_9110.Request {
     /// HTTP/1.1 request-line parser implementing RFC 9112 Section 3
@@ -37,7 +38,7 @@ extension RFC_9110.Request {
 
             // Find where version starts (should be " HTTP/")
             let afterMethod = line.index(after: firstSpace)
-            guard let httpRange = line.range(of: " HTTP/", options: .backwards) else {
+            guard let httpRange = line.range(of: " HTTP/") else {
                 throw ParsingError.invalidFormat(reason: "Missing HTTP version")
             }
 
@@ -64,7 +65,7 @@ extension RFC_9110.Request {
         }
 
         /// Parse request-line from data
-        public static func parse(_ data: [UInt8]) -> Line {
+        public static func parse(_ data: [Byte]) -> Line {
             fatalError("Not implemented")
             //            guard let string = String(data: data, encoding: .utf8) else {
             //                throw ParsingError.invalidEncoding

@@ -1,6 +1,7 @@
 // HTTP.TransferEncoding.Tests.swift
 // swift-rfc-9112
 
+import Foundation
 import Testing
 
 @testable import RFC_9112
@@ -43,7 +44,7 @@ struct `HTTP.TransferEncoding Tests` {
 
     @Test
     func `TransferEncoding - custom`() async throws {
-        let te = HTTP.TransferEncoding.custom("custom-encoding")
+        let te = HTTP.TransferEncoding(codingName: "custom-encoding")
 
         #expect(te.headerValue == "custom-encoding")
     }

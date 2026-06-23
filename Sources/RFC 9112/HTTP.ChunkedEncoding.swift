@@ -6,7 +6,9 @@
 //
 // Chunked transfer encoding encode/decode utilities
 
+import INCITS_4_1986
 import Standard_Library_Extensions
+public import Byte_Primitives
 
 extension RFC_9110 {
     /// Chunked transfer encoding utilities (RFC 9112 Section 7.1)
@@ -117,12 +119,12 @@ extension RFC_9110 {
 
         /// Result of decoding chunked data
         public struct DecodeResult: Sendable, Equatable {
-            public let data: [UInt8]
+            public let data: [Byte]
             public let chunkExtensions: [[Extension]]  // Extensions for each chunk
             public let trailers: [HTTP.Header.Field]
 
             public init(
-                data: [UInt8],
+                data: [Byte],
                 chunkExtensions: [[Extension]],
                 trailers: [HTTP.Header.Field]
             ) {
@@ -148,12 +150,12 @@ extension RFC_9110 {
         /// // "d\r\nHello, World!\r\n0\r\n\r\n"
         /// ```
         public static func encode(
-            _ data: [UInt8],
+            _ data: [Byte],
             chunkSize: Int = 8192,
             chunkExtensions: [Extension] = [],
             trailers: [HTTP.Header.Field] = []
-        ) -> [UInt8] {
-            var result = [UInt8]()
+        ) -> [Byte] {
+            var result = [Byte]()
 
             // Format chunk extensions once
             let extensionsString = chunkExtensions.map { $0.formatted }.joined()
@@ -212,8 +214,8 @@ extension RFC_9110 {
         /// // result.data == Array("Hello, World!".utf8)
         /// // result.trailers == []
         /// ```
-        public static func decode(_ data: [UInt8]) throws(ChunkedDecodingError) -> DecodeResult {
-            var result = [UInt8]()
+        public static func decode(_ data: [Byte]) throws(ChunkedDecodingError) -> DecodeResult {
+            var result = [Byte]()
             var allChunkExtensions: [[Extension]] = []
             var trailers: [HTTP.Header.Field] = []
             var offset = 0

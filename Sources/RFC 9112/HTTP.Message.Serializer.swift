@@ -2,6 +2,7 @@
 // swift-rfc-9112
 
 import Standard_Library_Extensions
+public import Byte_Primitives
 
 extension RFC_9110.Request {
     /// Serialize HTTP/1.1 request to wire format
@@ -13,18 +14,18 @@ extension RFC_9110.Request {
         public static func serialize(
             _ request: RFC_9110.Request,
             version: RFC_9110.Version = .http11
-        ) -> [UInt8] {
-            var data = [UInt8]()
+        ) -> [Byte] {
+            var data = [Byte]()
 
             // Request line
             let requestLine = formatRequestLine(request, version: version)
-            data.append(contentsOf: requestLine.utf8)
+            data.append(contentsOf: requestLine.utf8.map { Byte($0) })
             data.append(contentsOf: [0x0D, 0x0A])  // CRLF
 
             // Header fields
             for header in request.headers {
                 let fieldLine = "\(header.name.rawValue): \(header.value.rawValue)"
-                data.append(contentsOf: fieldLine.utf8)
+                data.append(contentsOf: fieldLine.utf8.map { Byte($0) })
                 data.append(contentsOf: [0x0D, 0x0A])  // CRLF
             }
 
@@ -88,8 +89,8 @@ extension RFC_9110.Response {
             _ response: RFC_9110.Response,
             version: RFC_9110.Version = .http11,
             includeReasonPhrase: Bool = true
-        ) -> [UInt8] {
-            var data = [UInt8]()
+        ) -> [Byte] {
+            var data = [Byte]()
 
             // Status line
             let statusLine = formatStatusLine(
@@ -97,13 +98,13 @@ extension RFC_9110.Response {
                 version: version,
                 includeReasonPhrase: includeReasonPhrase
             )
-            data.append(contentsOf: statusLine.utf8)
+            data.append(contentsOf: statusLine.utf8.map { Byte($0) })
             data.append(contentsOf: [0x0D, 0x0A])  // CRLF
 
             // Header fields
             for header in response.headers {
                 let fieldLine = "\(header.name.rawValue): \(header.value.rawValue)"
-                data.append(contentsOf: fieldLine.utf8)
+                data.append(contentsOf: fieldLine.utf8.map { Byte($0) })
                 data.append(contentsOf: [0x0D, 0x0A])  // CRLF
             }
 

@@ -1,6 +1,7 @@
 // HTTP.Connection.Tests.swift
 // swift-rfc-9112
 
+import Foundation
 import Testing
 
 @testable import RFC_9112

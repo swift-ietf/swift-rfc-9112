@@ -1,7 +1,7 @@
 // HTTP.Pipeline.swift
 // swift-rfc-9112
 
-import Time_Primitives
+public import RFC_5322
 
 extension RFC_9110 {
     /// HTTP/1.1 request/response pipelining support
@@ -16,11 +16,9 @@ extension RFC_9110 {
             let method: RFC_9110.Method
             let timestamp: HTTP.Date
 
-            init(method: RFC_9110.Method) {
+            init(method: RFC_9110.Method, timestamp: HTTP.Date) {
                 self.method = method
-                fatalError("Not implemented")
-                // TODO: fix .now for HTTP.Date()
-                //                self.timestamp = HTTP.Date()
+                self.timestamp = timestamp
             }
         }
 
@@ -35,7 +33,7 @@ extension RFC_9110 {
 
         /// Add a request to the pipeline
         /// Returns: true if request can be pipelined, false otherwise
-        public func addRequest(_ request: RFC_9110.Request) -> Bool {
+        public func addRequest(_ request: RFC_9110.Request, now: HTTP.Date) -> Bool {
             // RFC 9112 Section 9.4: "Clients SHOULD NOT pipeline requests after a
             // non-idempotent method, until the final response status code for that method
             // has been received"
@@ -54,7 +52,7 @@ extension RFC_9110 {
                 }
             }
 
-            pendingRequests.append(PendingRequest(method: request.method))
+            pendingRequests.append(PendingRequest(method: request.method, timestamp: now))
             return true
         }
 
@@ -111,16 +109,16 @@ extension RFC_9110 {
         // MARK: - Timeout Management
 
         /// Get age of oldest pending request in seconds
-        public func oldestRequestAge() -> Int? {
+        public func oldestRequestAge(now: HTTP.Date) -> Int? {
             guard let oldest = pendingRequests.first else {
                 return nil
             }
-            return HTTP.Date.now.secondsSinceEpoch - oldest.timestamp.secondsSinceEpoch
+            return now.secondsSinceEpoch - oldest.timestamp.secondsSinceEpoch
         }
 
         /// Check if any request has exceeded timeout
-        public func hasTimedOut(timeoutSeconds: Int) -> Bool {
-            guard let age = oldestRequestAge() else {
+        public func hasTimedOut(now: HTTP.Date, timeoutSeconds: Int) -> Bool {
+            guard let age = oldestRequestAge(now: now) else {
                 return false
             }
             return age > timeoutSeconds

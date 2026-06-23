@@ -2,6 +2,7 @@
 // swift-rfc-9112
 
 import Standard_Library_Extensions
+public import Byte_Primitives
 
 extension RFC_9110 {
     /// HTTP/1.1 message parser implementing RFC 9112 Section 2
@@ -13,7 +14,7 @@ extension RFC_9110 {
         /// RFC 9112 Section 2.2: "Each line ending with CRLF"
         /// Robustness: "A recipient that receives whitespace between the start-line and the first header field
         /// MUST either reject the message as invalid or consume each whitespace-preceded line without further processing"
-        public static func parseLines(from data: [UInt8]) throws(ParsingError) -> [Line] {
+        public static func parseLines(from data: [Byte]) throws(ParsingError) -> [Line] {
             var lines: [Line] = []
             var currentIndex = data.startIndex
             var lineNumber = 1
@@ -40,14 +41,14 @@ extension RFC_9110 {
         /// "A recipient MAY recognize a single LF as a line terminator and ignore any preceding CR"
         /// "A sender MUST NOT generate a bare CR"
         private static func parseLine(
-            from data: [UInt8],
-            startingAt index: inout Array<UInt8>.Index,
+            from data: [Byte],
+            startingAt index: inout Array<Byte>.Index,
             lineNumber: Int
         ) throws(ParsingError) -> Line? {
             guard index < data.endIndex else { return nil }
 
             let startIndex = index
-            var content = [UInt8]()
+            var content = [Byte]()
             var foundCR = false
 
             while index < data.endIndex {
@@ -102,11 +103,11 @@ extension RFC_9110 {
 
         /// A parsed line from an HTTP message
         public struct Line: Sendable, Equatable {
-            public let content: [UInt8]
+            public let content: [Byte]
             public let terminator: LineTerminator
             public let lineNumber: Int
 
-            public init(content: [UInt8], terminator: LineTerminator, lineNumber: Int) {
+            public init(content: [Byte], terminator: LineTerminator, lineNumber: Int) {
                 self.content = content
                 self.terminator = terminator
                 self.lineNumber = lineNumber
@@ -134,7 +135,7 @@ extension RFC_9110 {
 
         public enum ParsingError: Error, Sendable, Equatable {
             case bareCR(lineNumber: Int)
-            case invalidCharacter(lineNumber: Int, byte: UInt8)
+            case invalidCharacter(lineNumber: Int, byte: Byte)
             case lineTooLong(lineNumber: Int, length: Int)
             case unexpectedWhitespace(lineNumber: Int)
         }

@@ -1,7 +1,9 @@
 // HTTP.Field.swift
 // swift-rfc-9112
 
+import INCITS_4_1986
 import Standard_Library_Extensions
+public import Byte_Primitives
 
 extension RFC_9110.Header {
     /// Field-line parser implementing RFC 9112 Section 5
@@ -55,7 +57,7 @@ extension RFC_9110.Header {
         }
 
         /// Parse field-line from data
-        public static func parseFieldLine(_ data: [UInt8]) throws(ParsingError) -> (name: String, value: String) {
+        public static func parseFieldLine(_ data: [Byte]) throws(ParsingError) -> (name: String, value: String) {
             let string = String(decoding: data, as: UTF8.self)
             return try parseFieldLine(string)
         }

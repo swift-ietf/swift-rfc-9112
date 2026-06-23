@@ -93,7 +93,7 @@ struct `HTTP.Request.Line Tests` {
             version: .http11
         )
 
-        #expect(throws: RFC_9110.Request.Line.ValidationError.self) {
+        #expect(throws: RFC_9110.Request.Line.Error.self) {
             try line.validate(maxLength: 8000)
         }
     }

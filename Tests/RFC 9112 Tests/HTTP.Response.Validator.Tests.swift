@@ -3,6 +3,7 @@
 
 import Testing
 
+import Byte_Primitives
 @testable import RFC_9112
 
 @Suite
@@ -16,7 +17,7 @@ struct `HTTP.Response.Validator Tests` {
                 try RFC_9110.Header.Field(name: "Content-Type", value: "text/plain"),
                 try RFC_9110.Header.Field(name: "Content-Length", value: "5"),
             ],
-            body: Data("Hello".utf8)
+            body: Array("Hello".utf8).map { Byte($0) }
         )
 
         // Should not throw
@@ -131,7 +132,7 @@ struct `HTTP.Response.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Content-Length", value: "10")
             ],
-            body: Data(repeating: 0, count: 10)
+            body: [Byte](repeating: 0, count: 10)
         )
 
         // Single Content-Length is valid
@@ -146,7 +147,7 @@ struct `HTTP.Response.Validator Tests` {
                 try RFC_9110.Header.Field(name: "Content-Length", value: "10"),
                 try RFC_9110.Header.Field(name: "Content-Length", value: "10"),
             ],
-            body: Data(repeating: 0, count: 10)
+            body: [Byte](repeating: 0, count: 10)
         )
 
         // Multiple identical Content-Length values are allowed
@@ -161,7 +162,7 @@ struct `HTTP.Response.Validator Tests` {
                 try RFC_9110.Header.Field(name: "Content-Length", value: "10"),
                 try RFC_9110.Header.Field(name: "Content-Length", value: "20"),
             ],
-            body: Data(repeating: 0, count: 10)
+            body: [Byte](repeating: 0, count: 10)
         )
 
         // Multiple different Content-Length values should be rejected
@@ -178,7 +179,7 @@ struct `HTTP.Response.Validator Tests` {
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "chunked"),
                 try RFC_9110.Header.Field(name: "Content-Length", value: "10"),
             ],
-            body: Data()
+            body: [Byte]()
         )
 
         // Transfer-Encoding with Content-Length should be rejected
@@ -260,7 +261,7 @@ struct `HTTP.Response.Validator Tests` {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(400),
             headers: [],
-            body: Data("Bad Request".utf8)
+            body: Array("Bad Request".utf8).map { Byte($0) }
         )
 
         // 400 Bad Request should be valid
@@ -272,7 +273,7 @@ struct `HTTP.Response.Validator Tests` {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(500),
             headers: [],
-            body: Data("Internal Server Error".utf8)
+            body: Array("Internal Server Error".utf8).map { Byte($0) }
         )
 
         // 500 Internal Server Error should be valid
@@ -286,7 +287,7 @@ struct `HTTP.Response.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "chunked")
             ],
-            body: Data()
+            body: [Byte]()
         )
 
         // Chunked encoding should be valid
@@ -300,7 +301,7 @@ struct `HTTP.Response.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "gzip, chunked")
             ],
-            body: Data()
+            body: [Byte]()
         )
 
         // Multiple encodings with chunked last should be valid
@@ -324,7 +325,7 @@ struct `HTTP.Response.Validator Tests` {
         let response = RFC_9110.Response(
             status: RFC_9110.Status(200),
             headers: [],
-            body: Data("Hello".utf8)
+            body: Array("Hello".utf8).map { Byte($0) }
         )
 
         // Response without headers should be valid
@@ -353,7 +354,7 @@ struct `HTTP.Response.Validator Tests` {
                 try RFC_9110.Header.Field(name: "Content-Range", value: "bytes 0-99/1000"),
                 try RFC_9110.Header.Field(name: "Content-Length", value: "100"),
             ],
-            body: Data(repeating: 0, count: 100)
+            body: [Byte](repeating: 0, count: 100)
         )
 
         // 206 Partial Content should be valid
@@ -368,7 +369,7 @@ struct `HTTP.Response.Validator Tests` {
                 try RFC_9110.Header.Field(name: "content-length", value: "10"),
                 try RFC_9110.Header.Field(name: "CONTENT-LENGTH", value: "10"),
             ],
-            body: Data(repeating: 0, count: 10)
+            body: [Byte](repeating: 0, count: 10)
         )
 
         // Multiple identical Content-Length (case-insensitive) should be allowed

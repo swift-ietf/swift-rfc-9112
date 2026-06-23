@@ -17,6 +17,7 @@ let package = Package(
         )
     ],
     dependencies: [
+        .package(url: "https://github.com/swift-primitives/swift-byte-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-ietf/swift-rfc-9110.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-standard-library-extensions.git", branch: "main")
     ],
@@ -24,6 +25,7 @@ let package = Package(
         .target(
             name: "RFC 9112",
             dependencies: [
+                .product(name: "Byte Primitives", package: "swift-byte-primitives"),
                 .product(name: "RFC 9110", package: "swift-rfc-9110"),
                 .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions")
     ]

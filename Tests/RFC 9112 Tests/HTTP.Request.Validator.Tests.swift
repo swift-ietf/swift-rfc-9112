@@ -3,6 +3,7 @@
 
 import Testing
 
+import Byte_Primitives
 @testable import RFC_9112
 
 @Suite
@@ -21,7 +22,7 @@ struct `HTTP.Request.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Content-Length", value: "10")
             ],
-            body: Data("1234567890".utf8)
+            body: Array("1234567890".utf8).map { Byte($0) }
         )
 
         // Should not throw
@@ -41,7 +42,7 @@ struct `HTTP.Request.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "chunked")
             ],
-            body: Data()
+            body: [Byte]()
         )
 
         // Should not throw
@@ -62,7 +63,7 @@ struct `HTTP.Request.Validator Tests` {
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "chunked"),
                 try RFC_9110.Header.Field(name: "Content-Length", value: "10"),
             ],
-            body: Data()
+            body: [Byte]()
         )
 
         // RFC 9112 Section 11.2: Request smuggling prevention
@@ -84,7 +85,7 @@ struct `HTTP.Request.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "gzip, chunked")
             ],
-            body: Data()
+            body: [Byte]()
         )
 
         // Chunked should be the final encoding - should not throw
@@ -104,7 +105,7 @@ struct `HTTP.Request.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "chunked, gzip")
             ],
-            body: Data()
+            body: [Byte]()
         )
 
         #expect(throws: RFC_9110.Request.Validator.Error.self) {
@@ -125,7 +126,7 @@ struct `HTTP.Request.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "chunked, chunked")
             ],
-            body: Data()
+            body: [Byte]()
         )
 
         #expect(throws: RFC_9110.Request.Validator.Error.self) {
@@ -200,7 +201,7 @@ struct `HTTP.Request.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Content-Length", value: "4")
             ],
-            body: Data("test".utf8)
+            body: Array("test".utf8).map { Byte($0) }
         )
 
         // PUT with body should be valid
@@ -220,7 +221,7 @@ struct `HTTP.Request.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Content-Length", value: "5")
             ],
-            body: Data("patch".utf8)
+            body: Array("patch".utf8).map { Byte($0) }
         )
 
         // PATCH with body should be valid
@@ -286,7 +287,7 @@ struct `HTTP.Request.Validator Tests` {
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "gzip"),
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "chunked"),
             ],
-            body: Data()
+            body: [Byte]()
         )
 
         // Multiple Transfer-Encoding headers should be valid if chunked is last
@@ -306,7 +307,7 @@ struct `HTTP.Request.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "identity")
             ],
-            body: Data("test".utf8)
+            body: Array("test".utf8).map { Byte($0) }
         )
 
         // Identity encoding (deprecated) should be handled
@@ -326,7 +327,7 @@ struct `HTTP.Request.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "compress, chunked")
             ],
-            body: Data()
+            body: [Byte]()
         )
 
         // compress encoding with chunked should be valid
@@ -346,7 +347,7 @@ struct `HTTP.Request.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: "deflate, chunked")
             ],
-            body: Data()
+            body: [Byte]()
         )
 
         // deflate encoding with chunked should be valid
@@ -366,7 +367,7 @@ struct `HTTP.Request.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "transfer-encoding", value: "CHUNKED")
             ],
-            body: Data()
+            body: [Byte]()
         )
 
         // Header names and values should be case-insensitive
@@ -386,7 +387,7 @@ struct `HTTP.Request.Validator Tests` {
             headers: [
                 try RFC_9110.Header.Field(name: "Transfer-Encoding", value: " gzip , chunked ")
             ],
-            body: Data()
+            body: [Byte]()
         )
 
         // Whitespace around encoding values should be handled
