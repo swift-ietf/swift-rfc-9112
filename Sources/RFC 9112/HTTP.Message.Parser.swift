@@ -47,16 +47,13 @@ extension RFC_9110 {
         ) throws(ParsingError) -> Line? {
             guard index < data.endIndex else { return nil }
 
-            let startIndex = index
             var content = [Byte]()
-            var foundCR = false
 
             while index < data.endIndex {
                 let byte = data[index]
 
                 switch byte {
                 case 0x0D:  // CR
-                    foundCR = true
                     index = data.index(after: index)
 
                     // Check if followed by LF

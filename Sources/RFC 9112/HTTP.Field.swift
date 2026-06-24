@@ -79,7 +79,7 @@ extension RFC_9110.Header {
                     // "A server that receives an obs-fold in a request message...SHOULD
                     // either reject the message with a 400 (Bad Request) status code"
 
-                    guard let name = currentName else {
+                    guard currentName != nil else {
                         throw ParsingError.obsFoldWithoutPrecedingField(lineNumber: index + 1)
                     }
 
