@@ -121,12 +121,12 @@ extension RFC_9110 {
         public struct DecodeResult: Sendable, Equatable {
             public let data: [Byte]
             public let chunkExtensions: [[Extension]]  // Extensions for each chunk
-            public let trailers: [HTTP.Header.Field]
+            public let trailers: [RFC_9110.Header.Field]
 
             public init(
                 data: [Byte],
                 chunkExtensions: [[Extension]],
-                trailers: [HTTP.Header.Field]
+                trailers: [RFC_9110.Header.Field]
             ) {
                 self.data = data
                 self.chunkExtensions = chunkExtensions
@@ -153,7 +153,7 @@ extension RFC_9110 {
             _ data: [Byte],
             chunkSize: Int = 8192,
             chunkExtensions: [Extension] = [],
-            trailers: [HTTP.Header.Field] = []
+            trailers: [RFC_9110.Header.Field] = []
         ) -> [Byte] {
             var result = [Byte]()
 
@@ -217,7 +217,7 @@ extension RFC_9110 {
         public static func decode(_ data: [Byte]) throws(ChunkedDecodingError) -> DecodeResult {
             var result = [Byte]()
             var allChunkExtensions: [[Extension]] = []
-            var trailers: [HTTP.Header.Field] = []
+            var trailers: [RFC_9110.Header.Field] = []
             var offset = 0
 
             while offset < data.count {
@@ -284,7 +284,7 @@ extension RFC_9110 {
                                 let name = String(parts[0]).trimming(.ascii.whitespaces)
                                 let value = String(parts[1]).trimming(.ascii.whitespaces)
                                 do {
-                                    let trailer = try HTTP.Header.Field(name: name, value: value)
+                                    let trailer = try RFC_9110.Header.Field(name: name, value: value)
                                     trailers.append(trailer)
                                 } catch {
                                     // RFC 9112: "Recipients MUST ignore unrecognized chunk extensions"

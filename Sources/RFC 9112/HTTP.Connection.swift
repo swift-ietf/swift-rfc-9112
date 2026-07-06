@@ -106,7 +106,7 @@ extension RFC_9110 {
         /// Connection.parse("close, custom")  // Connection(options: ["close", "custom"])
         /// ```
         public static func parse(_ headerValue: String) -> Connection? {
-            let opts = HTTP.Parse.tokens(in: headerValue).map { $0.lowercased() }
+            let opts = RFC_9110.Parse.tokens(in: headerValue).map { $0.lowercased() }
 
             guard !opts.isEmpty else {
                 return nil

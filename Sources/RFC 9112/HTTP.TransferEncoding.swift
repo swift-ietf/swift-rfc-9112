@@ -129,7 +129,7 @@ extension RFC_9110 {
         /// ```
         public static func parse(_ headerValue: String) -> TransferEncoding? {
             let encodings =
-                HTTP.Parse.tokens(in: headerValue)
+                RFC_9110.Parse.tokens(in: headerValue)
                 .map { name -> TransferEncoding in
                     switch name.lowercased() {
                     case "chunked": return .chunked

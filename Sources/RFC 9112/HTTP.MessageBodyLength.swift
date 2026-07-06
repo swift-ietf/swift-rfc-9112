@@ -79,8 +79,8 @@ extension RFC_9110 {
         /// // length == .chunked
         /// ```
         public static func calculate(
-            for response: HTTP.Response,
-            requestMethod: HTTP.Method
+            for response: RFC_9110.Response,
+            requestMethod: RFC_9110.Method
         ) -> MessageBodyLength {
             // Rule 1: HEAD requests never have a body
             if requestMethod == .head {
@@ -153,7 +153,7 @@ extension RFC_9110 {
         /// let length = HTTP.MessageBodyLength.calculate(for: request)
         /// // length == .length(42)
         /// ```
-        public static func calculate(for request: HTTP.Request) -> MessageBodyLength {
+        public static func calculate(for request: RFC_9110.Request) -> MessageBodyLength {
             // Check Transfer-Encoding
             if let teHeader = request.headers["Transfer-Encoding"]?.first?.rawValue,
                 let te = TransferEncoding.parse(teHeader) {
