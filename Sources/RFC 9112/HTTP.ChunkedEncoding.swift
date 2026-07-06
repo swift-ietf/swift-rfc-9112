@@ -284,7 +284,10 @@ extension RFC_9110 {
                                 let name = String(parts[0]).trimming(.ascii.whitespaces)
                                 let value = String(parts[1]).trimming(.ascii.whitespaces)
                                 do {
-                                    let trailer = try RFC_9110.Header.Field(name: name, value: value)
+                                    let trailer = try RFC_9110.Header.Field(
+                                        name: name,
+                                        value: value
+                                    )
                                     trailers.append(trailer)
                                 } catch {
                                     // RFC 9112: "Recipients MUST ignore unrecognized chunk extensions"
