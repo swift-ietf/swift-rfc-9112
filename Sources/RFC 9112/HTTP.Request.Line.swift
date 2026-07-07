@@ -17,102 +17,105 @@ extension RFC_9110.Request {
             self.target = target
             self.version = version
         }
+    }
+}
 
-        // MARK: - Parsing
+extension RFC_9110.Request.Line {
 
-        /// Parse request-line from string
-        /// RFC 9112 Section 3: "request-line = method SP request-target SP HTTP-version"
-        public static func parse(_ line: String) throws(ParsingError) -> Line {
-            // Find first space (after method)
-            guard let firstSpace = line.firstIndex(of: " ") else {
-                throw ParsingError.invalidFormat(reason: "Missing space after method")
-            }
+    // MARK: - Parsing
 
-            // Parse method
-            let methodString = String(line[..<firstSpace])
-            guard !methodString.isEmpty else {
-                throw ParsingError.emptyMethod
-            }
-            // RFC 9112 Section 3.1: "The method token is case-sensitive"
-            let method = RFC_9110.Method(rawValue: methodString)
-
-            // Find where version starts (should be " HTTP/")
-            let afterMethod = line.index(after: firstSpace)
-            guard let httpRange = line.range(of: " HTTP/") else {
-                throw ParsingError.invalidFormat(reason: "Missing HTTP version")
-            }
-
-            // Parse target (everything between method and version)
-            let targetString = String(line[afterMethod..<httpRange.lowerBound])
-            guard !targetString.isEmpty else {
-                throw ParsingError.emptyTarget
-            }
-            // Validate target doesn't contain whitespace
-            guard !targetString.contains(where: \.ascii.isWhitespace) else {
-                throw ParsingError.targetContainsWhitespace
-            }
-
-            // Parse version (everything after the space before HTTP/)
-            let versionString = String(line[line.index(after: httpRange.lowerBound)...])
-            let version: RFC_9110.Version
-            do {
-                version = try RFC_9110.Version.parse(versionString)
-            } catch {
-                throw ParsingError.invalidVersion(versionString)
-            }
-
-            return Line(method: method, target: targetString, version: version)
+    /// Parse request-line from string
+    /// RFC 9112 Section 3: "request-line = method SP request-target SP HTTP-version"
+    public static func parse(_ line: String) throws(ParsingError) -> Self {
+        // Find first space (after method)
+        guard let firstSpace = line.firstIndex(of: " ") else {
+            throw ParsingError.invalidFormat(reason: "Missing space after method")
         }
 
-        /// Parse request-line from data
-        public static func parse(_ data: [Byte]) -> Line {
-            fatalError("Not implemented")
-            //            guard let string = String(data: data, encoding: .utf8) else {
-            //                throw ParsingError.invalidEncoding
-            //            }
-            //            return try parse(string)
+        // Parse method
+        let methodString = String(line[..<firstSpace])
+        guard !methodString.isEmpty else {
+            throw ParsingError.emptyMethod
+        }
+        // RFC 9112 Section 3.1: "The method token is case-sensitive"
+        let method = RFC_9110.Method(rawValue: methodString)
+
+        // Find where version starts (should be " HTTP/")
+        let afterMethod = line.index(after: firstSpace)
+        guard let httpRange = line.range(of: " HTTP/") else {
+            throw ParsingError.invalidFormat(reason: "Missing HTTP version")
         }
 
-        // MARK: - Formatting
-
-        /// Format request-line as string
-        public var formatted: String {
-            "\(method.rawValue) \(target) \(version.formatted)"
+        // Parse target (everything between method and version)
+        let targetString = String(line[afterMethod..<httpRange.lowerBound])
+        guard !targetString.isEmpty else {
+            throw ParsingError.emptyTarget
+        }
+        // Validate target doesn't contain whitespace
+        guard !targetString.contains(where: \.ascii.isWhitespace) else {
+            throw ParsingError.targetContainsWhitespace
         }
 
-        // MARK: - Validation
-
-        /// Validate the request-line components
-        /// RFC 9112 Section 3: Servers SHOULD be able to handle at least 8000 octets
-        public func validate(maxLength: Int = 8000) throws(Error) {
-            let formattedLength = formatted.utf8.count
-            guard formattedLength <= maxLength else {
-                throw Error.lineTooLong(length: formattedLength, max: maxLength)
-            }
-
-            // Validate method is known or server can handle it
-            // RFC 9112 Section 3.1: "A server that receives a method longer than any that it implements
-            // SHOULD respond with a 501 (Not Implemented) status code"
-            // Note: This is advisory - library consumers decide
-
-            // Validate target form matches method constraints
-            // RFC 9112 Section 3.2: CONNECT must use authority-form
-            // This validation happens when parsing target into Target type
+        // Parse version (everything after the space before HTTP/)
+        let versionString = String(line[line.index(after: httpRange.lowerBound)...])
+        let version: RFC_9110.Version
+        do throws(RFC_9110.Version.ParsingError) {
+            version = try RFC_9110.Version.parse(versionString)
+        } catch {
+            throw ParsingError.invalidVersion(versionString)
         }
 
-        // MARK: - Errors
+        return Self(method: method, target: targetString, version: version)
+    }
 
-        public enum ParsingError: Swift.Error, Sendable, Equatable {
-            case invalidFormat(reason: String)
-            case emptyMethod
-            case emptyTarget
-            case targetContainsWhitespace
-            case invalidEncoding
-            case invalidVersion(String)
+    /// Parse request-line from data
+    public static func parse(_ data: [Byte]) -> Self {
+        fatalError("Not implemented")
+        //            guard let string = String(data: data, encoding: .utf8) else {
+        //                throw ParsingError.invalidEncoding
+        //            }
+        //            return try parse(string)
+    }
+
+    // MARK: - Formatting
+
+    /// Format request-line as string
+    public var formatted: String {
+        "\(method.rawValue) \(target) \(version.formatted)"
+    }
+
+    // MARK: - Validation
+
+    /// Validate the request-line components
+    /// RFC 9112 Section 3: Servers SHOULD be able to handle at least 8000 octets
+    public func validate(maxLength: Int = 8000) throws(Error) {
+        let formattedLength = formatted.utf8.count
+        guard formattedLength <= maxLength else {
+            throw Error.lineTooLong(length: formattedLength, max: maxLength)
         }
 
-        public enum Error: Swift.Error, Sendable, Equatable {
-            case lineTooLong(length: Int, max: Int)
-        }
+        // Validate method is known or server can handle it
+        // RFC 9112 Section 3.1: "A server that receives a method longer than any that it implements
+        // SHOULD respond with a 501 (Not Implemented) status code"
+        // Note: This is advisory - library consumers decide
+
+        // Validate target form matches method constraints
+        // RFC 9112 Section 3.2: CONNECT must use authority-form
+        // This validation happens when parsing target into Target type
+    }
+
+    // MARK: - Errors
+
+    public enum ParsingError: Swift.Error, Sendable, Equatable {
+        case invalidFormat(reason: String)
+        case emptyMethod
+        case emptyTarget
+        case targetContainsWhitespace
+        case invalidEncoding
+        case invalidVersion(String)
+    }
+
+    public enum Error: Swift.Error, Sendable, Equatable {
+        case lineTooLong(length: Int, max: Int)
     }
 }

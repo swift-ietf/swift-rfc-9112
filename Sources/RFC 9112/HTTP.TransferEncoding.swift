@@ -51,11 +51,6 @@ extension RFC_9110 {
     public struct TransferEncoding: Sendable, Equatable, Hashable {
         // MARK: - Storage
 
-        private enum Storage: Sendable, Equatable, Hashable {
-            case single(String)
-            case list([TransferEncoding])
-        }
-
         private let storage: Storage
 
         // MARK: - Initialization
@@ -70,163 +65,173 @@ extension RFC_9110 {
         private init(storage: Storage) {
             self.storage = storage
         }
+    }
+}
 
-        // MARK: - Static Factory Methods
+extension RFC_9110.TransferEncoding {
 
-        /// Chunked transfer coding
-        public static let chunked = Self(codingName: "chunked")
+    // MARK: - Storage
 
-        /// Gzip compression
-        public static let gzip = Self(codingName: "gzip")
+    private enum Storage: Sendable, Equatable, Hashable {
+        case single(String)
+        case list([RFC_9110.TransferEncoding])
+    }
 
-        /// Compress (LZW) compression
-        public static let compress = Self(codingName: "compress")
+    // MARK: - Static Factory Methods
 
-        /// Deflate compression
-        public static let deflate = Self(codingName: "deflate")
+    /// Chunked transfer coding
+    public static let chunked = Self(codingName: "chunked")
 
-        /// Multiple transfer codings applied in sequence
-        ///
-        /// - Parameter encodings: The list of transfer encodings in order
-        /// - Returns: A transfer encoding representing the list
-        public static func list(_ encodings: [TransferEncoding]) -> Self {
-            Self(storage: .list(encodings))
+    /// Gzip compression
+    public static let gzip = Self(codingName: "gzip")
+
+    /// Compress (LZW) compression
+    public static let compress = Self(codingName: "compress")
+
+    /// Deflate compression
+    public static let deflate = Self(codingName: "deflate")
+
+    /// Multiple transfer codings applied in sequence
+    ///
+    /// - Parameter encodings: The list of transfer encodings in order
+    /// - Returns: A transfer encoding representing the list
+    public static func list(_ encodings: [Self]) -> Self {
+        Self(storage: .list(encodings))
+    }
+
+    // MARK: - Header Value
+
+    /// The header value representation
+    ///
+    /// - Returns: The Transfer-Encoding value formatted for HTTP headers
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// TransferEncoding.chunked.headerValue  // "chunked"
+    /// TransferEncoding.list([.gzip, .chunked]).headerValue  // "gzip, chunked"
+    /// ```
+    public var headerValue: String {
+        switch storage {
+        case .single(let name):
+            return name
+        case .list(let encodings):
+            return encodings.map { $0.headerValue }.joined(separator: ", ")
         }
+    }
 
-        // MARK: - Header Value
+    // MARK: - Parsing
 
-        /// The header value representation
-        ///
-        /// - Returns: The Transfer-Encoding value formatted for HTTP headers
-        ///
-        /// ## Example
-        ///
-        /// ```swift
-        /// TransferEncoding.chunked.headerValue  // "chunked"
-        /// TransferEncoding.list([.gzip, .chunked]).headerValue  // "gzip, chunked"
-        /// ```
-        public var headerValue: String {
-            switch storage {
-            case .single(let name):
-                return name
-            case .list(let encodings):
-                return encodings.map { $0.headerValue }.joined(separator: ", ")
-            }
-        }
-
-        // MARK: - Parsing
-
-        /// Parses a Transfer-Encoding header value
-        ///
-        /// - Parameter headerValue: The Transfer-Encoding header value to parse
-        /// - Returns: A TransferEncoding if parsing succeeds, nil otherwise
-        ///
-        /// ## Example
-        ///
-        /// ```swift
-        /// TransferEncoding.parse("chunked")  // .chunked
-        /// TransferEncoding.parse("gzip, chunked")  // .list([.gzip, .chunked])
-        /// ```
-        public static func parse(_ headerValue: String) -> TransferEncoding? {
-            let encodings =
-                RFC_9110.Parse.tokens(in: headerValue)
-                .map { name -> TransferEncoding in
-                    switch name.lowercased() {
-                    case "chunked": return .chunked
-                    case "gzip": return .gzip
-                    case "compress", "x-compress": return .compress
-                    case "deflate": return .deflate
-                    default: return Self(codingName: name)
-                    }
+    /// Parses a Transfer-Encoding header value
+    ///
+    /// - Parameter headerValue: The Transfer-Encoding header value to parse
+    /// - Returns: A TransferEncoding if parsing succeeds, nil otherwise
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// TransferEncoding.parse("chunked")  // .chunked
+    /// TransferEncoding.parse("gzip, chunked")  // .list([.gzip, .chunked])
+    /// ```
+    public static func parse(_ headerValue: String) -> Self? {
+        let encodings =
+            RFC_9110.Parse.tokens(in: headerValue)
+            .map { name -> Self in
+                switch name.lowercased() {
+                case "chunked": return .chunked
+                case "gzip": return .gzip
+                case "compress", "x-compress": return .compress
+                case "deflate": return .deflate
+                default: return Self(codingName: name)
                 }
-
-            guard !encodings.isEmpty else {
-                return nil
             }
 
-            if encodings.count == 1 {
-                return encodings[0]
-            }
-
-            return .list(encodings)
+        guard !encodings.isEmpty else {
+            return nil
         }
 
-        // MARK: - Chunked Helpers
-
-        /// Returns true if this is chunked encoding
-        ///
-        /// ## Example
-        ///
-        /// ```swift
-        /// TransferEncoding.chunked.isChunked  // true
-        /// TransferEncoding.gzip.isChunked  // false
-        /// TransferEncoding.list([.gzip, .chunked]).isChunked  // false
-        /// ```
-        public var isChunked: Bool {
-            switch storage {
-            case .single(let name):
-                return name == "chunked"
-            case .list:
-                return false
-            }
+        if encodings.count == 1 {
+            return encodings[0]
         }
 
-        /// Returns true if chunked encoding is present (including in a list)
-        ///
-        /// ## Example
-        ///
-        /// ```swift
-        /// TransferEncoding.chunked.hasChunked  // true
-        /// TransferEncoding.list([.gzip, .chunked]).hasChunked  // true
-        /// TransferEncoding.gzip.hasChunked  // false
-        /// ```
-        public var hasChunked: Bool {
-            switch storage {
-            case .single(let name):
-                return name == "chunked"
-            case .list(let encodings):
-                return encodings.contains { $0.isChunked }
-            }
-        }
+        return .list(encodings)
+    }
 
-        /// Returns true if chunked is the final encoding (when in a list)
-        ///
-        /// Per RFC 9112, chunked MUST be the final encoding when present.
-        ///
-        /// ## Example
-        ///
-        /// ```swift
-        /// TransferEncoding.chunked.isChunkedFinal  // true
-        /// TransferEncoding.list([.gzip, .chunked]).isChunkedFinal  // true
-        /// TransferEncoding.list([.chunked, .gzip]).isChunkedFinal  // false (invalid!)
-        /// ```
-        public var isChunkedFinal: Bool {
-            switch storage {
-            case .single(let name):
-                return name == "chunked"
-            case .list(let encodings):
-                return encodings.last?.isChunked ?? false
-            }
-        }
+    // MARK: - Chunked Helpers
 
-        /// Count how many times chunked encoding appears
-        ///
-        /// Per RFC 9112, chunked MUST NOT be applied more than once.
-        ///
-        /// ## Example
-        ///
-        /// ```swift
-        /// TransferEncoding.chunked.chunkedCount  // 1
-        /// TransferEncoding.list([.gzip, .chunked]).chunkedCount  // 1
-        /// TransferEncoding.list([.chunked, .chunked]).chunkedCount  // 2 (invalid!)
-        /// ```
-        public var chunkedCount: Int {
-            switch storage {
-            case .single(let name):
-                return name == "chunked" ? 1 : 0
-            case .list(let encodings):
-                return encodings.filter { $0.isChunked }.count
-            }
+    /// Returns true if this is chunked encoding
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// TransferEncoding.chunked.isChunked  // true
+    /// TransferEncoding.gzip.isChunked  // false
+    /// TransferEncoding.list([.gzip, .chunked]).isChunked  // false
+    /// ```
+    public var isChunked: Bool {
+        switch storage {
+        case .single(let name):
+            return name == "chunked"
+        case .list:
+            return false
+        }
+    }
+
+    /// Returns true if chunked encoding is present (including in a list)
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// TransferEncoding.chunked.hasChunked  // true
+    /// TransferEncoding.list([.gzip, .chunked]).hasChunked  // true
+    /// TransferEncoding.gzip.hasChunked  // false
+    /// ```
+    public var hasChunked: Bool {
+        switch storage {
+        case .single(let name):
+            return name == "chunked"
+        case .list(let encodings):
+            return encodings.contains { $0.isChunked }
+        }
+    }
+
+    /// Returns true if chunked is the final encoding (when in a list)
+    ///
+    /// Per RFC 9112, chunked MUST be the final encoding when present.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// TransferEncoding.chunked.isChunkedFinal  // true
+    /// TransferEncoding.list([.gzip, .chunked]).isChunkedFinal  // true
+    /// TransferEncoding.list([.chunked, .gzip]).isChunkedFinal  // false (invalid!)
+    /// ```
+    public var isChunkedFinal: Bool {
+        switch storage {
+        case .single(let name):
+            return name == "chunked"
+        case .list(let encodings):
+            return encodings.last?.isChunked ?? false
+        }
+    }
+
+    /// Count how many times chunked encoding appears
+    ///
+    /// Per RFC 9112, chunked MUST NOT be applied more than once.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// TransferEncoding.chunked.chunkedCount  // 1
+    /// TransferEncoding.list([.gzip, .chunked]).chunkedCount  // 1
+    /// TransferEncoding.list([.chunked, .chunked]).chunkedCount  // 2 (invalid!)
+    /// ```
+    public var chunkedCount: Int {
+        switch storage {
+        case .single(let name):
+            return name == "chunked" ? 1 : 0
+        case .list(let encodings):
+            return encodings.filter { $0.isChunked }.count
         }
     }
 }
