@@ -1,10 +1,10 @@
 // HTTP.ChunkedEncoding.Tests.swift
 // swift-rfc-9112
 
-import Testing
-
 import Byte_Primitives
 import Byte_Primitives_Standard_Library_Integration
+import Testing
+
 @testable import RFC_9112
 
 @Suite
@@ -16,7 +16,7 @@ struct `HTTP.ChunkedEncoding Tests` {
         let chunked = HTTP.ChunkedEncoding.encode(data)
 
         let expected = "d\r\nHello, World!\r\n0\r\n\r\n"
-        #expect(String(decoding:chunked, as: UTF8.self) == expected)
+        #expect(String(decoding: chunked, as: UTF8.self) == expected)
     }
 
     @Test
@@ -25,7 +25,7 @@ struct `HTTP.ChunkedEncoding Tests` {
         let chunked = HTTP.ChunkedEncoding.encode(data)
 
         let expected = "0\r\n\r\n"
-        #expect(String(decoding:chunked, as: UTF8.self) == expected)
+        #expect(String(decoding: chunked, as: UTF8.self) == expected)
     }
 
     @Test
@@ -58,7 +58,7 @@ struct `HTTP.ChunkedEncoding Tests` {
         let decoded = result.data
         let trailers = result.trailers
 
-        #expect(String(decoding:decoded, as: UTF8.self) == "Hello, World!")
+        #expect(String(decoding: decoded, as: UTF8.self) == "Hello, World!")
         #expect(trailers.isEmpty)
     }
 
@@ -80,7 +80,7 @@ struct `HTTP.ChunkedEncoding Tests` {
         let decoded = result.data
         let trailers = result.trailers
 
-        #expect(String(decoding:decoded, as: UTF8.self) == "Hello, World!")
+        #expect(String(decoding: decoded, as: UTF8.self) == "Hello, World!")
         #expect(trailers.isEmpty)
     }
 
@@ -91,7 +91,7 @@ struct `HTTP.ChunkedEncoding Tests` {
         let decoded = result.data
         let trailers = result.trailers
 
-        #expect(String(decoding:decoded, as: UTF8.self) == "Hello")
+        #expect(String(decoding: decoded, as: UTF8.self) == "Hello")
         #expect(trailers.count == 1)
         #expect(trailers[0].name.rawValue == "X-Checksum")
         #expect(trailers[0].value.rawValue == "abc123")
@@ -99,12 +99,14 @@ struct `HTTP.ChunkedEncoding Tests` {
 
     @Test
     func `Decode - multiple trailers`() async throws {
-        let chunked = Array("5\r\nHello\r\n0\r\nX-Checksum: abc123\r\nX-Signature: xyz\r\n\r\n".utf8).map { Byte($0) }
+        let chunked = Array(
+            "5\r\nHello\r\n0\r\nX-Checksum: abc123\r\nX-Signature: xyz\r\n\r\n".utf8
+        ).map { Byte($0) }
         let result = try HTTP.ChunkedEncoding.decode(chunked)
         let decoded = result.data
         let trailers = result.trailers
 
-        #expect(String(decoding:decoded, as: UTF8.self) == "Hello")
+        #expect(String(decoding: decoded, as: UTF8.self) == "Hello")
         #expect(trailers.count == 2)
     }
 
@@ -137,7 +139,8 @@ struct `HTTP.ChunkedEncoding Tests` {
 
     @Test
     func `Decode - missing CRLF`() async throws {
-        let chunked = Array("5\r\nHelloXX0\r\n\r\n".utf8).map { Byte($0) }  // Missing CRLF after chunk
+        // Missing CRLF after chunk
+        let chunked = Array("5\r\nHelloXX0\r\n\r\n".utf8).map { Byte($0) }
 
         #expect(throws: HTTP.ChunkedEncoding.ChunkedDecodingError.missingCRLF) {
             try HTTP.ChunkedEncoding.decode(chunked)

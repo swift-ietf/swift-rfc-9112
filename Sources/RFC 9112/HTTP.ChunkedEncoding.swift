@@ -6,9 +6,9 @@
 //
 // Chunked transfer encoding encode/decode utilities
 
+public import Byte_Primitives
 import INCITS_4_1986
 import Standard_Library_Extensions
-public import Byte_Primitives
 
 extension RFC_9110 {
     /// Chunked transfer encoding utilities (RFC 9112 Section 7.1)
@@ -262,7 +262,8 @@ extension RFC_9110 {
                     while offset < data.count {
                         // Check for final CRLF
                         if offset + 1 < data.count && data[offset] == 0x0D
-                            && data[offset + 1] == 0x0A {
+                            && data[offset + 1] == 0x0A
+                        {
                             // End of message
                             break
                         }

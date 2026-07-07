@@ -15,11 +15,6 @@ extension RFC_9110 {
         private struct PendingRequest: Sendable {
             let method: RFC_9110.Method
             let timestamp: RFC_9110.Date
-
-            init(method: RFC_9110.Method, timestamp: RFC_9110.Date) {
-                self.method = method
-                self.timestamp = timestamp
-            }
         }
 
         private var pendingRequests: [PendingRequest] = []

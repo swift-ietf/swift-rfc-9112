@@ -1,9 +1,9 @@
 // HTTP.Message.Parser.Tests.swift
 // swift-rfc-9112
 
+import Byte_Primitives
 import Testing
 
-import Byte_Primitives
 @testable import RFC_9112
 
 @Suite
@@ -128,7 +128,9 @@ struct `HTTP.Message.Parser Tests` {
 
     @Test
     func `Parse HTTP response with headers`() async throws {
-        let response = Array("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n".utf8).map { Byte($0) }
+        let response = Array("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n".utf8).map {
+            Byte($0)
+        }
         let lines = try RFC_9110.MessageParser.parseLines(from: response)
 
         #expect(lines.count == 3)

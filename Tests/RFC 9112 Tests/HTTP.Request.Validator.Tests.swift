@@ -1,9 +1,9 @@
 // HTTP.Request.Validator.Tests.swift
 // swift-rfc-9112
 
+import Byte_Primitives
 import Testing
 
-import Byte_Primitives
 @testable import RFC_9112
 
 @Suite

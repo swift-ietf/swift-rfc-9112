@@ -1,9 +1,9 @@
 // HTTP.Field.swift
 // swift-rfc-9112
 
+public import Byte_Primitives
 import INCITS_4_1986
 import Standard_Library_Extensions
-public import Byte_Primitives
 
 extension RFC_9110.Header {
     /// Field-line parser implementing RFC 9112 Section 5
@@ -14,7 +14,9 @@ extension RFC_9110.Header {
         /// Parse a field-line from string
         /// RFC 9112 Section 5.1: field-line = field-name ":" OWS field-value OWS
         /// RFC 9112: "No whitespace is allowed between the field name and colon"
-        public static func parseFieldLine(_ line: String) throws(ParsingError) -> (name: String, value: String) {
+        public static func parseFieldLine(
+            _ line: String
+        ) throws(ParsingError) -> (name: String, value: String) {
             // Find colon separator
             guard let colonIndex = line.firstIndex(of: ":") else {
                 throw ParsingError.missingColon
@@ -57,7 +59,9 @@ extension RFC_9110.Header {
         }
 
         /// Parse field-line from data
-        public static func parseFieldLine(_ data: [Byte]) throws(ParsingError) -> (name: String, value: String) {
+        public static func parseFieldLine(
+            _ data: [Byte]
+        ) throws(ParsingError) -> (name: String, value: String) {
             let string = String(decoding: data, as: UTF8.self)
             return try parseFieldLine(string)
         }

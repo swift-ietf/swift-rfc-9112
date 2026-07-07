@@ -1,8 +1,8 @@
 // HTTP.Message.Deserializer.swift
 // swift-rfc-9112
 
-import Standard_Library_Extensions
 public import Byte_Primitives
+import Standard_Library_Extensions
 
 extension RFC_9110.Request {
     /// Deserialize HTTP/1.1 request from wire format
@@ -16,8 +16,9 @@ extension RFC_9110.Request {
         ) throws(Error) -> (request: RFC_9110.Request, bytesConsumed: Int) {
             // Parse lines
             let lines: [RFC_9110.MessageParser.Line]
-            do { lines = try RFC_9110.MessageParser.parseLines(from: data) }
-            catch { throw .messageParsing(error) }
+            do { lines = try RFC_9110.MessageParser.parseLines(from: data) } catch {
+                throw .messageParsing(error)
+            }
 
             guard !lines.isEmpty else {
                 throw .emptyMessage
@@ -32,20 +33,23 @@ extension RFC_9110.Request {
             // Parse request line (first line)
             let requestLineString = lines[0].string
             let requestLine: RFC_9110.Request.Line
-            do { requestLine = try RFC_9110.Request.Line.parse(requestLineString) }
-            catch { throw .requestLine(error) }
+            do { requestLine = try RFC_9110.Request.Line.parse(requestLineString) } catch {
+                throw .requestLine(error)
+            }
 
             // Parse header fields (lines between request-line and separator)
             let headerLines = lines[1..<separatorIndex].map { $0.string }
             let headerPairs: [(name: String, value: String)]
-            do { headerPairs = try RFC_9110.Header.Parser.parseFieldLines(headerLines) }
-            catch { throw .headerParsing(error) }
+            do { headerPairs = try RFC_9110.Header.Parser.parseFieldLines(headerLines) } catch {
+                throw .headerParsing(error)
+            }
 
             // Create header fields
             var headers: [RFC_9110.Header.Field] = []
             for (name, value) in headerPairs {
-                do { headers.append(try RFC_9110.Header.Field(name: name, value: value)) }
-                catch { throw .headerValidation(error) }
+                do { headers.append(try RFC_9110.Header.Field(name: name, value: value)) } catch {
+                    throw .headerValidation(error)
+                }
             }
 
             // Parse target into Target type
@@ -91,8 +95,9 @@ extension RFC_9110.Request {
                 // Decode chunked body
                 let chunkedData = data[bytesConsumed...]
                 let result: RFC_9110.ChunkedEncoding.DecodeResult
-                do { result = try RFC_9110.ChunkedEncoding.decode(Array(chunkedData)) }
-                catch { throw .chunkedDecoding(error) }
+                do { result = try RFC_9110.ChunkedEncoding.decode(Array(chunkedData)) } catch {
+                    throw .chunkedDecoding(error)
+                }
                 body = result.data
                 // Add trailer headers if present
                 for trailer in result.trailers {
@@ -190,8 +195,9 @@ extension RFC_9110.Response {
         ) throws(Error) -> (response: RFC_9110.Response, bytesConsumed: Int) {
             // Parse lines
             let lines: [RFC_9110.MessageParser.Line]
-            do { lines = try RFC_9110.MessageParser.parseLines(from: data) }
-            catch { throw .messageParsing(error) }
+            do { lines = try RFC_9110.MessageParser.parseLines(from: data) } catch {
+                throw .messageParsing(error)
+            }
 
             guard !lines.isEmpty else {
                 throw .emptyMessage
@@ -206,20 +212,23 @@ extension RFC_9110.Response {
             // Parse status line (first line)
             let statusLineString = lines[0].string
             let statusLine: RFC_9110.Response.Line
-            do { statusLine = try RFC_9110.Response.Line.parse(statusLineString) }
-            catch { throw .responseLine(error) }
+            do { statusLine = try RFC_9110.Response.Line.parse(statusLineString) } catch {
+                throw .responseLine(error)
+            }
 
             // Parse header fields
             let headerLines = lines[1..<separatorIndex].map { $0.string }
             let headerPairs: [(name: String, value: String)]
-            do { headerPairs = try RFC_9110.Header.Parser.parseFieldLines(headerLines) }
-            catch { throw .headerParsing(error) }
+            do { headerPairs = try RFC_9110.Header.Parser.parseFieldLines(headerLines) } catch {
+                throw .headerParsing(error)
+            }
 
             // Create header fields
             var headers: [RFC_9110.Header.Field] = []
             for (name, value) in headerPairs {
-                do { headers.append(try RFC_9110.Header.Field(name: name, value: value)) }
-                catch { throw .headerValidation(error) }
+                do { headers.append(try RFC_9110.Header.Field(name: name, value: value)) } catch {
+                    throw .headerValidation(error)
+                }
             }
 
             // Calculate bytes consumed (up to and including separator line)
@@ -265,8 +274,9 @@ extension RFC_9110.Response {
                 // Decode chunked body
                 let chunkedData = data[bytesConsumed...]
                 let result: RFC_9110.ChunkedEncoding.DecodeResult
-                do { result = try RFC_9110.ChunkedEncoding.decode(Array(chunkedData)) }
-                catch { throw .chunkedDecoding(error) }
+                do { result = try RFC_9110.ChunkedEncoding.decode(Array(chunkedData)) } catch {
+                    throw .chunkedDecoding(error)
+                }
                 body = result.data
                 // Add trailer headers if present
                 for trailer in result.trailers {

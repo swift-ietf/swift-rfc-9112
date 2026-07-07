@@ -1,8 +1,8 @@
 // HTTP.Request.Line.swift
 // swift-rfc-9112
 
-import INCITS_4_1986
 public import Byte_Primitives
+import INCITS_4_1986
 
 extension RFC_9110.Request {
     /// HTTP/1.1 request-line parser implementing RFC 9112 Section 3

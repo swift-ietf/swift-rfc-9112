@@ -1,8 +1,8 @@
 // HTTP.Message.Parser.swift
 // swift-rfc-9112
 
-import Standard_Library_Extensions
 public import Byte_Primitives
+import Standard_Library_Extensions
 
 extension RFC_9110 {
     /// HTTP/1.1 message parser implementing RFC 9112 Section 2
