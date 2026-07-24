@@ -1,13 +1,17 @@
 // HTTP.Connection.swift
 // swift-rfc-9112
 //
-// RFC 9112 Section 9.6: Connection
-// https://www.rfc-editor.org/rfc/rfc9112.html#section-9.6
+// RFC 9110 Section 7.6.1: Connection
+// https://www.rfc-editor.org/rfc/rfc9110.html#section-7.6.1
+//
+// The Connection header field is defined by RFC 9110, not RFC 9112. The
+// tear-down semantics of its `close` option are RFC 9112 Section 9.6.
 //
 // Connection header for HTTP/1.1 connection management
 
 extension RFC_9110 {
-    /// HTTP Connection header (RFC 9112 Section 9.6)
+    /// HTTP Connection header (RFC 9110 Section 7.6.1; `close` tear-down
+    /// semantics in RFC 9112 Section 9.6)
     ///
     /// The Connection header field allows the sender to indicate desired
     /// control options for the current connection.
@@ -27,9 +31,9 @@ extension RFC_9110 {
     /// let conn3 = HTTP.Connection.options(["close", "custom"])
     /// ```
     ///
-    /// ## RFC 9112 Reference
+    /// ## RFC Reference
     ///
-    /// From RFC 9112 Section 9.6:
+    /// The grammar is RFC 9110 Section 7.6.1, not RFC 9112:
     /// ```
     /// Connection = #connection-option
     /// connection-option = token
@@ -43,7 +47,8 @@ extension RFC_9110 {
     ///
     /// ## Reference
     ///
-    /// - [RFC 9112 Section 9.6: Connection](https://www.rfc-editor.org/rfc/rfc9112.html#section-9.6)
+    /// - [RFC 9110 Section 7.6.1: Connection](https://www.rfc-editor.org/rfc/rfc9110.html#section-7.6.1)
+    /// - [RFC 9112 Section 9.6: Tear-down](https://www.rfc-editor.org/rfc/rfc9112.html#section-9.6)
     public struct Connection: Sendable, Equatable, Hashable {
         /// Connection options
         public let options: Set<String>

@@ -35,7 +35,8 @@ extension RFC_9110.Connection.State {
     // MARK: - State Updates
 
     /// Update connection state based on request
-    /// RFC 9112 Section 9.3.1: "close" connection option
+    /// RFC 9112 Section 9.6: Tear-down — the "close" connection option
+    /// https://www.rfc-editor.org/rfc/rfc9112.html#section-9.6
     public func processRequest(_ request: RFC_9110.Request) {
         // Check for Connection header
         let connectionHeaders = request.headers.filter {
@@ -89,7 +90,9 @@ extension RFC_9110.Connection.State {
     // MARK: - Upgrade Support
 
     /// Check if upgrade is requested
-    /// RFC 9112 Section 9.7: Upgrade
+    /// RFC 9110 Section 7.8: Upgrade — the Upgrade header field is RFC 9110
+    /// law, not RFC 9112 (9.7 there is TLS Connection Initiation)
+    /// https://www.rfc-editor.org/rfc/rfc9110.html#section-7.8
     public func isUpgradeRequested(in request: RFC_9110.Request) -> Bool {
         request.headers.contains { $0.name.rawValue.lowercased() == "upgrade" }
     }

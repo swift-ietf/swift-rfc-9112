@@ -5,7 +5,8 @@ public import RFC_5322
 
 extension RFC_9110 {
     /// HTTP/1.1 request/response pipelining support
-    /// RFC 9112 Section 9.4: Pipelining
+    /// RFC 9112 Section 9.3.2: Pipelining
+    /// https://www.rfc-editor.org/rfc/rfc9112.html#section-9.3.2
     ///
     /// HTTP pipelining allows clients to send multiple requests without waiting for each response.
     /// Responses must be sent in the same order as requests.
@@ -32,7 +33,7 @@ extension RFC_9110.Pipeline {
     /// Add a request to the pipeline
     /// Returns: true if request can be pipelined, false otherwise
     public func addRequest(_ request: RFC_9110.Request, now: RFC_9110.Date) -> Bool {
-        // RFC 9112 Section 9.4: "Clients SHOULD NOT pipeline requests after a
+        // RFC 9112 Section 9.3.2: "Clients SHOULD NOT pipeline requests after a
         // non-idempotent method, until the final response status code for that method
         // has been received"
         if !allowPipelining {
