@@ -1,7 +1,6 @@
 // HTTP.Request.Line.swift
 // swift-rfc-9112
 
-public import Byte_Primitives
 import INCITS_4_1986
 
 extension RFC_9110.Request {
@@ -66,15 +65,6 @@ extension RFC_9110.Request.Line {
         }
 
         return Self(method: method, target: targetString, version: version)
-    }
-
-    /// Parse request-line from data
-    public static func parse(_ data: [Byte]) -> Self {
-        fatalError("Not implemented")
-        //            guard let string = String(data: data, encoding: .utf8) else {
-        //                throw ParsingError.invalidEncoding
-        //            }
-        //            return try parse(string)
     }
 
     // MARK: - Formatting

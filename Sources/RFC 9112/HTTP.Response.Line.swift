@@ -1,8 +1,6 @@
 // HTTP.Response.Line.swift
 // swift-rfc-9112
 
-public import Byte_Primitives
-
 extension RFC_9110.Response {
     /// HTTP/1.1 status-line parser implementing RFC 9112 Section 4
     /// Format: HTTP-version SP status-code SP [ reason-phrase ]
@@ -78,15 +76,6 @@ extension RFC_9110.Response.Line {
         }
 
         return Self(version: version, statusCode: statusCode, reasonPhrase: reasonPhrase)
-    }
-
-    /// Parse status-line from data
-    public static func parse(_ data: [Byte]) -> Self {
-        fatalError("Not implemented")
-        //            guard let string = String(data: data, encoding: .utf8) else {
-        //                throw ParsingError.invalidEncoding
-        //            }
-        //            return try parse(string)
     }
 
     // MARK: - Formatting
