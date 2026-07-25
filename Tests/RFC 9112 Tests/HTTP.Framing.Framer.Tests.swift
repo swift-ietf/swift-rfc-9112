@@ -146,6 +146,28 @@ extension `HTTP.Framing.Framer Tests`.`Edge Case` {
     }
 
     @Test
+    func `whitespace between a field name and the colon is rejected`() throws {
+        // RFC 9112 Section 5.1: a server MUST reject a message with whitespace
+        // between a field name and its colon. F13 in the law-inventory set — a
+        // classic request-splitting vector, because a downstream recipient may
+        // split `Host : example.com` differently. The reject path must also
+        // leave the buffer byte-for-byte unadvanced: a desync presents as a
+        // plausible message read from the wrong offset, which a throw-only
+        // assertion cannot see.
+        var framer = HTTP.Framing.Framer()
+        let bytes = `HTTP.Framing.Framer Tests`.octets(
+            "GET / HTTP/1.1\r\nHost : example.com\r\n\r\n"
+        )
+        try framer.append(bytes)
+
+        #expect(throws: HTTP.Framing.Error.malformedFieldLine("Host : example.com")) {
+            try framer.nextRequestHead()
+        }
+        // Nothing was consumed by the failed frame.
+        #expect(framer.unconsumed == bytes.count)
+    }
+
+    @Test
     func `a field line without a colon is rejected`() throws {
         var framer = HTTP.Framing.Framer()
         try framer.append(

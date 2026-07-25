@@ -187,7 +187,9 @@ extension RFC_9110.Framing.Framer {
         while index < buffer.count {
             switch buffer[index] {
             case 0x0D:  // CR
-                guard buffer.indices.contains(index + 1), buffer[index + 1] == 0x0A else { return false }
+                guard buffer.indices.contains(index + 1), buffer[index + 1] == 0x0A else {
+                    return false
+                }
                 if index == lineStart { return true }
                 index += 2
                 lineStart = index
@@ -267,7 +269,17 @@ extension RFC_9110.Framing.Framer {
             guard let colon = fieldLine.firstIndex(of: 0x3A) else {  // ':'
                 throw .malformedFieldLine(Self.text(fieldLine))
             }
-            let name = Self.text(Array(fieldLine[fieldLine.startIndex..<colon]))
+            // RFC 9112 Section 5.1: no whitespace is allowed between the field
+            // name and the colon, and a recipient MUST reject a message that
+            // contains it — accepting `Host : example.com` is a request-smuggling
+            // vector, because a downstream recipient may split the line
+            // differently. The general rule is that the name is a token; the
+            // whitespace-before-colon case is one instance of a non-token name.
+            let nameBytes = Array(fieldLine[fieldLine.startIndex..<colon])
+            guard Self.isFieldName(nameBytes) else {
+                throw .malformedFieldLine(Self.text(fieldLine))
+            }
+            let name = Self.text(nameBytes)
             let value = Self.text(Array(fieldLine[fieldLine.index(after: colon)...]))
                 .trimming(.ascii.whitespaces)
             do throws(RFC_9110.Header.Field.Error) {
@@ -291,5 +303,36 @@ extension RFC_9110.Framing.Framer {
     /// intact enough to identify.
     internal static func text(_ bytes: [Byte]) -> String {
         String(decoding: bytes, as: UTF8.self)
+    }
+
+    /// True when `bytes` are a valid field-name token.
+    ///
+    /// RFC 9110 Section 5.6.2: `field-name = token = 1*tchar`. Validated here,
+    /// at the protocol level, because `RFC_9110.Header.Field.Name` deliberately
+    /// performs no validation of its own. An empty name, or any byte that is not
+    /// a `tchar` — most importantly the whitespace before a colon that RFC 9112
+    /// Section 5.1 forbids — makes the field line malformed.
+    internal static func isFieldName(_ bytes: [Byte]) -> Bool {
+        guard !bytes.isEmpty else { return false }
+        return bytes.allSatisfy(Self.isTchar)
+    }
+
+    /// RFC 9110 Section 5.6.2 `tchar`.
+    ///
+    /// The canonical predicate is `RFC_9110.Parse.Token.isTchar`, but it is a
+    /// static on a parser generic over `Byte.Input`, and importing the module
+    /// that defines `Byte.Input` shadows the standard-library `Array` this file
+    /// relies on. The byte set is therefore stated here, kept in lockstep with
+    /// RFC 9110's definition and matching the local `isDigits` in `BodyLength`.
+    private static func isTchar(_ byte: Byte) -> Bool {
+        switch byte {
+        case 0x21, 0x23, 0x24, 0x25, 0x26, 0x27, 0x2A, 0x2B,
+            0x2D, 0x2E, 0x5E, 0x5F, 0x60, 0x7C, 0x7E:
+            true
+        case 0x30...0x39: true  // DIGIT
+        case 0x41...0x5A: true  // ALPHA upper
+        case 0x61...0x7A: true  // ALPHA lower
+        default: false
+        }
     }
 }
