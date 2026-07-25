@@ -36,7 +36,7 @@ extension `HTTP.Framing.Framer Tests`.Unit {
         let bytes = `HTTP.Framing.Framer Tests`.octets(
             `HTTP.Framing.Framer Tests`.simpleRequest
         )
-        try framer.append(bytes)
+        try framer.append(bytes, accumulating: .head)
 
         let head = try framer.nextRequestHead()
         let unwrapped = try #require(head)
@@ -53,7 +53,8 @@ extension `HTTP.Framing.Framer Tests`.Unit {
     func `a response head frames using the method it answers`() throws {
         var framer = HTTP.Framing.Framer()
         try framer.append(
-            `HTTP.Framing.Framer Tests`.octets(`HTTP.Framing.Framer Tests`.simpleResponse)
+            `HTTP.Framing.Framer Tests`.octets(`HTTP.Framing.Framer Tests`.simpleResponse),
+            accumulating: .head
         )
 
         let head = try #require(try framer.nextResponseHead(answering: .get))
@@ -68,7 +69,8 @@ extension `HTTP.Framing.Framer Tests`.Unit {
         // being answered differs.
         var framer = HTTP.Framing.Framer()
         try framer.append(
-            `HTTP.Framing.Framer Tests`.octets(`HTTP.Framing.Framer Tests`.simpleResponse)
+            `HTTP.Framing.Framer Tests`.octets(`HTTP.Framing.Framer Tests`.simpleResponse),
+            accumulating: .head
         )
 
         let head = try #require(try framer.nextResponseHead(answering: .head))
@@ -80,7 +82,10 @@ extension `HTTP.Framing.Framer Tests`.Unit {
     @Test
     func `an incomplete head returns nil rather than throwing`() throws {
         var framer = HTTP.Framing.Framer()
-        try framer.append(`HTTP.Framing.Framer Tests`.octets("GET /path HTTP/1.1\r\nHost: ex"))
+        try framer.append(
+            `HTTP.Framing.Framer Tests`.octets("GET /path HTTP/1.1\r\nHost: ex"),
+            accumulating: .head
+        )
 
         #expect(try framer.nextRequestHead() == nil)
         // Nothing was consumed by a failed attempt.
@@ -91,7 +96,7 @@ extension `HTTP.Framing.Framer Tests`.Unit {
     func `body octets are left in the buffer, not consumed with the head`() throws {
         var framer = HTTP.Framing.Framer()
         let head = "POST /x HTTP/1.1\r\nContent-Length: 5\r\n\r\n"
-        try framer.append(`HTTP.Framing.Framer Tests`.octets(head + "HELLO"))
+        try framer.append(`HTTP.Framing.Framer Tests`.octets(head + "HELLO"), accumulating: .head)
 
         let framed = try #require(try framer.nextRequestHead())
         #expect(framed.bodyLength == .length(5))
@@ -109,7 +114,10 @@ extension `HTTP.Framing.Framer Tests`.`Edge Case` {
         // RFC 9112 Section 11.1: accepting bare CR desynchronises recipients
         // that disagree about whether it terminates a line.
         var framer = HTTP.Framing.Framer()
-        try framer.append(`HTTP.Framing.Framer Tests`.octets("GET / HTTP/1.1\rHost: x\r\n\r\n"))
+        try framer.append(
+            `HTTP.Framing.Framer Tests`.octets("GET / HTTP/1.1\rHost: x\r\n\r\n"),
+            accumulating: .head
+        )
 
         #expect(throws: HTTP.Framing.Error.bareCarriageReturn) {
             try framer.nextRequestHead()
@@ -122,11 +130,17 @@ extension `HTTP.Framing.Framer Tests`.`Edge Case` {
         // a partial read, CR is unterminated, not invalid. Treating it as a bare
         // CR would reject every message that happens to split on a CRLF.
         var framer = HTTP.Framing.Framer()
-        try framer.append(`HTTP.Framing.Framer Tests`.octets("GET / HTTP/1.1\r"))
+        try framer.append(
+            `HTTP.Framing.Framer Tests`.octets("GET / HTTP/1.1\r"),
+            accumulating: .head
+        )
 
         #expect(try framer.nextRequestHead() == nil)
 
-        try framer.append(`HTTP.Framing.Framer Tests`.octets("\nHost: x\r\n\r\n"))
+        try framer.append(
+            `HTTP.Framing.Framer Tests`.octets("\nHost: x\r\n\r\n"),
+            accumulating: .head
+        )
         #expect(try framer.nextRequestHead() != nil)
     }
 
@@ -137,7 +151,8 @@ extension `HTTP.Framing.Framer Tests`.`Edge Case` {
         // unfolds it differently.
         var framer = HTTP.Framing.Framer()
         try framer.append(
-            `HTTP.Framing.Framer Tests`.octets("GET / HTTP/1.1\r\nHost: a\r\n b\r\n\r\n")
+            `HTTP.Framing.Framer Tests`.octets("GET / HTTP/1.1\r\nHost: a\r\n b\r\n\r\n"),
+            accumulating: .head
         )
 
         #expect(throws: HTTP.Framing.Error.obsoleteLineFolding) {
@@ -158,7 +173,7 @@ extension `HTTP.Framing.Framer Tests`.`Edge Case` {
         let bytes = `HTTP.Framing.Framer Tests`.octets(
             "GET / HTTP/1.1\r\nHost : example.com\r\n\r\n"
         )
-        try framer.append(bytes)
+        try framer.append(bytes, accumulating: .head)
 
         #expect(throws: HTTP.Framing.Error.malformedFieldLine("Host : example.com")) {
             try framer.nextRequestHead()
@@ -171,7 +186,8 @@ extension `HTTP.Framing.Framer Tests`.`Edge Case` {
     func `a field line without a colon is rejected`() throws {
         var framer = HTTP.Framing.Framer()
         try framer.append(
-            `HTTP.Framing.Framer Tests`.octets("GET / HTTP/1.1\r\nnot-a-field\r\n\r\n")
+            `HTTP.Framing.Framer Tests`.octets("GET / HTTP/1.1\r\nnot-a-field\r\n\r\n"),
+            accumulating: .head
         )
 
         #expect(throws: HTTP.Framing.Error.malformedFieldLine("not-a-field")) {
@@ -189,7 +205,7 @@ extension `HTTP.Framing.Framer Tests`.`Edge Case` {
 
         let oversized = `HTTP.Framing.Framer Tests`.octets(String(repeating: "A", count: 128))
         #expect(throws: HTTP.Framing.Error.headSectionTooLong(limit: 64)) {
-            try framer.append(oversized)
+            try framer.append(oversized, accumulating: .head)
         }
         // Nothing was retained: the limit protected the buffer, not just the parse.
         #expect(framer.unconsumed == 0)
@@ -210,7 +226,7 @@ extension `HTTP.Framing.Framer Tests`.Integration {
         var framedAt: Int?
 
         for (offset, byte) in bytes.enumerated() {
-            try framer.append([byte])
+            try framer.append([byte], accumulating: .head)
             if let head = try framer.nextRequestHead() {
                 framedAt = offset
                 #expect(head.line.method == .get)
@@ -236,7 +252,8 @@ extension `HTTP.Framing.Framer Tests`.Integration {
         try framer.append(
             `HTTP.Framing.Framer Tests`.octets(
                 "GET /first HTTP/1.1\r\nHost: a\r\n\r\nGET /second HTTP/1.1\r\nHost: b\r\n\r\n"
-            )
+            ),
+            accumulating: .head
         )
 
         let first = try #require(try framer.nextRequestHead())
@@ -253,13 +270,17 @@ extension `HTTP.Framing.Framer Tests`.Integration {
     func `finish distinguishes a clean close from a truncated message`() throws {
         var clean = HTTP.Framing.Framer()
         try clean.append(
-            `HTTP.Framing.Framer Tests`.octets(`HTTP.Framing.Framer Tests`.simpleRequest)
+            `HTTP.Framing.Framer Tests`.octets(`HTTP.Framing.Framer Tests`.simpleRequest),
+            accumulating: .head
         )
         _ = try clean.nextRequestHead()
         #expect(try clean.finish() == .clean)
 
         var truncated = HTTP.Framing.Framer()
-        try truncated.append(`HTTP.Framing.Framer Tests`.octets("GET / HTTP/1.1\r\nHos"))
+        try truncated.append(
+            `HTTP.Framing.Framer Tests`.octets("GET / HTTP/1.1\r\nHos"),
+            accumulating: .head
+        )
         // nil here means "incomplete", which finish() resolves into "truncated".
         #expect(try truncated.nextRequestHead() == nil)
         #expect(try truncated.finish() == .truncated(unconsumed: 19))
@@ -281,7 +302,8 @@ extension `HTTP.Framing.Framer Tests`.Integration {
         try framer.append(
             `HTTP.Framing.Framer Tests`.octets(
                 "POST /x HTTP/1.1\r\nContent-Length: 5\r\n\r\nHELLO"
-            )
+            ),
+            accumulating: .head
         )
 
         let head = try #require(try framer.nextRequestHead())
@@ -301,7 +323,8 @@ extension `HTTP.Framing.Framer Tests`.Integration {
         try framer.append(
             `HTTP.Framing.Framer Tests`.octets(
                 "POST /x HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\n"
-            )
+            ),
+            accumulating: .head
         )
 
         let head = try #require(try framer.nextRequestHead())
@@ -333,7 +356,10 @@ extension `HTTP.Framing.Framer Tests`.Integration {
     func `F9 - a chunk consumes size line, data, CRLFs, zero chunk and final CRLF`() throws {
         // `5\r\nhello\r\n0\r\n\r\n` = 1+2 + 5+2 + 1+2 + 2 = 15 octets; decoded = 5.
         var framer = HTTP.Framing.Framer()
-        try framer.append(`HTTP.Framing.Framer Tests`.octets("5\r\nhello\r\n0\r\n\r\n"))
+        try framer.append(
+            `HTTP.Framing.Framer Tests`.octets("5\r\nhello\r\n0\r\n\r\n"),
+            accumulating: .body
+        )
 
         let body = try #require(try framer.nextBody(.chunked))
         #expect(body.content == `HTTP.Framing.Framer Tests`.octets("hello"))
@@ -347,7 +373,10 @@ extension `HTTP.Framing.Framer Tests`.Integration {
         // `5;ext=1\r\nhello\r\n0\r\n\r\n` = 7+2 + 5+2 + 1+2 + 2 = 21 octets;
         // decoded is still 5. The extension is the difference between the two.
         var framer = HTTP.Framing.Framer()
-        try framer.append(`HTTP.Framing.Framer Tests`.octets("5;ext=1\r\nhello\r\n0\r\n\r\n"))
+        try framer.append(
+            `HTTP.Framing.Framer Tests`.octets("5;ext=1\r\nhello\r\n0\r\n\r\n"),
+            accumulating: .body
+        )
 
         let body = try #require(try framer.nextBody(.chunked))
         #expect(body.content == `HTTP.Framing.Framer Tests`.octets("hello"))
@@ -362,7 +391,8 @@ extension `HTTP.Framing.Framer Tests`.Integration {
         // = 29 octets; decoded = 5. The trailer is consumed, not decoded.
         var framer = HTTP.Framing.Framer()
         try framer.append(
-            `HTTP.Framing.Framer Tests`.octets("5\r\nhello\r\n0\r\nX-Trailer: v\r\n\r\n")
+            `HTTP.Framing.Framer Tests`.octets("5\r\nhello\r\n0\r\nX-Trailer: v\r\n\r\n"),
+            accumulating: .body
         )
 
         let body = try #require(try framer.nextBody(.chunked))
@@ -383,7 +413,8 @@ extension `HTTP.Framing.Framer Tests`.Integration {
             `HTTP.Framing.Framer Tests`.octets(
                 "POST /1 HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\n"
                     + "POST /2 HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n3\r\nbye\r\n0\r\n\r\n"
-            )
+            ),
+            accumulating: .head
         )
 
         let head1 = try #require(try framer.nextRequestHead())
@@ -420,7 +451,7 @@ extension `HTTP.Framing.Framer Tests`.`Edge Case` {
         let bytes = `HTTP.Framing.Framer Tests`.octets(
             "POST / HTTP/1.1\r\nTransfer-Encoding: chunked, gzip\r\n\r\n"
         )
-        try framer.append(bytes)
+        try framer.append(bytes, accumulating: .head)
 
         #expect(throws: HTTP.Framing.Error.chunkedNotFinal) {
             try framer.nextRequestHead()
@@ -436,7 +467,7 @@ extension `HTTP.Framing.Framer Tests`.`Edge Case` {
         let bytes = `HTTP.Framing.Framer Tests`.octets(
             "POST / HTTP/1.1\r\nContent-Length: 5\r\nContent-Length: 6\r\n\r\n"
         )
-        try framer.append(bytes)
+        try framer.append(bytes, accumulating: .head)
 
         #expect(throws: HTTP.Framing.Error.conflictingContentLength(["5", "6"])) {
             try framer.nextRequestHead()
@@ -460,7 +491,8 @@ extension `HTTP.Framing.Framer Tests`.Unit {
         try framer.append(
             `HTTP.Framing.Framer Tests`.octets(
                 "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked, gzip\r\n\r\n"
-            )
+            ),
+            accumulating: .head
         )
 
         let head = try #require(try framer.nextResponseHead(answering: .get))
@@ -473,7 +505,8 @@ extension `HTTP.Framing.Framer Tests`.Unit {
         // `Content-Length:5` — OWS after the colon is optional, so this frames.
         var framer = HTTP.Framing.Framer()
         try framer.append(
-            `HTTP.Framing.Framer Tests`.octets("POST /x HTTP/1.1\r\nContent-Length:5\r\n\r\nHELLO")
+            `HTTP.Framing.Framer Tests`.octets("POST /x HTTP/1.1\r\nContent-Length:5\r\n\r\nHELLO"),
+            accumulating: .head
         )
 
         let head = try #require(try framer.nextRequestHead())

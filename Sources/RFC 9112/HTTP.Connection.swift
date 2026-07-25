@@ -45,6 +45,15 @@ extension RFC_9110 {
     /// - HTTP/1.1 defaults to persistent connections
     /// - HTTP/1.0 requires explicit "keep-alive" for persistence
     ///
+    /// ## ⚠️ Not to be confused with `RFC_9110.Framing.Connection`
+    ///
+    /// This type is the parsed **`Connection` header field**. The similarly
+    /// named `RFC_9110.Framing.Connection` is the connection *drive* — the thing
+    /// that frames a byte stream across a whole connection. Inside
+    /// `extension RFC_9110.Framing { … }` the bare name `Connection` resolves to
+    /// the drive, so this type must be spelled `RFC_9110.Connection` in full
+    /// there.
+    ///
     /// ## Reference
     ///
     /// - [RFC 9110 Section 7.6.1: Connection](https://www.rfc-editor.org/rfc/rfc9110.html#section-7.6.1)

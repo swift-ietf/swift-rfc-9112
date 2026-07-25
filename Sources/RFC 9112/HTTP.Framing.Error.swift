@@ -111,9 +111,35 @@ extension RFC_9110.Framing {
 
         /// A body exceeded `Limits.body` before it completed.
         ///
-        /// Enforced while decoding, so an over-long body is refused rather than
-        /// fully accumulated and complained about afterwards — the body-side
-        /// counterpart of `headSectionTooLong`.
+        /// Enforced while accumulating and again while decoding, so an over-long
+        /// body is refused rather than fully accumulated and complained about
+        /// afterwards — the body-side counterpart of `headSectionTooLong`.
         case bodyTooLong(limit: Int)
+
+        // MARK: - Connection framing
+
+        /// A response arrived with no outstanding request to answer.
+        ///
+        /// RFC 9112 Section 9.3.2 makes responses arrive in the order their
+        /// requests were sent, so a client drive frames each response against a
+        /// queued method. With the queue empty there is no method, and Section
+        /// 6.3 rules 1 and 2 make the framing depend on it — a `HEAD` response
+        /// has no body whatever its `Content-Length` says.
+        ///
+        /// Reported rather than guessed. Assuming a method would frame the
+        /// response against a request that was never sent, and if the guess were
+        /// wrong the body's octets would be read as the next response.
+        case responseWithoutRequest
+
+        /// A request head reported a close-delimited body.
+        ///
+        /// Structurally unreachable: RFC 9112 Section 6.3 gives `.untilClose`
+        /// and `.tunnel` to responses only, and `BodyLength.determine` yields
+        /// neither on the request arm. The case exists so that the impossible
+        /// state has a **failure channel rather than a silent coercion** — a
+        /// total signature over a partial operation does not remove the failure,
+        /// it relocates it to whichever escape hatch is nearest, which in this
+        /// package has twice been a legal-looking sentinel or a trap.
+        case closeDelimitedRequest
     }
 }

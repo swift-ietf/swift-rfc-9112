@@ -29,15 +29,25 @@ extension RFC_9110.Framing {
     /// than corrected. `octets` on a framed head is reported for accounting and
     /// tests; nothing needs it to locate the next message.
     ///
-    /// ## Scope
+    /// ## Scope — the framer knows messages, not connections
     ///
-    /// This increment frames **head sections only** — start line and field
-    /// section — and reports how the body that follows is delimited. Body
-    /// framing, including chunked decoding with exact accounting, is a
-    /// subsequent increment, and there is deliberately **no** `next()` that
-    /// frames some bodies and not others: a call that must either mis-frame a
-    /// chunked message or throw "not implemented" is the shape of the trapping
-    /// entry points this package has just removed.
+    /// It frames head sections and the three **self-delimiting** bodies, with
+    /// exact consumed accounting. It deliberately does **not** know:
+    ///
+    /// - **which phase the stream is in.** The phase rides on
+    ///   `append(_:accumulating:)`, so the right budget applies without the
+    ///   framer having to guess from the buffer's contents.
+    /// - **whether the peer has closed.** `.untilClose` and `.tunnel` are
+    ///   delimited by the close, so `nextBody(_:)` returns `nil` for them rather
+    ///   than inventing a boundary the byte stream does not contain.
+    /// - **which request a response answers.** That rides on
+    ///   `nextResponseHead(answering:)`, because on a persistent connection it
+    ///   differs per exchange.
+    ///
+    /// All three are connection-scoped facts, and RFC 9112 Section 3.1 is the
+    /// message/connection split they belong to. `Framing.Connection.Server` and
+    /// `Framing.Connection.Client` hold them and drive this type; nothing else
+    /// here needs to.
     ///
     /// ## Roles
     ///
@@ -69,30 +79,58 @@ extension RFC_9110.Framing.Framer {
 // MARK: - Feeding
 
 extension RFC_9110.Framing.Framer {
-    /// Accepts received octets.
+    /// Accepts received octets, bounded by the budget for the phase they belong
+    /// to.
     ///
-    /// The head-section budget is checked **before** the octets are retained,
-    /// so an over-long head is refused rather than stored and complained about
-    /// afterwards. A limit that can only be checked after acceptance has
-    /// already lost the memory it was meant to protect.
+    /// The budget is checked **before** the octets are retained, so an over-long
+    /// head or body is refused rather than stored and complained about
+    /// afterwards. A limit that can only be checked after acceptance has already
+    /// lost the memory it was meant to protect.
     ///
-    /// - Throws: `headSectionTooLong` if accepting these octets would push an
-    ///   unterminated head past `limits.headSection`.
-    public mutating func append(_ bytes: [Byte]) throws(RFC_9110.Framing.Error) {
-        let projected = buffer.count + bytes.count
-        // 2c: this guard bounds the HEAD-accumulation phase only, but the framer
-        // is stateless about phase (by design — body delimitation rides on the
-        // per-call `nextBody(_:)`, not on stored state). So a large IDENTITY body
-        // delivered incrementally, with no head terminator among its bytes, is
-        // measured against `headSection` and can be wrongly refused once it
-        // exceeds it. The body budget (`limits.body`) is enforced inside
-        // `nextBody`; the pre-retention body-phase guard belongs with the
-        // connection drive, which is what knows a body is in progress — the
-        // framer knows messages, the drive knows connections. Tracked for 2c.
-        if projected > limits.headSection && !Self.containsHeadTerminator(buffer) {
-            throw .headSectionTooLong(limit: limits.headSection)
+    /// `accumulating` has **no default**. A default would have to name one
+    /// phase, and a caller in the other phase would then silently get the wrong
+    /// budget — the same wrong-combination-permitting signature that keeping a
+    /// construction-time role would have been. The connection drive knows the
+    /// phase; it states it.
+    ///
+    /// - Throws: `headSectionTooLong` or `bodyTooLong` — whichever budget these
+    ///   octets would overrun — leaving the buffer unchanged.
+    public mutating func append(
+        _ bytes: [Byte],
+        accumulating phase: RFC_9110.Framing.Phase
+    ) throws(RFC_9110.Framing.Error) {
+        let budget = phase.budget(under: limits)
+        guard buffer.count + bytes.count <= budget else {
+            throw phase.overrun(of: budget)
         }
         buffer.append(contentsOf: bytes)
+    }
+}
+
+// MARK: - Surrendering the buffer
+
+extension RFC_9110.Framing.Framer {
+    /// Removes and returns everything currently buffered.
+    ///
+    /// The delivery mechanism for a **close-delimited** body, which has no
+    /// boundary in the byte stream for `nextBody` to find. Deliberately
+    /// `internal`: on the public surface no consumed count and no raw remainder
+    /// crosses the API, which is what makes the consumed-count defect class
+    /// unreachable rather than merely fixed. The connection drive is inside this
+    /// module and is the only intended caller.
+    internal mutating func takeBuffered() -> [Byte] {
+        defer { buffer.removeAll(keepingCapacity: true) }
+        return buffer
+    }
+
+    /// Surrenders the unconsumed octets, ending framing.
+    ///
+    /// `consuming`, because after a successful `CONNECT` the connection stops
+    /// being a sequence of HTTP messages (RFC 9112 Section 9.3.3) and there is
+    /// nothing further for a framer to do. The octets are handed to whatever
+    /// takes the tunnel over.
+    internal consuming func surrenderUnconsumed() -> [Byte] {
+        buffer
     }
 }
 
@@ -253,34 +291,6 @@ extension RFC_9110.Framing.Framer {
 // MARK: - Scanning
 
 extension RFC_9110.Framing.Framer {
-    /// True when a complete head terminator is already buffered.
-    ///
-    /// Used to decide whether the head budget still applies: once the head is
-    /// complete the remaining octets are body, which the head budget does not
-    /// govern.
-    internal static func containsHeadTerminator(_ buffer: borrowing [Byte]) -> Bool {
-        var index = 0
-        var lineStart = 0
-        while index < buffer.count {
-            switch buffer[index] {
-            case 0x0D:  // CR
-                guard buffer.indices.contains(index + 1), buffer[index + 1] == 0x0A else {
-                    return false
-                }
-                if index == lineStart { return true }
-                index += 2
-                lineStart = index
-            case 0x0A:  // bare LF, tolerated as a line terminator
-                if index == lineStart { return true }
-                index += 1
-                lineStart = index
-            default:
-                index += 1
-            }
-        }
-        return false
-    }
-
     /// Scans a complete head out of `buffer` without consuming it.
     ///
     /// Returns `nil` when the head is not yet complete.
