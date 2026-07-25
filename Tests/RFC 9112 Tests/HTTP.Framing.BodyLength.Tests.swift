@@ -182,7 +182,7 @@ extension `HTTP.Framing.BodyLength Tests`.Integration {
         }
 
         let response = try HTTP.Framing.BodyLength.determine(
-            context: .response(status: .ok, requestMethod: .get),
+            context: .response(statusCode: 200, requestMethod: .get),
             headers: headers
         )
         #expect(response == .untilClose)
@@ -199,7 +199,7 @@ extension `HTTP.Framing.BodyLength Tests`.Integration {
         }
 
         let response = try HTTP.Framing.BodyLength.determine(
-            context: .response(status: .ok, requestMethod: .get),
+            context: .response(statusCode: 200, requestMethod: .get),
             headers: headers
         )
         #expect(response == .untilClose)
@@ -213,7 +213,7 @@ extension `HTTP.Framing.BodyLength Tests`.Integration {
         #expect(request == .none)
 
         let response = try HTTP.Framing.BodyLength.determine(
-            context: .response(status: .ok, requestMethod: .get),
+            context: .response(statusCode: 200, requestMethod: .get),
             headers: headers
         )
         #expect(response == .untilClose)
@@ -227,7 +227,7 @@ extension `HTTP.Framing.BodyLength Tests`.Unit {
     func `a response to HEAD has no body even with a Content-Length`() throws {
         let headers: HTTP.Headers = [try .init(name: "Content-Length", value: "100")]
         let length = try HTTP.Framing.BodyLength.determine(
-            context: .response(status: .ok, requestMethod: .head),
+            context: .response(statusCode: 200, requestMethod: .head),
             headers: headers
         )
         #expect(length == .none)
@@ -237,7 +237,7 @@ extension `HTTP.Framing.BodyLength Tests`.Unit {
     func `a 204 response has no body`() throws {
         let headers: HTTP.Headers = []
         let length = try HTTP.Framing.BodyLength.determine(
-            context: .response(status: .noContent, requestMethod: .get),
+            context: .response(statusCode: 204, requestMethod: .get),
             headers: headers
         )
         #expect(length == .none)
@@ -247,7 +247,7 @@ extension `HTTP.Framing.BodyLength Tests`.Unit {
     func `a 304 response has no body`() throws {
         let headers: HTTP.Headers = []
         let length = try HTTP.Framing.BodyLength.determine(
-            context: .response(status: .notModified, requestMethod: .get),
+            context: .response(statusCode: 304, requestMethod: .get),
             headers: headers
         )
         #expect(length == .none)
@@ -259,7 +259,7 @@ extension `HTTP.Framing.BodyLength Tests`.Unit {
         // HTTP messages, which "no body, then the next message" would deny.
         let headers: HTTP.Headers = []
         let length = try HTTP.Framing.BodyLength.determine(
-            context: .response(status: .ok, requestMethod: .connect),
+            context: .response(statusCode: 200, requestMethod: .connect),
             headers: headers
         )
         #expect(length == .tunnel)

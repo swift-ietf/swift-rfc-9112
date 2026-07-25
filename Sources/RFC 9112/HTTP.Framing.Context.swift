@@ -27,7 +27,13 @@ extension RFC_9110.Framing {
 
         /// A response being framed by a client, together with the method of the
         /// request it answers.
-        case response(status: RFC_9110.Status, requestMethod: RFC_9110.Method)
+        ///
+        /// The status is carried as its numeric code rather than as a
+        /// `RFC_9110.Status`, because Section 6.3 reasons about **ranges** —
+        /// 1xx, 204, 304, and 2xx-to-`CONNECT`. A registered-status type would
+        /// be over-specified for that and would leave an unregistered code
+        /// unframeable, when in fact an unknown 2xx must still frame correctly.
+        case response(statusCode: Int, requestMethod: RFC_9110.Method)
     }
 }
 

@@ -52,10 +52,10 @@ extension RFC_9110.Framing.BodyLength {
     ) throws(RFC_9110.Framing.Error) -> Self {
         // Rules 1 and 2 — responses whose framing is fixed by their status or by
         // the method they answer, regardless of any framing header present.
-        if case .response(let status, let requestMethod) = context {
+        if case .response(let statusCode, let requestMethod) = context {
             if requestMethod == .head { return .none }
 
-            switch status.code {
+            switch statusCode {
             case 100..<200, 204, 304:
                 return .none
             case 200..<300 where requestMethod == .connect:

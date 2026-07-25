@@ -1,0 +1,295 @@
+// HTTP.Framing.Framer.swift
+// swift-rfc-9112
+//
+// RFC 9112 Section 2.2: Message Parsing
+// https://www.rfc-editor.org/rfc/rfc9112.html#section-2.2
+//
+// Incremental, buffer-owning HTTP/1.1 message framer.
+
+public import Byte_Primitives
+import INCITS_4_1986
+
+extension RFC_9110.Framing {
+    /// Incremental HTTP/1.1 framer over a caller-supplied byte stream.
+    ///
+    /// Sans-I/O: it never reads a socket, it is fed by one.
+    ///
+    /// ## Why it owns the buffer
+    ///
+    /// Every framing defect in this package's whole-buffer surface is a
+    /// consumed-count defect. `HTTP.Message.Deserializer` estimates consumed
+    /// octets from *decoded* size, which is wrong whenever framing overhead
+    /// exists, and `ChunkedEncoding.DecodeResult` cannot express a consumed
+    /// count at all — so the deserializer estimates because the type it calls
+    /// offers nothing better.
+    ///
+    /// **The framer retains the unconsumed remainder itself, so no consumed
+    /// count crosses the API boundary.** A caller never computes an offset into
+    /// its own buffer, which makes that entire defect class unreachable rather
+    /// than corrected. `octets` on a framed head is reported for accounting and
+    /// tests; nothing needs it to locate the next message.
+    ///
+    /// ## Scope
+    ///
+    /// This increment frames **head sections only** — start line and field
+    /// section — and reports how the body that follows is delimited. Body
+    /// framing, including chunked decoding with exact accounting, is a
+    /// subsequent increment, and there is deliberately **no** `next()` that
+    /// frames some bodies and not others: a call that must either mis-frame a
+    /// chunked message or throw "not implemented" is the shape of the trapping
+    /// entry points this package has just removed.
+    ///
+    /// ## Roles
+    ///
+    /// There is no role set at construction. A response's framing depends on
+    /// the **method of the request it answers** (RFC 9112 Section 6.3 rules 1
+    /// and 2), and on a persistent connection that varies per exchange —
+    /// Section 9.2 is about exactly that association. The role therefore rides
+    /// on the call, and the two calls carry exactly the data their role needs,
+    /// so a wrong combination is unrepresentable rather than merely rejected.
+    public struct Framer: ~Copyable {
+        /// Unconsumed octets, oldest first.
+        private var buffer: [Byte]
+
+        /// Bounds enforced during accumulation.
+        public let limits: Limits
+
+        public init(limits: Limits = .default) {
+            self.buffer = []
+            self.limits = limits
+        }
+    }
+}
+
+extension RFC_9110.Framing.Framer {
+    /// Octets received and not yet consumed by a framed message.
+    public var unconsumed: Int { buffer.count }
+}
+
+// MARK: - Feeding
+
+extension RFC_9110.Framing.Framer {
+    /// Accepts received octets.
+    ///
+    /// The head-section budget is checked **before** the octets are retained,
+    /// so an over-long head is refused rather than stored and complained about
+    /// afterwards. A limit that can only be checked after acceptance has
+    /// already lost the memory it was meant to protect.
+    ///
+    /// - Throws: `headSectionTooLong` if accepting these octets would push an
+    ///   unterminated head past `limits.headSection`.
+    public mutating func append(_ bytes: [Byte]) throws(RFC_9110.Framing.Error) {
+        let projected = buffer.count + bytes.count
+        if projected > limits.headSection && !Self.containsHeadTerminator(buffer) {
+            throw .headSectionTooLong(limit: limits.headSection)
+        }
+        buffer.append(contentsOf: bytes)
+    }
+}
+
+// MARK: - Framing
+
+extension RFC_9110.Framing.Framer {
+    /// Frames the next request head, or returns `nil` when more octets are
+    /// needed.
+    ///
+    /// `nil` is the ordinary path on a partial read, not an error. It does
+    /// **not** distinguish "incomplete" from "the peer closed mid-message" —
+    /// that is what `finish()` is for.
+    public mutating func nextRequestHead() throws(RFC_9110.Framing.Error)
+        -> RFC_9110.Framing.RequestHead?
+    {
+        guard let scan = try Self.scanHead(buffer, limits: limits) else { return nil }
+
+        let line: RFC_9110.Request.Line
+        do throws(RFC_9110.Request.Line.ParsingError) {
+            line = try RFC_9110.Request.Line.parse(scan.startLine)
+        } catch {
+            throw .malformedStartLine(scan.startLine)
+        }
+
+        let bodyLength = try RFC_9110.Framing.BodyLength.determine(
+            context: .request,
+            headers: scan.headers
+        )
+
+        buffer.removeFirst(scan.octets)
+        return RFC_9110.Framing.RequestHead(
+            line: line,
+            headers: scan.headers,
+            bodyLength: bodyLength,
+            octets: scan.octets
+        )
+    }
+
+    /// Frames the next response head, or returns `nil` when more octets are
+    /// needed.
+    ///
+    /// - Parameter requestMethod: the method of the request this response
+    ///   answers. Required because RFC 9112 Section 6.3 rules 1 and 2 make the
+    ///   body's delimitation depend on it — a response to `HEAD` has no body
+    ///   whatever its `Content-Length` says, and a 2xx to `CONNECT` becomes a
+    ///   tunnel — and on a persistent connection it differs per exchange.
+    public mutating func nextResponseHead(
+        answering requestMethod: RFC_9110.Method
+    ) throws(RFC_9110.Framing.Error) -> RFC_9110.Framing.ResponseHead? {
+        guard let scan = try Self.scanHead(buffer, limits: limits) else { return nil }
+
+        let line: RFC_9110.Response.Line
+        do throws(RFC_9110.Response.Line.ParsingError) {
+            line = try RFC_9110.Response.Line.parse(scan.startLine)
+        } catch {
+            throw .malformedStartLine(scan.startLine)
+        }
+
+        let bodyLength = try RFC_9110.Framing.BodyLength.determine(
+            context: .response(statusCode: line.statusCode, requestMethod: requestMethod),
+            headers: scan.headers
+        )
+
+        buffer.removeFirst(scan.octets)
+        return RFC_9110.Framing.ResponseHead(
+            line: line,
+            headers: scan.headers,
+            bodyLength: bodyLength,
+            octets: scan.octets
+        )
+    }
+}
+
+// MARK: - Termination
+
+extension RFC_9110.Framing.Framer {
+    /// Declares the stream ended and reports how.
+    ///
+    /// `consuming`, so a framer cannot be fed after its stream is over. RFC
+    /// 9112 Section 8 governs incomplete messages, and distinguishing a clean
+    /// close from a truncated one is the distinction a `nil` from a framing
+    /// call cannot express.
+    public consuming func finish() throws(RFC_9110.Framing.Error)
+        -> RFC_9110.Framing.Terminal
+    {
+        buffer.isEmpty ? .clean : .truncated(unconsumed: buffer.count)
+    }
+}
+
+// MARK: - Scanning
+
+extension RFC_9110.Framing.Framer {
+    /// True when a complete head terminator is already buffered.
+    ///
+    /// Used to decide whether the head budget still applies: once the head is
+    /// complete the remaining octets are body, which the head budget does not
+    /// govern.
+    internal static func containsHeadTerminator(_ buffer: borrowing [Byte]) -> Bool {
+        var index = 0
+        var lineStart = 0
+        while index < buffer.count {
+            switch buffer[index] {
+            case 0x0D:  // CR
+                guard buffer.indices.contains(index + 1), buffer[index + 1] == 0x0A else { return false }
+                if index == lineStart { return true }
+                index += 2
+                lineStart = index
+            case 0x0A:  // bare LF, tolerated as a line terminator
+                if index == lineStart { return true }
+                index += 1
+                lineStart = index
+            default:
+                index += 1
+            }
+        }
+        return false
+    }
+
+    /// Scans a complete head out of `buffer` without consuming it.
+    ///
+    /// Returns `nil` when the head is not yet complete.
+    internal static func scanHead(
+        _ buffer: borrowing [Byte],
+        limits: RFC_9110.Framing.Limits
+    ) throws(RFC_9110.Framing.Error) -> Self.Scan? {
+        var lines: [[Byte]] = []
+        var index = 0
+        var lineStart = 0
+        var headEnd: Int?
+
+        scan: while index < buffer.count {
+            switch buffer[index] {
+            case 0x0D:  // CR
+                // A CR at the very end of what has arrived is not yet a bare CR
+                // — the LF may be in the next read. Only a CR followed by a
+                // non-LF octet is a violation.
+                guard buffer.indices.contains(index + 1) else { return nil }
+                guard buffer[index + 1] == 0x0A else { throw .bareCarriageReturn }
+                let line = Array(buffer[lineStart..<index])
+                index += 2
+                if line.isEmpty {
+                    headEnd = index
+                    break scan
+                }
+                lines.append(line)
+                lineStart = index
+
+            case 0x0A:  // RFC 9112 Section 2.2: a recipient MAY treat bare LF as a terminator
+                let line = Array(buffer[lineStart..<index])
+                index += 1
+                if line.isEmpty {
+                    headEnd = index
+                    break scan
+                }
+                lines.append(line)
+                lineStart = index
+
+            default:
+                index += 1
+            }
+        }
+
+        guard let octets = headEnd else { return nil }
+        guard let startLineBytes = lines.first else { throw .malformedStartLine("") }
+        guard startLineBytes.count <= limits.startLine else {
+            throw .headSectionTooLong(limit: limits.startLine)
+        }
+        guard octets <= limits.headSection else {
+            throw .headSectionTooLong(limit: limits.headSection)
+        }
+
+        var fields: [RFC_9110.Header.Field] = []
+        for fieldLine in lines.dropFirst() {
+            // RFC 9112 Section 5.2: a field line starting with SP or HTAB is
+            // obsolete line folding. Rejected rather than unfolded: forwarding
+            // a folded field is a smuggling vector when a downstream recipient
+            // unfolds it differently.
+            if let first = fieldLine.first, first == 0x20 || first == 0x09 {
+                throw .obsoleteLineFolding
+            }
+            guard let colon = fieldLine.firstIndex(of: 0x3A) else {  // ':'
+                throw .malformedFieldLine(Self.text(fieldLine))
+            }
+            let name = Self.text(Array(fieldLine[fieldLine.startIndex..<colon]))
+            let value = Self.text(Array(fieldLine[fieldLine.index(after: colon)...]))
+                .trimming(.ascii.whitespaces)
+            do throws(RFC_9110.Header.Field.Error) {
+                fields.append(try RFC_9110.Header.Field(name: name, value: value))
+            } catch {
+                throw .malformedFieldLine(Self.text(fieldLine))
+            }
+        }
+
+        return Scan(
+            startLine: Self.text(startLineBytes),
+            headers: RFC_9110.Headers(fields),
+            octets: octets
+        )
+    }
+
+    /// Renders octets as text for parsing and diagnostics.
+    ///
+    /// HTTP field content is ASCII-superset; invalid sequences are replaced
+    /// rather than dropped so a malformed line still reaches an error message
+    /// intact enough to identify.
+    internal static func text(_ bytes: [Byte]) -> String {
+        String(decoding: bytes, as: UTF8.self)
+    }
+}

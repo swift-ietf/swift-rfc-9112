@@ -59,5 +59,40 @@ extension RFC_9110.Framing {
 
         /// A `Transfer-Encoding` value could not be parsed as a transfer coding.
         case malformedTransferEncoding(String)
+
+        // MARK: - Framing (incremental)
+
+        /// The head section exceeded its budget before a complete head arrived.
+        ///
+        /// Raised by `Framer.append` **before** the offending bytes are retained.
+        /// A limit that can only be checked after acceptance is not a limit: the
+        /// memory has already been committed by the time it fires.
+        case headSectionTooLong(limit: Int)
+
+        /// The start line was not well formed.
+        case malformedStartLine(String)
+
+        /// A field line was not `name: value`.
+        case malformedFieldLine(String)
+
+        /// A bare CR appeared outside a CRLF pair.
+        ///
+        /// RFC 9112 Section 2.2 forbids generating one, and Section 11.1 makes
+        /// accepting one a response-splitting vector, because a recipient that
+        /// treats bare CR as a line terminator can be desynchronised from one
+        /// that does not.
+        case bareCarriageReturn
+
+        /// A field line began with whitespace (obsolete line folding).
+        ///
+        /// RFC 9112 Section 5.2: a recipient MUST either reject the message or
+        /// replace the folding with SP before interpreting it. This
+        /// implementation rejects, because forwarding a folded field is a
+        /// request-smuggling vector (Section 11.2) when a downstream recipient
+        /// unfolds differently.
+        case obsoleteLineFolding
+
+        /// The stream ended part-way through a message.
+        case truncatedMessage
     }
 }
