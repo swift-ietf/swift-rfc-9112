@@ -94,5 +94,26 @@ extension RFC_9110.Framing {
 
         /// The stream ended part-way through a message.
         case truncatedMessage
+
+        // MARK: - Body framing (chunked)
+
+        /// A chunk-size was not a non-empty sequence of hex digits.
+        ///
+        /// RFC 9112 Section 7.1: `chunk-size = 1*HEXDIG`, so an empty size, a
+        /// sign, or `0x`-style prefixing is invalid. Detected rather than
+        /// coerced, because a mis-read chunk size mis-frames every octet after
+        /// it — the chunked analogue of an invalid `Content-Length`.
+        case invalidChunkSize(String)
+
+        /// A chunked body was structurally malformed: chunk-data was not
+        /// followed by CRLF, or a trailer line was not `name: value`.
+        case malformedChunk(String)
+
+        /// A body exceeded `Limits.body` before it completed.
+        ///
+        /// Enforced while decoding, so an over-long body is refused rather than
+        /// fully accumulated and complained about afterwards — the body-side
+        /// counterpart of `headSectionTooLong`.
+        case bodyTooLong(limit: Int)
     }
 }

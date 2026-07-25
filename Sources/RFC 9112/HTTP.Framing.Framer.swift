@@ -173,6 +173,74 @@ extension RFC_9110.Framing.Framer {
     }
 }
 
+// MARK: - Framing the body
+
+extension RFC_9110.Framing.Framer {
+    /// Frames the body that follows a head, or returns `nil` when more octets
+    /// are needed.
+    ///
+    /// The delimitation is supplied by the caller from the head it just framed
+    /// (`RequestHead.bodyLength` / `ResponseHead.bodyLength`), so the framer
+    /// holds no per-message state between a head and its body — exactly as the
+    /// response's per-exchange method rides on `nextResponseHead(answering:)`
+    /// rather than on construction. When it returns a `Body`, the framer has
+    /// removed exactly `Body.octets` from its buffer, so the next message begins
+    /// at the head of the buffer and **no consumed count crosses the API for a
+    /// caller to get wrong** — the property that makes the consumed-count defect
+    /// class unreachable rather than merely fixed.
+    ///
+    /// Handles the three **self-delimiting** framings:
+    ///
+    /// - `.none` — an empty body, complete immediately.
+    /// - `.length(n)` — complete once `n` octets are buffered.
+    /// - `.chunked` — complete at the last chunk, its trailer section and the
+    ///   terminating CRLF, with the exact wire length reported.
+    ///
+    /// `.untilClose` and `.tunnel` are delimited by the connection closing, not
+    /// by the byte stream, so their end is not knowable here: this call returns
+    /// `nil` for them rather than inventing a boundary the stream does not
+    /// contain. Delivering a close-delimited body is the connection drive's
+    /// responsibility, because the drive is what observes the close — the framer
+    /// knows messages, the drive knows connections.
+    ///
+    /// - Throws: `invalidChunkSize` / `malformedChunk` on malformed chunked
+    ///   framing, and `bodyTooLong` if the body exceeds `limits.body`. A throw
+    ///   leaves the buffer byte-for-byte unchanged, as `nil` does.
+    public mutating func nextBody(
+        _ bodyLength: RFC_9110.Framing.BodyLength
+    ) throws(RFC_9110.Framing.Error) -> RFC_9110.Framing.Body? {
+        switch bodyLength {
+        case .none:
+            return RFC_9110.Framing.Body(content: [], octets: 0, trailers: RFC_9110.Headers([]))
+
+        case .length(let expected):
+            if expected > limits.body { throw .bodyTooLong(limit: limits.body) }
+            guard buffer.count >= expected else { return nil }
+            let content = Array(buffer[..<expected])
+            buffer.removeFirst(expected)
+            return RFC_9110.Framing.Body(
+                content: content,
+                octets: expected,
+                trailers: RFC_9110.Headers([])
+            )
+
+        case .chunked:
+            guard let framed = try Self.scanChunkedBody(buffer, limit: limits.body) else {
+                return nil
+            }
+            buffer.removeFirst(framed.octets)
+            return RFC_9110.Framing.Body(
+                content: framed.content,
+                octets: framed.octets,
+                trailers: framed.trailers
+            )
+
+        case .untilClose, .tunnel:
+            return nil
+        }
+    }
+}
+
 // MARK: - Scanning
 
 extension RFC_9110.Framing.Framer {

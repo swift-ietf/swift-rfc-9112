@@ -265,3 +265,53 @@ extension `HTTP.Framing.Framer Tests`.Integration {
         #expect(try truncated.finish() == .truncated(unconsumed: 19))
     }
 }
+
+// MARK: - Body framing (core)
+//
+// These two prove the body mechanism end to end before the law-inventory
+// consumed-count set (F9–F12) is written. The chunked one is the one that
+// matters: it asserts the CONSUMED octet count, not the decoded length, which
+// are deliberately different — a decoded-size proxy would report 5 here and be
+// off by exactly the framing overhead.
+
+extension `HTTP.Framing.Framer Tests`.Integration {
+    @Test
+    func `an identity body is delivered whole and consumes exactly its length`() throws {
+        var framer = HTTP.Framing.Framer()
+        try framer.append(
+            `HTTP.Framing.Framer Tests`.octets(
+                "POST /x HTTP/1.1\r\nContent-Length: 5\r\n\r\nHELLO"
+            )
+        )
+
+        let head = try #require(try framer.nextRequestHead())
+        #expect(head.bodyLength == .length(5))
+
+        let body = try #require(try framer.nextBody(head.bodyLength))
+        #expect(body.content == `HTTP.Framing.Framer Tests`.octets("HELLO"))
+        #expect(body.octets == 5)
+        #expect(body.trailers.isEmpty)
+        #expect(framer.unconsumed == 0)
+    }
+
+    @Test
+    func `a chunked body reports its true wire length, not the decoded length`() throws {
+        // `5\r\nhello\r\n0\r\n\r\n` is 15 octets on the wire and decodes to 5.
+        var framer = HTTP.Framing.Framer()
+        try framer.append(
+            `HTTP.Framing.Framer Tests`.octets(
+                "POST /x HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\n"
+            )
+        )
+
+        let head = try #require(try framer.nextRequestHead())
+        #expect(head.bodyLength == .chunked)
+
+        let body = try #require(try framer.nextBody(head.bodyLength))
+        #expect(body.content == `HTTP.Framing.Framer Tests`.octets("hello"))
+        #expect(body.content.count == 5)
+        #expect(body.octets == 15)
+        #expect(body.trailers.isEmpty)
+        #expect(framer.unconsumed == 0)
+    }
+}

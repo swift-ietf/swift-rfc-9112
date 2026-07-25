@@ -49,8 +49,7 @@ extension RFC_9110.Request.Validator {
 
     /// Validate Transfer-Encoding header
     /// RFC 9112 Section 6.1
-    private static func validateTransferEncoding(headers: [RFC_9110.Header.Field]) throws(Error)
-    {
+    private static func validateTransferEncoding(headers: [RFC_9110.Header.Field]) throws(Error) {
         let transferEncodingHeaders = headers.filter {
             $0.name.rawValue.lowercased() == "transfer-encoding"
         }
