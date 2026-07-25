@@ -80,6 +80,15 @@ extension RFC_9110.Framing.Framer {
     ///   unterminated head past `limits.headSection`.
     public mutating func append(_ bytes: [Byte]) throws(RFC_9110.Framing.Error) {
         let projected = buffer.count + bytes.count
+        // 2c: this guard bounds the HEAD-accumulation phase only, but the framer
+        // is stateless about phase (by design — body delimitation rides on the
+        // per-call `nextBody(_:)`, not on stored state). So a large IDENTITY body
+        // delivered incrementally, with no head terminator among its bytes, is
+        // measured against `headSection` and can be wrongly refused once it
+        // exceeds it. The body budget (`limits.body`) is enforced inside
+        // `nextBody`; the pre-retention body-phase guard belongs with the
+        // connection drive, which is what knows a body is in progress — the
+        // framer knows messages, the drive knows connections. Tracked for 2c.
         if projected > limits.headSection && !Self.containsHeadTerminator(buffer) {
             throw .headSectionTooLong(limit: limits.headSection)
         }

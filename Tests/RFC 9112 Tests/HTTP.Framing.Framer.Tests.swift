@@ -315,3 +315,189 @@ extension `HTTP.Framing.Framer Tests`.Integration {
         #expect(framer.unconsumed == 0)
     }
 }
+
+// MARK: - Law-inventory consumed-count set (F9–F12)
+//
+// From `Research/rfc-9110-9112-law-inventory-2026-07-24.md` §4.3. Each asserts
+// the CONSUMED octet count, never the decoded body — the decoded length is
+// precisely the quantity that looks right while being wrong, so a decoded-size
+// proxy (as `Message.Deserializer` uses) passes the body and fails the framing.
+// The wire counts below are computed from the bytes, not copied from §4.3, whose
+// F9 figure ("17") is off by two — the true length of `5\r\nhello\r\n0\r\n\r\n`
+// is 15. F12 is the one that turns an accounting error into an observable
+// smuggle: if message 1's consumed count is wrong, message 2 is read from the
+// wrong offset and its head is garbage.
+
+extension `HTTP.Framing.Framer Tests`.Integration {
+    @Test
+    func `F9 - a chunk consumes size line, data, CRLFs, zero chunk and final CRLF`() throws {
+        // `5\r\nhello\r\n0\r\n\r\n` = 1+2 + 5+2 + 1+2 + 2 = 15 octets; decoded = 5.
+        var framer = HTTP.Framing.Framer()
+        try framer.append(`HTTP.Framing.Framer Tests`.octets("5\r\nhello\r\n0\r\n\r\n"))
+
+        let body = try #require(try framer.nextBody(.chunked))
+        #expect(body.content == `HTTP.Framing.Framer Tests`.octets("hello"))
+        #expect(body.octets == 15)
+        #expect(body.trailers.isEmpty)
+        #expect(framer.unconsumed == 0)
+    }
+
+    @Test
+    func `F10 - a chunk extension counts toward consumed but not decoded`() throws {
+        // `5;ext=1\r\nhello\r\n0\r\n\r\n` = 7+2 + 5+2 + 1+2 + 2 = 21 octets;
+        // decoded is still 5. The extension is the difference between the two.
+        var framer = HTTP.Framing.Framer()
+        try framer.append(`HTTP.Framing.Framer Tests`.octets("5;ext=1\r\nhello\r\n0\r\n\r\n"))
+
+        let body = try #require(try framer.nextBody(.chunked))
+        #expect(body.content == `HTTP.Framing.Framer Tests`.octets("hello"))
+        #expect(body.content.count == 5)
+        #expect(body.octets == 21)
+        #expect(framer.unconsumed == 0)
+    }
+
+    @Test
+    func `F11 - a trailer section counts toward consumed and is reported`() throws {
+        // `5\r\nhello\r\n0\r\nX-Trailer: v\r\n\r\n` = 1+2 + 5+2 + 1+2 + 12+2 + 2
+        // = 29 octets; decoded = 5. The trailer is consumed, not decoded.
+        var framer = HTTP.Framing.Framer()
+        try framer.append(
+            `HTTP.Framing.Framer Tests`.octets("5\r\nhello\r\n0\r\nX-Trailer: v\r\n\r\n")
+        )
+
+        let body = try #require(try framer.nextBody(.chunked))
+        #expect(body.content == `HTTP.Framing.Framer Tests`.octets("hello"))
+        #expect(body.octets == 29)
+        #expect(body.trailers.count == 1)
+        #expect(body.trailers.contains("X-Trailer"))
+        #expect(framer.unconsumed == 0)
+    }
+
+    @Test
+    func `F12 - two chunked messages back to back, the second must parse`() throws {
+        // The end-to-end statement of Finding D: message 2 is found only because
+        // message 1 consumed EXACTLY its own octets. An off-by-any error in the
+        // chunked count reads message 2's head from the wrong offset.
+        var framer = HTTP.Framing.Framer()
+        try framer.append(
+            `HTTP.Framing.Framer Tests`.octets(
+                "POST /1 HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\n"
+                    + "POST /2 HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n3\r\nbye\r\n0\r\n\r\n"
+            )
+        )
+
+        let head1 = try #require(try framer.nextRequestHead())
+        #expect(head1.line.target == "/1")
+        #expect(head1.bodyLength == .chunked)
+        let body1 = try #require(try framer.nextBody(head1.bodyLength))
+        #expect(body1.content == `HTTP.Framing.Framer Tests`.octets("hello"))
+        #expect(body1.octets == 15)
+
+        // If body1's count were wrong, this head would not frame as `/2`.
+        let head2 = try #require(try framer.nextRequestHead())
+        #expect(head2.line.target == "/2")
+        #expect(head2.bodyLength == .chunked)
+        let body2 = try #require(try framer.nextBody(head2.bodyLength))
+        #expect(body2.content == `HTTP.Framing.Framer Tests`.octets("bye"))
+        #expect(body2.octets == 13)
+
+        #expect(framer.unconsumed == 0)
+    }
+}
+
+// MARK: - Law-inventory reject set, asserted end-to-end at the wire (F7r, F1)
+//
+// §4.5. These were already proven at the header-decision level in
+// `HTTP.Framing.BodyLength.Tests`; here they run through the byte-level framer,
+// which additionally proves the reject path leaves the buffer byte-for-byte
+// UNADVANCED. A framer that threw the right error but advanced the buffer would
+// desynchronise the next read — the failure a throw-only assertion cannot see.
+
+extension `HTTP.Framing.Framer Tests`.`Edge Case` {
+    @Test
+    func `F7r - chunked-not-final on a request is rejected, buffer unadvanced`() throws {
+        var framer = HTTP.Framing.Framer()
+        let bytes = `HTTP.Framing.Framer Tests`.octets(
+            "POST / HTTP/1.1\r\nTransfer-Encoding: chunked, gzip\r\n\r\n"
+        )
+        try framer.append(bytes)
+
+        #expect(throws: HTTP.Framing.Error.chunkedNotFinal) {
+            try framer.nextRequestHead()
+        }
+        #expect(framer.unconsumed == bytes.count)
+    }
+
+    @Test
+    func `F1 - differing duplicate Content-Length on a request is rejected, buffer unadvanced`()
+        throws
+    {
+        var framer = HTTP.Framing.Framer()
+        let bytes = `HTTP.Framing.Framer Tests`.octets(
+            "POST / HTTP/1.1\r\nContent-Length: 5\r\nContent-Length: 6\r\n\r\n"
+        )
+        try framer.append(bytes)
+
+        #expect(throws: HTTP.Framing.Error.conflictingContentLength(["5", "6"])) {
+            try framer.nextRequestHead()
+        }
+        #expect(framer.unconsumed == bytes.count)
+    }
+}
+
+// MARK: - Law-inventory accept set, asserted at the wire (F7s, F14)
+//
+// §4.5. The accept set is what proves the rejections discriminate rather than
+// blanket-reject. F7s is the response half of the F7r pair — the SAME input that
+// is rejected on a request reads until close on a response. F14 proves the
+// no-whitespace-after-colon form is accepted, pinning (with F13) exactly WHICH
+// whitespace RFC 9112 §5.1 forbids.
+
+extension `HTTP.Framing.Framer Tests`.Unit {
+    @Test
+    func `F7s - chunked-not-final on a response reads until close, not an error`() throws {
+        var framer = HTTP.Framing.Framer()
+        try framer.append(
+            `HTTP.Framing.Framer Tests`.octets(
+                "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked, gzip\r\n\r\n"
+            )
+        )
+
+        let head = try #require(try framer.nextResponseHead(answering: .get))
+        #expect(head.line.statusCode == 200)
+        #expect(head.bodyLength == .untilClose)
+    }
+
+    @Test
+    func `F14 - no whitespace after the colon is accepted`() throws {
+        // `Content-Length:5` — OWS after the colon is optional, so this frames.
+        var framer = HTTP.Framing.Framer()
+        try framer.append(
+            `HTTP.Framing.Framer Tests`.octets("POST /x HTTP/1.1\r\nContent-Length:5\r\n\r\nHELLO")
+        )
+
+        let head = try #require(try framer.nextRequestHead())
+        #expect(head.headers.contains("Content-Length"))
+        #expect(head.bodyLength == .length(5))
+    }
+}
+
+// MARK: - F17 — a compile-guarantee and a trap-census, not a runtime assertion
+//
+// §4.5 F17: "byte-level `Request.Line.parse([Byte])` on any input must not
+// terminate the process." There is deliberately NO runtime test, because there
+// is nothing to call: the trapping `[Byte]` parse entry points were removed in
+// `9ccfb80`, leaving only `Request.Line.parse(_ line: String) throws`. F17 is
+// satisfied by construction and recorded, not asserted:
+//
+//   • compile-guarantee — no `[Byte]` parse overload exists on `Request.Line`
+//     or `Response.Line`; a caller cannot reach a trapping byte parser because
+//     the symbol is gone. Re-introducing one is a source change a reviewer sees.
+//   • trap-census — `fatalError` / `try!` / `as!` / `preconditionFailure` over
+//     `Sources/RFC 9112` is 0 (verified 2026-07-25). The byte-level entry point
+//     is now the `Framer`, whose malformed-input paths throw (see the reject
+//     fixtures above) rather than trap.
+//
+// A `#expect` here would test the surviving String parser, which is not what
+// F17 constrains. The guarantee lives in the absence of the overload and the
+// census, which is why it is written down rather than asserted.

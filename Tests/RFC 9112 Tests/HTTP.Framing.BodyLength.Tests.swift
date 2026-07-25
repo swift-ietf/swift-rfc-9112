@@ -41,6 +41,25 @@ extension `HTTP.Framing.BodyLength Tests`.`Edge Case` {
     }
 
     @Test
+    func `a leading-plus Content-Length throws`() throws {
+        // F4c. `Int(_:)`-style parsing accepts `+5`, but 1*DIGIT forbids the
+        // sign, so the ABNF-faithful check must reject it.
+        let headers: HTTP.Headers = [try .init(name: "Content-Length", value: "+5")]
+        #expect(throws: HTTP.Framing.Error.invalidContentLength("+5")) {
+            try HTTP.Framing.BodyLength.determine(context: .request, headers: headers)
+        }
+    }
+
+    @Test
+    func `a hex-prefixed Content-Length throws`() throws {
+        // F4d. `0x5` is not 1*DIGIT; only decimal digits are a valid length.
+        let headers: HTTP.Headers = [try .init(name: "Content-Length", value: "0x5")]
+        #expect(throws: HTTP.Framing.Error.invalidContentLength("0x5")) {
+            try HTTP.Framing.BodyLength.determine(context: .request, headers: headers)
+        }
+    }
+
+    @Test
     func `empty Content-Length throws`() throws {
         let headers: HTTP.Headers = [try .init(name: "Content-Length", value: "")]
         #expect(throws: (any Swift.Error).self) {
