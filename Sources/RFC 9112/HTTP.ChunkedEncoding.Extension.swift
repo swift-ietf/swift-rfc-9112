@@ -30,7 +30,7 @@ extension RFC_9110.ChunkedEncoding.Extension {
     /// Format as string for transmission
     /// Format: ";name" or ";name=value"
     public var formatted: String {
-        if let value = value {
+        if let value {
             // Check if value needs quoting
             if value.contains(where: { $0 == ";" || $0.isWhitespace }) {
                 return ";\(name)=\"\(value)\""

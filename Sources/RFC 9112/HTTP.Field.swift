@@ -152,6 +152,7 @@ extension RFC_9110.Header.Parser {
         case "(", ")", "<", ">", "@", ",", ";", ":", "\\", "\"", "/",
             "[", "]", "?", "=", "{", "}", " ", "\t":
             return true
+
         default:
             return false
         }

@@ -108,6 +108,7 @@ extension RFC_9110.TransferEncoding {
         switch storage {
         case .single(let name):
             return name
+
         case .list(let encodings):
             return encodings.map { $0.headerValue }.joined(separator: ", ")
         }
@@ -165,6 +166,7 @@ extension RFC_9110.TransferEncoding {
         switch storage {
         case .single(let name):
             return name == "chunked"
+
         case .list:
             return false
         }
@@ -183,6 +185,7 @@ extension RFC_9110.TransferEncoding {
         switch storage {
         case .single(let name):
             return name == "chunked"
+
         case .list(let encodings):
             return encodings.contains { $0.isChunked }
         }
@@ -203,6 +206,7 @@ extension RFC_9110.TransferEncoding {
         switch storage {
         case .single(let name):
             return name == "chunked"
+
         case .list(let encodings):
             return encodings.last?.isChunked ?? false
         }
@@ -223,6 +227,7 @@ extension RFC_9110.TransferEncoding {
         switch storage {
         case .single(let name):
             return name == "chunked" ? 1 : 0
+
         case .list(let encodings):
             return encodings.filter { $0.isChunked }.count
         }

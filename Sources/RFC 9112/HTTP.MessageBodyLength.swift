@@ -211,8 +211,10 @@ extension RFC_9110.MessageBodyLength {
         switch self {
         case .none:
             return false
+
         case .length(let len):
             return len > 0
+
         case .chunked, .untilClose:
             return true
         }
@@ -231,8 +233,10 @@ extension RFC_9110.MessageBodyLength {
         switch self {
         case .none:
             return 0
+
         case .length(let len):
             return len
+
         case .chunked, .untilClose:
             return nil
         }

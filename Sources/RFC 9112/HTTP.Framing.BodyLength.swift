@@ -58,8 +58,10 @@ extension RFC_9110.Framing.BodyLength {
             switch statusCode {
             case 100..<200, 204, 304:
                 return .none
+
             case 200..<300 where requestMethod == .connect:
                 return .tunnel
+
             default:
                 break
             }

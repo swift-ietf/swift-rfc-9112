@@ -72,8 +72,10 @@ extension RFC_9110.Response.Deserializer {
             switch line.terminator {
             case .crlf:
                 bytesConsumed += 2
+
             case .lf:
                 bytesConsumed += 1
+
             case .none:
                 break
             }

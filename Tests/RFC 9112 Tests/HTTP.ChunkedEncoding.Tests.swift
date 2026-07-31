@@ -97,7 +97,9 @@ struct `HTTP.ChunkedEncoding Tests` {
 
         @Test
         func `Decode - with trailers`() async throws {
-            let chunked = Array("5\r\nHello\r\n0\r\nX-Checksum: abc123\r\n\r\n".utf8).map { Byte($0) }
+            let chunked = Array("5\r\nHello\r\n0\r\nX-Checksum: abc123\r\n\r\n".utf8).map {
+                Byte($0)
+            }
             let result = try HTTP.ChunkedEncoding.decode(chunked)
             let decoded = result.data
             let trailers = result.trailers

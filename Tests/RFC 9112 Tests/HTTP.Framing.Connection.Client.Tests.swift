@@ -255,9 +255,11 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
                 switch event {
                 case .head(let framed): head = framed
                 case .body(let chunk): payload.append(contentsOf: chunk)
+
                 case .end(_, let octets):
                     ended = true
                     endOctets = octets
+
                 case .tunnel: Issue.record("no tunnel in this fixture")
                 }
             }

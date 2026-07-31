@@ -59,7 +59,7 @@ extension RFC_9110.Request.Serializer {
     private static func formatTarget(_ target: RFC_9110.Request.Target) -> String {
         switch target {
         case .origin(let path, let query):
-            if let query = query {
+            if let query {
                 return "\(path.description)?\(query.description)"
             }
             return path.description
