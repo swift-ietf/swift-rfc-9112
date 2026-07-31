@@ -123,27 +123,25 @@ extension RFC_9110.Header.Parser {
     /// field-vchar = VCHAR / obs-text
     /// Note: We allow UTF-8 characters (> 0xFF) for modern HTTP usage
     private static func validateFieldValue(_ value: String) throws(ParsingError) {
-        for char in value {
-            let scalar = char.unicodeScalars.first!
-            let value = scalar.value
-
+        for byte in value.utf8 {
             // Allow visible characters (0x21-0x7E)
-            if value >= 0x21 && value <= 0x7E {
+            if byte >= 0x21 && byte <= 0x7E {
                 continue
             }
 
             // Allow whitespace (SP = 0x20, HTAB = 0x09)
-            if value == 0x20 || value == 0x09 {
+            if byte == 0x20 || byte == 0x09 {
                 continue
             }
 
-            // Allow obs-text and UTF-8 (>= 0x80) - for compatibility and modern usage
-            if value >= 0x80 {
+            // Allow obs-text and UTF-8 lead/continuation bytes (>= 0x80) - for
+            // compatibility and modern usage
+            if byte >= 0x80 {
                 continue
             }
 
             // Reject control characters (0x00-0x1F, 0x7F)
-            throw ParsingError.invalidFieldValueChar(char)
+            throw ParsingError.invalidFieldValueChar(Character(UnicodeScalar(byte)))
         }
     }
 
@@ -160,13 +158,6 @@ extension RFC_9110.Header.Parser {
     }
 
     // MARK: - Obsolete Line Folding
-
-    /// Handling policy for obsolete line folding
-    public enum ObsFoldPolicy {
-        case reject  // Return error (recommended for servers)
-        case replaceWithSpace  // Replace with single space
-        case discard  // Remove the obs-fold entirely
-    }
 
     /// Parse field-lines with specific obs-fold handling policy
     public static func parseFieldLines(
@@ -189,16 +180,4 @@ extension RFC_9110.Header.Parser {
         }
     }
 
-    // MARK: - Errors
-
-    public enum ParsingError: Error, Sendable, Equatable {
-        case missingColon
-        case emptyFieldName
-        case whitespaceBeforeColon
-        case invalidFieldName(String)
-        case invalidFieldValueChar(Character)
-        case invalidEncoding
-        case obsFoldWithoutPrecedingField(lineNumber: Int)
-        case invalidFieldLine(lineNumber: Int)
-    }
 }

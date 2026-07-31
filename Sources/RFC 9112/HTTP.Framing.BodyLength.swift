@@ -82,7 +82,7 @@ extension RFC_9110.Framing.BodyLength {
             // Finality must therefore be judged on the COMBINED list — chunked
             // last in the first of two field lines is not final overall — so the
             // combination happens before the parse, not after.
-            let combined = transferEncodings.map(\.rawValue).joined(separator: ", ")
+            let combined = transferEncodings.map(\.description).joined(separator: ", ")
 
             guard let coding = RFC_9110.TransferEncoding.parse(combined) else {
                 throw .malformedTransferEncoding(combined)
@@ -109,7 +109,7 @@ extension RFC_9110.Framing.BodyLength {
             var seen: [String] = []
 
             for value in contentLengths {
-                let raw = value.rawValue
+                let raw = value.description
                 // A single field line may itself carry a comma-separated list.
                 for element in raw.split(separator: ",", omittingEmptySubsequences: false) {
                     let token = String(element).trimming(.ascii.whitespaces)

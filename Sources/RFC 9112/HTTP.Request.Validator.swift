@@ -22,10 +22,10 @@ extension RFC_9110.Request.Validator {
 
         // Check for both Transfer-Encoding and Content-Length
         let hasTransferEncoding = headers.contains {
-            $0.name.rawValue.lowercased() == "transfer-encoding"
+            $0.name.description.lowercased() == "transfer-encoding"
         }
         let hasContentLength = headers.contains {
-            $0.name.rawValue.lowercased() == "content-length"
+            $0.name.description.lowercased() == "content-length"
         }
 
         if hasTransferEncoding && hasContentLength {
@@ -51,7 +51,7 @@ extension RFC_9110.Request.Validator {
     /// RFC 9112 Section 6.1
     private static func validateTransferEncoding(headers: [RFC_9110.Header.Field]) throws(Error) {
         let transferEncodingHeaders = headers.filter {
-            $0.name.rawValue.lowercased() == "transfer-encoding"
+            $0.name.description.lowercased() == "transfer-encoding"
         }
 
         guard !transferEncodingHeaders.isEmpty else {
@@ -60,8 +60,8 @@ extension RFC_9110.Request.Validator {
 
         // Parse Transfer-Encoding value
         for header in transferEncodingHeaders {
-            guard let te = RFC_9110.TransferEncoding.parse(header.value.rawValue) else {
-                throw Error.invalidTransferEncoding(header.value.rawValue)
+            guard let te = RFC_9110.TransferEncoding.parse(header.value.description) else {
+                throw Error.invalidTransferEncoding(header.value.description)
             }
 
             // RFC 9112 Section 7: Chunked must be final encoding (if present in list)
@@ -73,7 +73,7 @@ extension RFC_9110.Request.Validator {
         // RFC 9112: "A sender MUST NOT apply the chunked transfer coding more than once to a message body"
         var chunkedCount = 0
         for header in transferEncodingHeaders {
-            if let te = RFC_9110.TransferEncoding.parse(header.value.rawValue) {
+            if let te = RFC_9110.TransferEncoding.parse(header.value.description) {
                 // Count how many times chunked appears in this header
                 chunkedCount += te.chunkedCount
             }
@@ -88,7 +88,7 @@ extension RFC_9110.Request.Validator {
     /// RFC 9112 Section 6.2
     private static func validateContentLength(headers: [RFC_9110.Header.Field]) throws(Error) {
         let contentLengthHeaders = headers.filter {
-            $0.name.rawValue.lowercased() == "content-length"
+            $0.name.description.lowercased() == "content-length"
         }
 
         guard contentLengthHeaders.count > 1 else {
@@ -96,7 +96,7 @@ extension RFC_9110.Request.Validator {
         }
 
         // Multiple Content-Length headers - check if they all have the same value
-        let values = contentLengthHeaders.compactMap { Int($0.value.rawValue) }
+        let values = contentLengthHeaders.compactMap { Int($0.value.description) }
 
         guard values.count == contentLengthHeaders.count else {
             throw Error.invalidContentLength(reason: "Non-integer Content-Length value")
@@ -107,14 +107,4 @@ extension RFC_9110.Request.Validator {
         }
     }
 
-    // MARK: - Errors
-
-    public enum Error: Swift.Error, Sendable, Equatable {
-        case ambiguousMessageFraming(reason: String)
-        case invalidTransferEncoding(String)
-        case invalidContentLength(reason: String)
-        case multipleContentLengthValues([Int])
-        case chunkedNotFinalEncoding
-        case chunkedAppliedMultipleTimes
-    }
 }

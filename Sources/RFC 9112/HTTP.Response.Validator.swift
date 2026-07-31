@@ -20,7 +20,7 @@ extension RFC_9110.Response.Validator {
 
         // Validate Transfer-Encoding
         let hasTransferEncoding = headers.contains {
-            $0.name.rawValue.lowercased() == "transfer-encoding"
+            $0.name.description.lowercased() == "transfer-encoding"
         }
         if hasTransferEncoding {
             try validateTransferEncoding(headers: Array(headers))
@@ -48,7 +48,7 @@ extension RFC_9110.Response.Validator {
         // in any message that contains a Transfer-Encoding header field"
         if hasTransferEncoding {
             let hasContentLength = headers.contains {
-                $0.name.rawValue.lowercased() == "content-length"
+                $0.name.description.lowercased() == "content-length"
             }
             if hasContentLength {
                 throw Error.transferEncodingWithContentLength
@@ -62,7 +62,7 @@ extension RFC_9110.Response.Validator {
     /// RFC 9112 Section 6.1
     private static func validateTransferEncoding(headers: [RFC_9110.Header.Field]) throws(Error) {
         let transferEncodingHeaders = headers.filter {
-            $0.name.rawValue.lowercased() == "transfer-encoding"
+            $0.name.description.lowercased() == "transfer-encoding"
         }
 
         guard !transferEncodingHeaders.isEmpty else {
@@ -71,8 +71,8 @@ extension RFC_9110.Response.Validator {
 
         // Parse Transfer-Encoding value
         for header in transferEncodingHeaders {
-            guard let te = RFC_9110.TransferEncoding.parse(header.value.rawValue) else {
-                throw Error.invalidTransferEncoding(header.value.rawValue)
+            guard let te = RFC_9110.TransferEncoding.parse(header.value.description) else {
+                throw Error.invalidTransferEncoding(header.value.description)
             }
 
             // RFC 9112 Section 7: Chunked must be final encoding (if present in list)
@@ -83,7 +83,7 @@ extension RFC_9110.Response.Validator {
 
         // RFC 9112: "A sender MUST NOT apply the chunked transfer coding more than once to a message body"
         let chunkedCount = transferEncodingHeaders.filter { header in
-            RFC_9110.TransferEncoding.parse(header.value.rawValue)?.hasChunked ?? false
+            RFC_9110.TransferEncoding.parse(header.value.description)?.hasChunked ?? false
         }.count
 
         if chunkedCount > 1 {
@@ -95,7 +95,7 @@ extension RFC_9110.Response.Validator {
     /// RFC 9112 Section 6.2
     private static func validateContentLength(headers: [RFC_9110.Header.Field]) throws(Error) {
         let contentLengthHeaders = headers.filter {
-            $0.name.rawValue.lowercased() == "content-length"
+            $0.name.description.lowercased() == "content-length"
         }
 
         guard contentLengthHeaders.count > 1 else {
@@ -103,7 +103,7 @@ extension RFC_9110.Response.Validator {
         }
 
         // Multiple Content-Length headers - check if they all have the same value
-        let values = contentLengthHeaders.compactMap { Int($0.value.rawValue) }
+        let values = contentLengthHeaders.compactMap { Int($0.value.description) }
 
         guard values.count == contentLengthHeaders.count else {
             throw Error.invalidContentLength(reason: "Non-integer Content-Length value")
@@ -114,16 +114,4 @@ extension RFC_9110.Response.Validator {
         }
     }
 
-    // MARK: - Errors
-
-    public enum Error: Swift.Error, Sendable, Equatable {
-        case invalidTransferEncoding(String)
-        case invalidContentLength(reason: String)
-        case multipleContentLengthValues([Int])
-        case chunkedNotFinalEncoding
-        case chunkedAppliedMultipleTimes
-        case invalidStatusCode(Int)
-        case transferEncodingWithIncompatibleStatus(Int)
-        case transferEncodingWithContentLength
-    }
 }

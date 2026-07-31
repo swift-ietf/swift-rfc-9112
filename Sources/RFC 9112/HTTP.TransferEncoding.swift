@@ -70,13 +70,6 @@ extension RFC_9110 {
 
 extension RFC_9110.TransferEncoding {
 
-    // MARK: - Storage
-
-    private enum Storage: Sendable, Equatable, Hashable {
-        case single(String)
-        case list([RFC_9110.TransferEncoding])
-    }
-
     // MARK: - Static Factory Methods
 
     /// Chunked transfer coding

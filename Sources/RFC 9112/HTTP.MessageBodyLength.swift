@@ -106,7 +106,7 @@ extension RFC_9110.MessageBodyLength {
         }
 
         // Rule 3-4: Check Transfer-Encoding
-        if let teHeader = response.headers["Transfer-Encoding"]?.first?.rawValue,
+        if let teHeader = response.headers["Transfer-Encoding"]?.first?.description,
             let te = RFC_9110.TransferEncoding.parse(teHeader)
         {
             // Transfer-Encoding takes precedence
@@ -120,7 +120,7 @@ extension RFC_9110.MessageBodyLength {
             // Multiple Content-Length headers
             if clHeaders.count > 1 {
                 // Check if all values are identical
-                let values = clHeaders.map { $0.rawValue }
+                let values = clHeaders.map { $0.description }
                 let uniqueValues = Set(values)
                 if uniqueValues.count > 1 {
                     // Invalid: multiple different Content-Length values
@@ -130,7 +130,7 @@ extension RFC_9110.MessageBodyLength {
             }
 
             // Parse single Content-Length value
-            if let clValue = clHeaders.first?.rawValue.trimming(.ascii.whitespaces),
+            if let clValue = clHeaders.first?.description.trimming(.ascii.whitespaces),
                 let length = Int(clValue), length >= 0
             {
                 return .length(length)
@@ -163,7 +163,7 @@ extension RFC_9110.MessageBodyLength {
     /// ```
     public static func calculate(for request: RFC_9110.Request) -> Self {
         // Check Transfer-Encoding
-        if let teHeader = request.headers["Transfer-Encoding"]?.first?.rawValue,
+        if let teHeader = request.headers["Transfer-Encoding"]?.first?.description,
             let te = RFC_9110.TransferEncoding.parse(teHeader)
         {
             if te.hasChunked {
@@ -175,7 +175,7 @@ extension RFC_9110.MessageBodyLength {
         if let clHeaders = request.headers["Content-Length"], !clHeaders.isEmpty {
             // Multiple Content-Length headers
             if clHeaders.count > 1 {
-                let values = clHeaders.map { $0.rawValue }
+                let values = clHeaders.map { $0.description }
                 let uniqueValues = Set(values)
                 if uniqueValues.count > 1 {
                     // Invalid: multiple different Content-Length values
@@ -184,7 +184,7 @@ extension RFC_9110.MessageBodyLength {
             }
 
             // Parse single Content-Length value
-            if let clValue = clHeaders.first?.rawValue.trimming(.ascii.whitespaces),
+            if let clValue = clHeaders.first?.description.trimming(.ascii.whitespaces),
                 let length = Int(clValue), length >= 0
             {
                 return .length(length)

@@ -77,11 +77,4 @@ extension RFC_9110.Version {
         major > 1 || (major == 1 && minor >= 1)
     }
 
-    // MARK: - Errors
-
-    public enum ParsingError: Error, Sendable, Equatable {
-        case invalidFormat(reason: String)
-        case invalidHTTPName(String)
-        case invalidVersionNumber
-    }
 }

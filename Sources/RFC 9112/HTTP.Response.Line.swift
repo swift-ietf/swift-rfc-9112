@@ -98,14 +98,6 @@ extension RFC_9110.Response.Line {
         RFC_9110.Status.from(code: statusCode)
     }
 
-    // MARK: - Errors
-
-    public enum ParsingError: Error, Sendable, Equatable {
-        case invalidFormat(reason: String)
-        case invalidStatusCode(String)
-        case statusCodeOutOfRange(Int)
-        case invalidEncoding
-    }
 }
 
 extension RFC_9110.Status {

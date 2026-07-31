@@ -99,46 +99,4 @@ extension RFC_9110.MessageParser {
         return nil
     }
 
-    // MARK: - Types
-
-    /// A parsed line from an HTTP message
-    public struct Line: Sendable, Equatable {
-        public let content: [Byte]
-        public let terminator: LineTerminator
-        public let lineNumber: Int
-
-        public init(content: [Byte], terminator: LineTerminator, lineNumber: Int) {
-            self.content = content
-            self.terminator = terminator
-            self.lineNumber = lineNumber
-        }
-    }
-
-    /// Line terminator types
-    public enum LineTerminator: Sendable, Equatable {
-        case crlf  // Standard: CR LF (0x0D 0x0A)
-        case lf  // Lenient: Single LF (0x0A)
-        case none  // No terminator (end of data)
-    }
-
-    // MARK: - Errors
-
-    public enum ParsingError: Error, Sendable, Equatable {
-        case bareCR(lineNumber: Int)
-        case invalidCharacter(lineNumber: Int, byte: Byte)
-        case lineTooLong(lineNumber: Int, length: Int)
-        case unexpectedWhitespace(lineNumber: Int)
-    }
-}
-
-extension RFC_9110.MessageParser.Line {
-    /// Get the line content as a string
-    public var string: String {
-        String(decoding: content, as: UTF8.self)
-    }
-
-    /// Check if line is empty (blank line)
-    public var isEmpty: Bool {
-        content.isEmpty
-    }
 }

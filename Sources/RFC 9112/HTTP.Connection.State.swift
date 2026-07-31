@@ -40,11 +40,11 @@ extension RFC_9110.Connection.State {
     public func processRequest(_ request: RFC_9110.Request) {
         // Check for Connection header
         let connectionHeaders = request.headers.filter {
-            $0.name.rawValue.lowercased() == "connection"
+            $0.name.description.lowercased() == "connection"
         }
 
         for header in connectionHeaders {
-            if let conn = RFC_9110.Connection.parse(header.value.rawValue) {
+            if let conn = RFC_9110.Connection.parse(header.value.description) {
                 if conn.hasClose {
                     closeRequested = true
                     shouldPersist = false
@@ -58,11 +58,11 @@ extension RFC_9110.Connection.State {
     public func processResponse(_ response: RFC_9110.Response) {
         // Check for Connection header
         let connectionHeaders = response.headers.filter {
-            $0.name.rawValue.lowercased() == "connection"
+            $0.name.description.lowercased() == "connection"
         }
 
         for header in connectionHeaders {
-            if let conn = RFC_9110.Connection.parse(header.value.rawValue) {
+            if let conn = RFC_9110.Connection.parse(header.value.description) {
                 if conn.hasClose {
                     closeRequested = true
                     shouldPersist = false
@@ -94,7 +94,7 @@ extension RFC_9110.Connection.State {
     /// law, not RFC 9112 (9.7 there is TLS Connection Initiation)
     /// https://www.rfc-editor.org/rfc/rfc9110.html#section-7.8
     public func isUpgradeRequested(in request: RFC_9110.Request) -> Bool {
-        request.headers.contains { $0.name.rawValue.lowercased() == "upgrade" }
+        request.headers.contains { $0.name.description.lowercased() == "upgrade" }
     }
 
     /// Check if upgrade was accepted

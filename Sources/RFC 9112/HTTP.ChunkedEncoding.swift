@@ -60,39 +60,6 @@ extension RFC_9110 {
 
 extension RFC_9110.ChunkedEncoding {
 
-    // MARK: - Chunk Extension
-
-    /// Chunk extension (RFC 9112 Section 7.1.1)
-    ///
-    /// Chunk extensions provide a mechanism for additional chunk-specific metadata.
-    /// RFC 9112: "Recipients MUST ignore unrecognized chunk extensions"
-    public struct Extension: Sendable, Equatable, Hashable {
-        public let name: String
-        public let value: String?
-
-        public init(name: String, value: String? = nil) {
-            self.name = name
-            self.value = value
-        }
-    }
-
-    /// Result of decoding chunked data
-    public struct DecodeResult: Sendable, Equatable {
-        public let data: [Byte]
-        public let chunkExtensions: [[Extension]]  // Extensions for each chunk
-        public let trailers: [RFC_9110.Header.Field]
-
-        public init(
-            data: [Byte],
-            chunkExtensions: [[Extension]],
-            trailers: [RFC_9110.Header.Field]
-        ) {
-            self.data = data
-            self.chunkExtensions = chunkExtensions
-            self.trailers = trailers
-        }
-    }
-
     /// Encodes data using chunked transfer encoding
     ///
     /// - Parameters:
@@ -150,7 +117,7 @@ extension RFC_9110.ChunkedEncoding {
 
         // trailer-section
         for trailer in trailers {
-            let line = "\(trailer.name.rawValue): \(trailer.value.rawValue)\r\n"
+            let line = "\(trailer.name): \(trailer.value)\r\n"
             result.append(contentsOf: line.utf8)
         }
 
@@ -183,7 +150,7 @@ extension RFC_9110.ChunkedEncoding {
         while offset < data.count {
             // Find CRLF for chunk-size line
             guard let crlfIndex = data[offset...].firstIndex(of: 0x0D),
-                crlfIndex + 1 < data.count,
+                data.index(after: crlfIndex) < data.endIndex,
                 data[crlfIndex + 1] == 0x0A
             else {
                 throw ChunkedDecodingError.invalidFormat
@@ -221,7 +188,7 @@ extension RFC_9110.ChunkedEncoding {
                 // Parse trailer section
                 while offset < data.count {
                     // Check for final CRLF
-                    if offset + 1 < data.count && data[offset] == 0x0D
+                    if data.index(after: offset) < data.endIndex && data[offset] == 0x0D
                         && data[offset + 1] == 0x0A
                     {
                         // End of message
@@ -230,7 +197,7 @@ extension RFC_9110.ChunkedEncoding {
 
                     // Find next CRLF for trailer line
                     guard let nextCrlf = data[offset...].firstIndex(of: 0x0D),
-                        nextCrlf + 1 < data.count,
+                        data.index(after: nextCrlf) < data.endIndex,
                         data[nextCrlf + 1] == 0x0A
                     else {
                         throw ChunkedDecodingError.invalidFormat
@@ -290,66 +257,5 @@ extension RFC_9110.ChunkedEncoding {
             chunkExtensions: allChunkExtensions,
             trailers: trailers
         )
-    }
-
-    /// Errors that can occur during chunked decoding
-    public enum ChunkedDecodingError: Error, Sendable, Equatable {
-        /// Invalid chunked encoding format
-        case invalidFormat
-
-        /// Invalid chunk size value
-        case invalidChunkSize
-
-        /// Incomplete chunk data
-        case incompleteChunk
-
-        /// Missing CRLF after chunk data
-        case missingCRLF
-    }
-}
-
-extension RFC_9110.ChunkedEncoding.Extension {
-    /// Format as string for transmission
-    /// Format: ";name" or ";name=value"
-    public var formatted: String {
-        if let value = value {
-            // Check if value needs quoting
-            if value.contains(where: { $0 == ";" || $0.isWhitespace }) {
-                return ";\(name)=\"\(value)\""
-            } else {
-                return ";\(name)=\(value)"
-            }
-        } else {
-            return ";\(name)"
-        }
-    }
-
-    /// Parse chunk extensions from string
-    /// RFC 9112 Section 7.1.1: chunk-ext = *( BWS ";" BWS chunk-ext-name [ BWS "=" BWS chunk-ext-val ] )
-    static func parseExtensions(_ string: String) -> [Self] {
-        var extensions: [Self] = []
-        let parts = string.split(separator: ";", omittingEmptySubsequences: true)
-
-        for part in parts {
-            let trimmed = part.trimming(.ascii.whitespaces)
-            if trimmed.contains("=") {
-                let components = trimmed.split(separator: "=", maxSplits: 1)
-                if components.count == 2 {
-                    let name = String(components[0]).trimming(.ascii.whitespaces)
-                    var value = String(components[1]).trimming(.ascii.whitespaces)
-
-                    // Remove quotes if present
-                    if value.hasPrefix("\"") && value.hasSuffix("\"") {
-                        value = String(value.dropFirst().dropLast())
-                    }
-
-                    extensions.append(Self(name: name, value: value))
-                }
-            } else {
-                extensions.append(Self(name: trimmed, value: nil))
-            }
-        }
-
-        return extensions
     }
 }

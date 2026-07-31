@@ -22,12 +22,6 @@ extension RFC_9110 {
 
 extension RFC_9110.Pipeline {
 
-    /// Pending request information
-    private struct PendingRequest: Sendable {
-        let method: RFC_9110.Method
-        let timestamp: RFC_9110.Date
-    }
-
     // MARK: - Request Management
 
     /// Add a request to the pipeline

@@ -71,7 +71,7 @@ extension RFC_9110.Request.Line {
 
     /// Format request-line as string
     public var formatted: String {
-        "\(method.rawValue) \(target) \(version.formatted)"
+        "\(method) \(target) \(version.formatted)"
     }
 
     // MARK: - Validation
@@ -94,18 +94,4 @@ extension RFC_9110.Request.Line {
         // This validation happens when parsing target into Target type
     }
 
-    // MARK: - Errors
-
-    public enum ParsingError: Swift.Error, Sendable, Equatable {
-        case invalidFormat(reason: String)
-        case emptyMethod
-        case emptyTarget
-        case targetContainsWhitespace
-        case invalidEncoding
-        case invalidVersion(String)
-    }
-
-    public enum Error: Swift.Error, Sendable, Equatable {
-        case lineTooLong(length: Int, max: Int)
-    }
 }
