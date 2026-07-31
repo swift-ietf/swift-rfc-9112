@@ -143,7 +143,8 @@ struct `HTTP.ChunkedEncoding Tests` {
 
         @Test
         func `Decode - incomplete chunk`() async throws {
-            let chunked = Array("10\r\nshort".utf8).map { Byte($0) }  // Says 16 bytes but only has 5
+            // Says 16 bytes but only has 5
+            let chunked = Array("10\r\nshort".utf8).map { Byte($0) }
 
             #expect(throws: HTTP.ChunkedEncoding.ChunkedDecodingError.incompleteChunk) {
                 try HTTP.ChunkedEncoding.decode(chunked)
