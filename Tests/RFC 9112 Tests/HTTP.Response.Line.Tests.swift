@@ -7,6 +7,9 @@ import Testing
 
 @Suite
 struct `HTTP.Response.Line Tests` {
+    @Suite struct Unit {}
+    @Suite struct `Edge Case` {}
+    @Suite struct Integration {}
 
     @Test
     func `Parse valid status line with reason phrase`() async throws {

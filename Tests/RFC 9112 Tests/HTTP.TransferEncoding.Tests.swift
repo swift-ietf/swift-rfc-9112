@@ -8,6 +8,9 @@ import Testing
 
 @Suite
 struct `HTTP.TransferEncoding Tests` {
+    @Suite struct Unit {}
+    @Suite struct `Edge Case` {}
+    @Suite struct Integration {}
 
     @Test
     func `TransferEncoding - chunked`() async throws {

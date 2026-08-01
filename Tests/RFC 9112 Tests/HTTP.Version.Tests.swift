@@ -7,6 +7,9 @@ import Testing
 
 @Suite
 struct `HTTP.Version Tests` {
+    @Suite struct Unit {}
+    @Suite struct `Edge Case` {}
+    @Suite struct Integration {}
 
     @Test
     func `Parse HTTP/1.1`() async throws {

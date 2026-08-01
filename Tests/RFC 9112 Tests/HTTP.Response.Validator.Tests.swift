@@ -8,6 +8,9 @@ import Testing
 
 @Suite
 struct `HTTP.Response.Validator Tests` {
+    @Suite struct Unit {}
+    @Suite struct `Edge Case` {}
+    @Suite struct Integration {}
 
     @Test
     func `Validate 200 OK response`() async throws {

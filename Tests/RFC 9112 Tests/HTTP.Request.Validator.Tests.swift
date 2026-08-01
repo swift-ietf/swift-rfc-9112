@@ -8,6 +8,9 @@ import Testing
 
 @Suite
 struct `HTTP.Request.Validator Tests` {
+    @Suite struct Unit {}
+    @Suite struct `Edge Case` {}
+    @Suite struct Integration {}
 
     @Test
     func `Validate request with Content-Length only`() async throws {
