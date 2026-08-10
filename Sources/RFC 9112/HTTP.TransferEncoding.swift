@@ -245,6 +245,7 @@ extension RFC_9110.TransferEncoding: CustomStringConvertible {
 // MARK: - Codable
 
 extension RFC_9110.TransferEncoding: Codable {
+    // swiftlint:disable:next no_any_protocol_existential typed_throws_required // reason: Decodable.init(from:) is a stdlib protocol requirement; signature is fixed to `any Decoder` / untyped `throws`.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         let string = try container.decode(String.self)
@@ -259,6 +260,7 @@ extension RFC_9110.TransferEncoding: Codable {
         self = parsed
     }
 
+    // swiftlint:disable:next no_any_protocol_existential typed_throws_required // reason: Encodable.encode(to:) is a stdlib protocol requirement; signature is fixed to `any Encoder` / untyped `throws`.
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(headerValue)
