@@ -5,9 +5,20 @@ public import Byte_Primitives
 import Standard_Library_Extensions
 
 extension RFC_9110.Response {
-    /// Serialize HTTP/1.1 response to wire format
-    /// RFC 9112 Section 4: HTTP/1.1 response message format
-    public struct Serializer {}
+    /// Serializes an HTTP/1.1 response to wire format.
+    ///
+    /// Use the stateful initializer and `serialize(_:)` when the body arrives
+    /// incrementally. The static `serialize(_:version:includeReasonPhrase:)`
+    /// operation remains the whole-response compatibility surface.
+    public struct Serializer {
+        /// Where the incremental serializer is in its response.
+        private var state: State
+
+        /// Creates an incremental response serializer awaiting a head.
+        public init() {
+            self.state = .head
+        }
+    }
 }
 
 extension RFC_9110.Response.Serializer {
