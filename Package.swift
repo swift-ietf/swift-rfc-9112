@@ -18,7 +18,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/swift-primitives/swift-byte-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-ietf/swift-rfc-9110.git", revision: "9c48f6ffdafba51dccf6fb85033b5772280ec298"),
+        .package(url: "https://github.com/swift-ietf/swift-rfc-9110.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-standard-library-extensions.git", branch: "main")
     ],
     targets: [
