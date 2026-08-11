@@ -18,6 +18,9 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/swift-primitives/swift-byte-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-incits/swift-incits-4-1986.git", branch: "main"),
+        .package(url: "https://github.com/swift-ietf/swift-rfc-3986.git", branch: "main"),
+        .package(url: "https://github.com/swift-ietf/swift-rfc-5322.git", branch: "main"),
         .package(url: "https://github.com/swift-ietf/swift-rfc-9110.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-standard-library-extensions.git", branch: "main")
     ],
@@ -26,6 +29,9 @@ let package = Package(
             name: "RFC 9112",
             dependencies: [
                 .product(name: "Byte Primitives", package: "swift-byte-primitives"),
+                .product(name: "INCITS 4 1986", package: "swift-incits-4-1986"),
+                .product(name: "RFC 3986", package: "swift-rfc-3986"),
+                .product(name: "RFC 5322", package: "swift-rfc-5322"),
                 .product(name: "RFC 9110", package: "swift-rfc-9110"),
                 .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions")
     ]
