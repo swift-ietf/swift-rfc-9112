@@ -64,7 +64,15 @@ extension RFC_9110.Request.Deserializer {
         }
 
         // Parse target into Target type
-        let target = try parseTarget(requestLine.target, method: requestLine.method)
+        let target: RFC_9110.Request.Target
+        do throws(RFC_9110.Request.Target.ParsingError) {
+            target = try RFC_9110.Request.Target.parse(
+                requestLine.target,
+                method: requestLine.method
+            )
+        } catch {
+            throw .invalidTarget(requestLine.target)
+        }
 
         // Calculate bytes consumed (up to and including separator line)
         var bytesConsumed = 0
@@ -132,67 +140,5 @@ extension RFC_9110.Request.Deserializer {
         )
 
         return (request, bytesConsumed)
-    }
-
-    /// Parse target string into Target type
-    private static func parseTarget(
-        _ targetString: String,
-        method: RFC_9110.Method
-    ) throws(Error) -> RFC_9110.Request.Target {
-        // RFC 9112 Section 3.2: Request target forms
-        if targetString == "*" {
-            return .asterisk
-        }
-
-        // Check for absolute-form (starts with scheme)
-        if targetString.contains("://") {
-            let uri: RFC_3986.URI
-            do throws(RFC_3986.Error) {
-                uri = try RFC_3986.URI(targetString)
-            } catch {
-                throw .invalidTarget(targetString)
-            }
-            return .absolute(uri)
-        }
-
-        // Check for authority-form (CONNECT method)
-        if method == .connect {
-            let authority: RFC_3986.URI.Authority
-            do throws(RFC_3986.URI.Authority.Error) {
-                authority = try RFC_3986.URI.Authority(targetString)
-            } catch {
-                throw .invalidTarget(targetString)
-            }
-            return .authority(authority)
-        }
-
-        // origin-form: path and optional query
-        let components = targetString.split(separator: "?", maxSplits: 1)
-        let pathString = String(components[0])
-
-        let path: RFC_3986.URI.Path
-        do throws(RFC_3986.URI.Path.Error) {
-            path = try RFC_3986.URI.Path(pathString)
-        } catch {
-            throw .invalidTarget(targetString)
-        }
-
-        let query: RFC_3986.URI.Query?
-        if components.count > 1 {
-            let queryString = String(components[1])
-            do throws(RFC_3986.URI.Query.Error) {
-                query = try RFC_3986.URI.Query(queryString)
-            } catch {
-                // Malformed query on an otherwise-valid target is tolerated:
-                // RFC 9112 Section 3.2 leaves origin-form query handling to
-                // the target consumer, and a request line MUST NOT be
-                // rejected solely for a query string that doesn't parse.
-                query = nil
-            }
-        } else {
-            query = nil
-        }
-
-        return .origin(path: path, query: query)
     }
 }
