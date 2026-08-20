@@ -1,14 +1,14 @@
-// swift-tools-version: 6.3.3
+// swift-tools-version: 6.4
 
 import PackageDescription
 
 let package = Package(
     name: "swift-rfc-9112",
     platforms: [
-        .macOS("27"),
-        .iOS("27"),
-        .tvOS("27"),
-        .watchOS("27")
+        .macOS(.v27),
+        .iOS(.v27),
+        .tvOS(.v27),
+        .watchOS(.v27),
     ],
     products: [
         .library(
@@ -17,9 +17,15 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-primitives/swift-byte-primitives.git", branch: "main"),
+        .package(
+            url: "https://github.com/swift-primitives/swift-byte-primitives.git",
+            branch: "main"
+        ),
         .package(url: "https://github.com/swift-ietf/swift-rfc-9110.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-standard-library-extensions.git", branch: "main")
+        .package(
+            url: "https://github.com/swift-primitives/swift-standard-library-extensions.git",
+            branch: "main"
+        ),
     ],
     targets: [
         .target(
@@ -27,13 +33,16 @@ let package = Package(
             dependencies: [
                 .product(name: "Byte Primitives", package: "swift-byte-primitives"),
                 .product(name: "RFC 9110", package: "swift-rfc-9110"),
-                .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions")
-    ]
+                .product(
+                    name: "Standard Library Extensions",
+                    package: "swift-standard-library-extensions"
+                ),
+            ]
         ),
         .testTarget(
             name: "RFC 9112 Tests",
             dependencies: [
-                "RFC 9112",
+                "RFC 9112"
             ]
         ),
     ],
