@@ -1,6 +1,3 @@
-// HTTP.Response.Deserializer.Error.swift
-// swift-rfc-9112
-
 extension RFC_9110.Response.Deserializer {
     public enum Error: Swift.Error, Sendable {
         case emptyMessage

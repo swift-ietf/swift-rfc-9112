@@ -1,6 +1,3 @@
-// HTTP.Response.Validator.Tests.swift
-// swift-rfc-9112
-
 import Byte_Primitives
 import Testing
 
@@ -23,7 +20,6 @@ struct `HTTP.Response.Validator Tests` {
             body: Array("Hello".utf8).map { Byte($0) }
         )
 
-        // Should not throw
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -35,7 +31,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // Should not throw
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -50,7 +45,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // 101 should not have body
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -62,7 +56,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // 204 should not have body
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -76,7 +69,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // 304 should not have body
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -90,7 +82,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // 101 cannot have Transfer-Encoding
         #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
@@ -106,7 +97,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // 204 cannot have Transfer-Encoding
         #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
@@ -122,7 +112,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // 304 cannot have Transfer-Encoding
         #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
@@ -138,7 +127,6 @@ struct `HTTP.Response.Validator Tests` {
             body: [Byte](repeating: 0, count: 10)
         )
 
-        // Single Content-Length is valid
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -153,7 +141,6 @@ struct `HTTP.Response.Validator Tests` {
             body: [Byte](repeating: 0, count: 10)
         )
 
-        // Multiple identical Content-Length values are allowed
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -168,7 +155,6 @@ struct `HTTP.Response.Validator Tests` {
             body: [Byte](repeating: 0, count: 10)
         )
 
-        // Multiple different Content-Length values should be rejected
         #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
@@ -185,7 +171,6 @@ struct `HTTP.Response.Validator Tests` {
             body: [Byte]()
         )
 
-        // Transfer-Encoding with Content-Length should be rejected
         #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
@@ -199,7 +184,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // Status code < 100 is invalid
         #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
@@ -213,7 +197,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // Status code >= 600 is invalid
         #expect(throws: RFC_9110.Response.Validator.Error.self) {
             try RFC_9110.Response.Validator.validate(response)
         }
@@ -227,7 +210,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // 100 Continue should be valid
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -241,7 +223,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // 201 Created should be valid
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -255,7 +236,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // 301 Moved Permanently should be valid
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -267,7 +247,6 @@ struct `HTTP.Response.Validator Tests` {
             body: Array("Bad Request".utf8).map { Byte($0) }
         )
 
-        // 400 Bad Request should be valid
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -279,7 +258,6 @@ struct `HTTP.Response.Validator Tests` {
             body: Array("Internal Server Error".utf8).map { Byte($0) }
         )
 
-        // 500 Internal Server Error should be valid
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -293,7 +271,6 @@ struct `HTTP.Response.Validator Tests` {
             body: [Byte]()
         )
 
-        // Chunked encoding should be valid
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -307,7 +284,6 @@ struct `HTTP.Response.Validator Tests` {
             body: [Byte]()
         )
 
-        // Multiple encodings with chunked last should be valid
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -319,7 +295,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // Custom status code in valid range should be accepted
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -331,7 +306,6 @@ struct `HTTP.Response.Validator Tests` {
             body: Array("Hello".utf8).map { Byte($0) }
         )
 
-        // Response without headers should be valid
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -345,7 +319,6 @@ struct `HTTP.Response.Validator Tests` {
             body: nil
         )
 
-        // Response with no body should be valid
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -360,7 +333,6 @@ struct `HTTP.Response.Validator Tests` {
             body: [Byte](repeating: 0, count: 100)
         )
 
-        // 206 Partial Content should be valid
         try RFC_9110.Response.Validator.validate(response)
     }
 
@@ -375,7 +347,6 @@ struct `HTTP.Response.Validator Tests` {
             body: [Byte](repeating: 0, count: 10)
         )
 
-        // Multiple identical Content-Length (case-insensitive) should be allowed
         try RFC_9110.Response.Validator.validate(response)
     }
 }

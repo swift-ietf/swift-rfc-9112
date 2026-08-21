@@ -1,16 +1,10 @@
-// HTTP.ChunkedEncoding.DecodeResult.swift
-// swift-rfc-9112
-//
-// RFC 9112 Section 7.1: Chunked Transfer Coding
-// https://www.rfc-editor.org/rfc/rfc9112.html#section-7.1
-
 public import Byte_Primitives
 
 extension RFC_9110.ChunkedEncoding {
-    /// Result of decoding chunked data
+
     public struct DecodeResult: Sendable, Equatable {
         public let data: [Byte]
-        public let chunkExtensions: [[Extension]]  // Extensions for each chunk
+        public let chunkExtensions: [[Extension]]
         public let trailers: [RFC_9110.Header.Field]
 
         public init(

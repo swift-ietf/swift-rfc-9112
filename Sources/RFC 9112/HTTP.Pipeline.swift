@@ -1,15 +1,7 @@
-// HTTP.Pipeline.swift
-// swift-rfc-9112
-
 public import RFC_5322
 
 extension RFC_9110 {
-    /// HTTP/1.1 request/response pipelining support
-    /// RFC 9112 Section 9.3.2: Pipelining
-    /// https://www.rfc-editor.org/rfc/rfc9112.html#section-9.3.2
-    ///
-    /// HTTP pipelining allows clients to send multiple requests without waiting for each response.
-    /// Responses must be sent in the same order as requests.
+
     public actor Pipeline {
         private var pendingRequests: [PendingRequest] = []
         private var allowPipelining: Bool
@@ -22,24 +14,17 @@ extension RFC_9110 {
 
 extension RFC_9110.Pipeline {
 
-    // MARK: - Request Management
-
-    /// Add a request to the pipeline
-    /// Returns: true if request can be pipelined, false otherwise
     public func addRequest(_ request: RFC_9110.Request, now: RFC_9110.Date) -> Bool {
-        // RFC 9112 Section 9.3.2: "Clients SHOULD NOT pipeline requests after a
-        // non-idempotent method, until the final response status code for that method
-        // has been received"
+
         if !allowPipelining {
-            // If pipelining disabled, only allow if no pending requests
+
             guard pendingRequests.isEmpty else {
                 return false
             }
         }
 
-        // Check if we should allow pipelining after the last request
         if let last = pendingRequests.last {
-            // Don't pipeline after non-idempotent methods
+
             if !last.method.isIdempotent {
                 return false
             }
@@ -49,8 +34,6 @@ extension RFC_9110.Pipeline {
         return true
     }
 
-    /// Remove the oldest pending request (when response received)
-    /// Returns: The method of the request that was removed
     public func removeOldestRequest() -> RFC_9110.Method? {
         guard !pendingRequests.isEmpty else {
             return nil
@@ -59,49 +42,35 @@ extension RFC_9110.Pipeline {
         return removed.method
     }
 
-    /// Get the method of the next expected response
-    /// This is needed for proper message body length determination
     public func nextExpectedMethod() -> RFC_9110.Method? {
         pendingRequests.first?.method
     }
 
-    /// Get count of pending requests
     public func pendingCount() -> Int {
         pendingRequests.count
     }
 
-    /// Clear all pending requests
     public func clear() {
         pendingRequests.removeAll()
     }
 
-    /// Check if pipelining is allowed
     public func canPipeline() -> Bool {
         allowPipelining
     }
 
-    /// Enable or disable pipelining
     public func setPipelining(enabled: Bool) {
         allowPipelining = enabled
     }
 
-    // MARK: - Safety Checks
-
-    /// Check if it's safe to pipeline after this method
-    /// RFC 9112: Don't pipeline after non-idempotent methods
     public static func isSafeToPipelineAfter(method: RFC_9110.Method) -> Bool {
         method.isIdempotent
     }
 
-    /// Check if request should wait for response before sending next
     public func shouldWaitForResponse(after request: RFC_9110.Request) -> Bool {
-        // Always wait after non-idempotent methods
+
         !request.method.isIdempotent
     }
 
-    // MARK: - Timeout Management
-
-    /// Get age of oldest pending request in seconds
     public func oldestRequestAge(now: RFC_9110.Date) -> Int? {
         guard let oldest = pendingRequests.first else {
             return nil
@@ -109,7 +78,6 @@ extension RFC_9110.Pipeline {
         return now.secondsSinceEpoch - oldest.timestamp.secondsSinceEpoch
     }
 
-    /// Check if any request has exceeded timeout
     public func hasTimedOut(now: RFC_9110.Date, timeoutSeconds: Int) -> Bool {
         guard let age = oldestRequestAge(now: now) else {
             return false

@@ -1,9 +1,5 @@
-// HTTP.Connection.State.swift
-// swift-rfc-9112
-
 extension RFC_9110.Connection {
-    /// Connection state machine for HTTP/1.1 persistence tracking
-    /// RFC 9112 Section 9.3: Persistence
+
     public actor State {
         private var shouldPersist: Bool
         private var version: RFC_9110.Version
@@ -11,7 +7,7 @@ extension RFC_9110.Connection {
 
         public init(version: RFC_9110.Version = .http11) {
             self.version = version
-            // HTTP/1.1 defaults to persistent
+
             self.shouldPersist = version.isHTTP11OrHigher
             self.closeRequested = false
         }
@@ -20,25 +16,16 @@ extension RFC_9110.Connection {
 
 extension RFC_9110.Connection.State {
 
-    // MARK: - State Queries
-
-    /// Check if connection should persist
     public func isPersistent() -> Bool {
         !closeRequested && shouldPersist
     }
 
-    /// Get current HTTP version
     public func getVersion() -> RFC_9110.Version {
         version
     }
 
-    // MARK: - State Updates
-
-    /// Update connection state based on request
-    /// RFC 9112 Section 9.6: Tear-down — the "close" connection option
-    /// https://www.rfc-editor.org/rfc/rfc9112.html#section-9.6
     public func processRequest(_ request: RFC_9110.Request) {
-        // Check for Connection header
+
         let connectionHeaders = request.headers.filter {
             $0.name.description.lowercased() == "connection"
         }
@@ -53,10 +40,8 @@ extension RFC_9110.Connection.State {
         }
     }
 
-    /// Update connection state based on response
-    /// RFC 9112 Section 9.3: Persistence is determined by most recent message
     public func processResponse(_ response: RFC_9110.Response) {
-        // Check for Connection header
+
         let connectionHeaders = response.headers.filter {
             $0.name.description.lowercased() == "connection"
         }
@@ -67,39 +52,30 @@ extension RFC_9110.Connection.State {
                     closeRequested = true
                     shouldPersist = false
                 } else if conn.hasKeepAlive && version.isHTTP10 {
-                    // HTTP/1.0 with keep-alive
+
                     shouldPersist = true
                 }
             }
         }
     }
 
-    /// Mark connection for closure
     public func close() {
         closeRequested = true
         shouldPersist = false
     }
 
-    /// Reset connection state (for reuse after closure)
     public func reset(version: RFC_9110.Version = .http11) {
         self.version = version
         self.shouldPersist = version.isHTTP11OrHigher
         self.closeRequested = false
     }
 
-    // MARK: - Upgrade Support
-
-    /// Check if upgrade is requested
-    /// RFC 9110 Section 7.8: Upgrade — the Upgrade header field is RFC 9110
-    /// law, not RFC 9112 (9.7 there is TLS Connection Initiation)
-    /// https://www.rfc-editor.org/rfc/rfc9110.html#section-7.8
     public func isUpgradeRequested(in request: RFC_9110.Request) -> Bool {
         request.headers.contains { $0.name.description.lowercased() == "upgrade" }
     }
 
-    /// Check if upgrade was accepted
     public func isUpgradeAccepted(in response: RFC_9110.Response) -> Bool {
-        // 101 Switching Protocols
+
         response.status.code == 101
     }
 }

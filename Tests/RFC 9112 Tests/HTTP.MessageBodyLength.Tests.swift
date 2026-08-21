@@ -1,6 +1,3 @@
-// HTTP.MessageBodyLength.Tests.swift
-// swift-rfc-9112
-
 import Testing
 
 @testable import RFC_9112
@@ -255,7 +252,6 @@ struct `HTTP.MessageBodyLength Tests` {
                 requestMethod: .get
             )
 
-            // Invalid - should return none
             #expect(length == .none)
         }
 

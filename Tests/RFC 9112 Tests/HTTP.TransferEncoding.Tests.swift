@@ -1,6 +1,3 @@
-// HTTP.TransferEncoding.Tests.swift
-// swift-rfc-9112
-
 import Foundation
 import Testing
 
@@ -66,7 +63,7 @@ struct `HTTP.TransferEncoding Tests` {
         let te = HTTP.TransferEncoding.list([.chunked, .gzip])
 
         #expect(te.hasChunked == true)
-        #expect(te.isChunkedFinal == false)  // Invalid per RFC 9112
+        #expect(te.isChunkedFinal == false)
     }
 
     @Test
@@ -122,7 +119,7 @@ struct `HTTP.TransferEncoding Tests` {
         var set: Set<HTTP.TransferEncoding> = []
 
         set.insert(.chunked)
-        set.insert(.chunked)  // Duplicate
+        set.insert(.chunked)
         set.insert(.gzip)
 
         #expect(set.count == 2)

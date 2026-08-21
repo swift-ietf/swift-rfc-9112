@@ -1,6 +1,3 @@
-// HTTP.MessageParser.ParsingError.swift
-// swift-rfc-9112
-
 public import Byte_Primitives
 
 extension RFC_9110.MessageParser {

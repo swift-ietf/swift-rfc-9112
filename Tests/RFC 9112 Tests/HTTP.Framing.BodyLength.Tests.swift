@@ -1,14 +1,3 @@
-// HTTP.Framing.BodyLength.Tests.swift
-// swift-rfc-9112
-//
-// RFC 9112 Section 6.3 conformance, both directions.
-//
-// The reject set alone is not sufficient: a determination that rejected every
-// message near the hazard would pass all of it. The accept set is what proves
-// the rejections are discriminating, and the request/response pair on the same
-// input is what proves the two dispositions were distinguished rather than
-// unified into whichever was easier to implement.
-
 import Testing
 
 @testable import RFC_9112
@@ -19,8 +8,6 @@ struct `HTTP.Framing.BodyLength Tests` {
     @Suite struct `Edge Case` {}
     @Suite struct Integration {}
 }
-
-// MARK: - Edge Case: framing that MUST NOT be reported as a valid length
 
 extension `HTTP.Framing.BodyLength Tests`.`Edge Case` {
     @Test
@@ -33,7 +20,7 @@ extension `HTTP.Framing.BodyLength Tests`.`Edge Case` {
 
     @Test
     func `negative Content-Length throws`() throws {
-        // Content-Length = 1*DIGIT, so a sign is not merely out of range.
+
         let headers: HTTP.Headers = [try .init(name: "Content-Length", value: "-1")]
         #expect(throws: HTTP.Framing.Error.invalidContentLength("-1")) {
             try HTTP.Framing.BodyLength.determine(context: .request, headers: headers)
@@ -42,8 +29,7 @@ extension `HTTP.Framing.BodyLength Tests`.`Edge Case` {
 
     @Test
     func `a leading-plus Content-Length throws`() throws {
-        // F4c. `Int(_:)`-style parsing accepts `+5`, but 1*DIGIT forbids the
-        // sign, so the ABNF-faithful check must reject it.
+
         let headers: HTTP.Headers = [try .init(name: "Content-Length", value: "+5")]
         #expect(throws: HTTP.Framing.Error.invalidContentLength("+5")) {
             try HTTP.Framing.BodyLength.determine(context: .request, headers: headers)
@@ -52,7 +38,7 @@ extension `HTTP.Framing.BodyLength Tests`.`Edge Case` {
 
     @Test
     func `a hex-prefixed Content-Length throws`() throws {
-        // F4d. `0x5` is not 1*DIGIT; only decimal digits are a valid length.
+
         let headers: HTTP.Headers = [try .init(name: "Content-Length", value: "0x5")]
         #expect(throws: HTTP.Framing.Error.invalidContentLength("0x5")) {
             try HTTP.Framing.BodyLength.determine(context: .request, headers: headers)
@@ -88,9 +74,7 @@ extension `HTTP.Framing.BodyLength Tests`.`Edge Case` {
 
     @Test
     func `Transfer-Encoding with Content-Length is reported, not silently preferred`() throws {
-        // Section 6.3 rule 3. The condition must be reported so a forwarding
-        // intermediary can obey the MUST to strip Content-Length; silently
-        // returning .chunked leaves it unable to comply.
+
         let headers: HTTP.Headers = [
             try .init(name: "Transfer-Encoding", value: "chunked"),
             try .init(name: "Content-Length", value: "42"),
@@ -102,8 +86,7 @@ extension `HTTP.Framing.BodyLength Tests`.`Edge Case` {
 
     @Test
     func `chunked not final is rejected on a request`() throws {
-        // `hasChunked` membership would accept this; `isChunkedFinal` is the
-        // conformant test and this is the case that separates them.
+
         let headers: HTTP.Headers = [try .init(name: "Transfer-Encoding", value: "chunked, gzip")]
         #expect(throws: HTTP.Framing.Error.chunkedNotFinal) {
             try HTTP.Framing.BodyLength.determine(context: .request, headers: headers)
@@ -120,9 +103,7 @@ extension `HTTP.Framing.BodyLength Tests`.`Edge Case` {
 
     @Test
     func `chunked split across field lines so it is not final overall is rejected`() throws {
-        // Two field lines are equivalent to one comma-joined list, so this is
-        // `chunked, gzip` and chunked is not final. Judging finality per line
-        // would wrongly accept it.
+
         let headers: HTTP.Headers = [
             try .init(name: "Transfer-Encoding", value: "chunked"),
             try .init(name: "Transfer-Encoding", value: "gzip"),
@@ -133,12 +114,10 @@ extension `HTTP.Framing.BodyLength Tests`.`Edge Case` {
     }
 }
 
-// MARK: - Unit: valid framing that MUST NOT be rejected
-
 extension `HTTP.Framing.BodyLength Tests`.Unit {
     @Test
     func `identical repeated Content-Length field lines are legal`() throws {
-        // Section 6.3 rule 4 makes only DIFFERING values invalid.
+
         let headers: HTTP.Headers = [
             try .init(name: "Content-Length", value: "42"),
             try .init(name: "Content-Length", value: "42"),
@@ -165,8 +144,7 @@ extension `HTTP.Framing.BodyLength Tests`.Unit {
     func `optional whitespace around a list separator does not invalidate a Content-Length`()
         throws
     {
-        // OWS is permitted around list separators (RFC 9110 Section 5.6.1), so
-        // the digits check must run on the trimmed token, not the raw element.
+
         let headers: HTTP.Headers = [try .init(name: "Content-Length", value: "42 ,\t42")]
         let length = try HTTP.Framing.BodyLength.determine(context: .request, headers: headers)
         #expect(length == .length(42))
@@ -187,13 +165,10 @@ extension `HTTP.Framing.BodyLength Tests`.Unit {
     }
 }
 
-// MARK: - Integration: the same input framed in both roles
-
 extension `HTTP.Framing.BodyLength Tests`.Integration {
     @Test
     func `chunked-not-final rejects on request but reads until close on response`() throws {
-        // The pair, not either half, is what proves the two dispositions were
-        // distinguished rather than unified into whichever was easier.
+
         let headers: HTTP.Headers = [try .init(name: "Transfer-Encoding", value: "chunked, gzip")]
 
         #expect(throws: HTTP.Framing.Error.chunkedNotFinal) {
@@ -239,8 +214,6 @@ extension `HTTP.Framing.BodyLength Tests`.Integration {
     }
 }
 
-// MARK: - Unit: status and method override any framing header
-
 extension `HTTP.Framing.BodyLength Tests`.Unit {
     @Test
     func `a response to HEAD has no body even with a Content-Length`() throws {
@@ -274,8 +247,7 @@ extension `HTTP.Framing.BodyLength Tests`.Unit {
 
     @Test
     func `a successful CONNECT response is a tunnel, distinct from no body`() throws {
-        // .tunnel rather than .none: the connection stops being a sequence of
-        // HTTP messages, which "no body, then the next message" would deny.
+
         let headers: HTTP.Headers = []
         let length = try HTTP.Framing.BodyLength.determine(
             context: .response(statusCode: 200, requestMethod: .connect),

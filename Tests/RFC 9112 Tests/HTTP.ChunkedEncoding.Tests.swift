@@ -1,6 +1,3 @@
-// HTTP.ChunkedEncoding.Tests.swift
-// swift-rfc-9112
-
 import Byte_Primitives
 import Byte_Primitives_Standard_Library_Integration
 import Testing
@@ -143,7 +140,7 @@ struct `HTTP.ChunkedEncoding Tests` {
 
         @Test
         func `Decode - incomplete chunk`() async throws {
-            // Says 16 bytes but only has 5
+
             let chunked = Array("10\r\nshort".utf8).map { Byte($0) }
 
             #expect(throws: HTTP.ChunkedEncoding.ChunkedDecodingError.incompleteChunk) {
@@ -153,7 +150,7 @@ struct `HTTP.ChunkedEncoding Tests` {
 
         @Test
         func `Decode - missing CRLF`() async throws {
-            // Missing CRLF after chunk
+
             let chunked = Array("5\r\nHelloXX0\r\n\r\n".utf8).map { Byte($0) }
 
             #expect(throws: HTTP.ChunkedEncoding.ChunkedDecodingError.missingCRLF) {
@@ -175,7 +172,7 @@ struct `HTTP.ChunkedEncoding Tests` {
 
         @Test
         func `Round trip - large data`() async throws {
-            let original = [Byte](repeating: 0x41, count: 100000)  // 100KB of 'A'
+            let original = [Byte](repeating: 0x41, count: 100000)
             let chunked = HTTP.ChunkedEncoding.encode(original, chunkSize: 8192)
             let decoded = try HTTP.ChunkedEncoding.decode(chunked).data
 

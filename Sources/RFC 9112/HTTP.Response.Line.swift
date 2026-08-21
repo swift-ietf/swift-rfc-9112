@@ -1,9 +1,5 @@
-// HTTP.Response.Line.swift
-// swift-rfc-9112
-
 extension RFC_9110.Response {
-    /// HTTP/1.1 status-line parser implementing RFC 9112 Section 4
-    /// Format: HTTP-version SP status-code SP [ reason-phrase ]
+
     public struct Line: Sendable, Equatable {
         public let version: RFC_9110.Version
         public let statusCode: Int
@@ -15,7 +11,6 @@ extension RFC_9110.Response {
             self.reasonPhrase = reasonPhrase
         }
 
-        /// Create from RFC_9110.Status
         public init(version: RFC_9110.Version, status: RFC_9110.Status, reasonPhrase: String? = nil)
         {
             self.version = version
@@ -27,14 +22,8 @@ extension RFC_9110.Response {
 
 extension RFC_9110.Response.Line {
 
-    // MARK: - Parsing
-
-    /// Parse status-line from string
-    /// RFC 9112 Section 4: "status-line = HTTP-version SP status-code SP [ reason-phrase ]"
-    /// RFC 9112: "the space that separates the status-code from the reason-phrase is required
-    /// even if the reason-phrase is absent"
     public static func parse(_ line: String) throws(ParsingError) -> Self {
-        // Split into version and rest
+
         let components = line.split(
             separator: " ",
             maxSplits: 2,
@@ -47,7 +36,6 @@ extension RFC_9110.Response.Line {
             )
         }
 
-        // Parse version
         let versionString = String(components[0])
         let version: RFC_9110.Version
         do throws(RFC_9110.Version.ParsingError) {
@@ -56,19 +44,15 @@ extension RFC_9110.Response.Line {
             throw ParsingError.invalidFormat(reason: "Invalid HTTP version: \(versionString)")
         }
 
-        // Parse status code
         let statusString = String(components[1])
         guard let statusCode = Int(statusString), statusString.count == 3 else {
             throw ParsingError.invalidStatusCode(statusString)
         }
 
-        // RFC 9112 Section 4: status-code must be 3 digits
         guard statusCode >= 100 && statusCode <= 999 else {
             throw ParsingError.statusCodeOutOfRange(statusCode)
         }
 
-        // Parse reason phrase (optional)
-        // RFC 9112: "Clients SHOULD ignore the reason-phrase content because it is not a reliable channel"
         var reasonPhrase: String?
         if components.count == 3 {
             let phrase = String(components[2])
@@ -78,11 +62,6 @@ extension RFC_9110.Response.Line {
         return Self(version: version, statusCode: statusCode, reasonPhrase: reasonPhrase)
     }
 
-    // MARK: - Formatting
-
-    /// Format status-line as string
-    /// RFC 9112 Section 4: "the space that separates the status-code from the reason-phrase
-    /// is required even if the reason-phrase is absent"
     public var formatted: String {
         if let reason = reasonPhrase {
             return "\(version.formatted) \(statusCode) \(reason)"
@@ -91,9 +70,6 @@ extension RFC_9110.Response.Line {
         }
     }
 
-    // MARK: - Convenience
-
-    /// Get the status as RFC_9110.Status if it's a known status code
     public var status: RFC_9110.Status? {
         RFC_9110.Status.from(code: statusCode)
     }
@@ -101,11 +77,9 @@ extension RFC_9110.Response.Line {
 }
 
 extension RFC_9110.Status {
-    /// Get Status from status code if known
+
     internal static func from(code: Int) -> RFC_9110.Status? {
-        // Check if it's a known status
-        // This is a helper that can be used but isn't required
-        // Since Status has init(_ code: Int), we can always create one
+
         return RFC_9110.Status(code)
     }
 }

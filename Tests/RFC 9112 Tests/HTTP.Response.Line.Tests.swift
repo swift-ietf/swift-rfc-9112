@@ -1,6 +1,3 @@
-// HTTP.Response.Line.Tests.swift
-// swift-rfc-9112
-
 import Testing
 
 @testable import RFC_9112
@@ -156,7 +153,7 @@ struct `HTTP.Response.Line Tests` {
 
     @Test
     func `Validate - status code range`() async throws {
-        // Valid status codes are 100-599
+
         let valid = RFC_9110.Response.Line(
             version: .http11,
             statusCode: 200,

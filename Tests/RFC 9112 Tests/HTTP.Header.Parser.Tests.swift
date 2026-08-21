@@ -1,6 +1,3 @@
-// HTTP.Header.Parser.Tests.swift
-// swift-rfc-9112
-
 import Testing
 
 @testable import RFC_9112
@@ -51,7 +48,6 @@ struct `HTTP.Header.Parser Tests` {
             let line = "content-type: text/plain"
             let (name, value) = try RFC_9110.Header.Parser.parseFieldLine(line)
 
-            // Field names should preserve case
             #expect(name == "content-type")
             #expect(value == "text/plain")
         }
@@ -62,7 +58,7 @@ struct `HTTP.Header.Parser Tests` {
             let (name, value) = try RFC_9110.Header.Parser.parseFieldLine(line)
 
             #expect(name == "X-Custom")
-            // Leading/trailing whitespace should be trimmed
+
             #expect(value == "value with spaces")
         }
 
@@ -88,7 +84,6 @@ struct `HTTP.Header.Parser Tests` {
         func `ObsFoldPolicy sendable conformance`() async throws {
             let policy = RFC_9110.Header.Parser.ObsFoldPolicy.replaceWithSpace
 
-            // Verify policy can be safely sent across concurrency boundaries
             await Task {
                 _ = policy
             }.value

@@ -1,26 +1,13 @@
-// HTTP.Request.Validator.swift
-// swift-rfc-9112
-
 extension RFC_9110.Request {
-    /// HTTP/1.1 request validation for security (RFC 9112 Section 11.2)
-    ///
-    /// Implements validation rules to prevent request smuggling
+
     public enum Validator {}
 }
 
 extension RFC_9110.Request.Validator {
 
-    /// Validate request for potential smuggling attacks
-    /// RFC 9112 Section 11.2: Request Smuggling
-    ///
-    /// Key rule: "A server MAY reject a request that contains both Content-Length and
-    /// Transfer-Encoding or process such a request in accordance with the Transfer-Encoding
-    /// alone. Regardless, the server MUST close the connection after responding to such a
-    /// request to avoid the potential attacks."
     public static func validate(_ request: RFC_9110.Request) throws(Error) {
         let headers = request.headers
 
-        // Check for both Transfer-Encoding and Content-Length
         let hasTransferEncoding = headers.contains {
             $0.name.description.lowercased() == "transfer-encoding"
         }
@@ -34,21 +21,15 @@ extension RFC_9110.Request.Validator {
             )
         }
 
-        // Validate Transfer-Encoding if present
         if hasTransferEncoding {
             try validateTransferEncoding(headers: Array(headers))
         }
 
-        // Validate Content-Length if present
         if hasContentLength {
             try validateContentLength(headers: Array(headers))
         }
     }
 
-    // MARK: - Header Validation
-
-    /// Validate Transfer-Encoding header
-    /// RFC 9112 Section 6.1
     private static func validateTransferEncoding(headers: [RFC_9110.Header.Field]) throws(Error) {
         let transferEncodingHeaders = headers.filter {
             $0.name.description.lowercased() == "transfer-encoding"
@@ -58,23 +39,20 @@ extension RFC_9110.Request.Validator {
             return
         }
 
-        // Parse Transfer-Encoding value
         for header in transferEncodingHeaders {
             guard let te = RFC_9110.TransferEncoding.parse(header.value.description) else {
                 throw Error.invalidTransferEncoding(header.value.description)
             }
 
-            // RFC 9112 Section 7: Chunked must be final encoding (if present in list)
             if te.hasChunked && !te.isChunkedFinal {
                 throw Error.chunkedNotFinalEncoding
             }
         }
 
-        // RFC 9112: "A sender MUST NOT apply the chunked transfer coding more than once to a message body"
         var chunkedCount = 0
         for header in transferEncodingHeaders {
             if let te = RFC_9110.TransferEncoding.parse(header.value.description) {
-                // Count how many times chunked appears in this header
+
                 chunkedCount += te.chunkedCount
             }
         }
@@ -84,8 +62,6 @@ extension RFC_9110.Request.Validator {
         }
     }
 
-    /// Validate Content-Length header
-    /// RFC 9112 Section 6.2
     private static func validateContentLength(headers: [RFC_9110.Header.Field]) throws(Error) {
         let contentLengthHeaders = headers.filter {
             $0.name.description.lowercased() == "content-length"
@@ -95,7 +71,6 @@ extension RFC_9110.Request.Validator {
             return
         }
 
-        // Multiple Content-Length headers - check if they all have the same value
         let values = contentLengthHeaders.compactMap { Int($0.value.description) }
 
         guard values.count == contentLengthHeaders.count else {

@@ -1,6 +1,3 @@
-// HTTP.Message.Parser.Tests.swift
-// swift-rfc-9112
-
 import Byte_Primitives
 import Testing
 
@@ -73,7 +70,6 @@ struct `HTTP.Message.Parser Tests` {
                 lineNumber: 1
             )
 
-            // Verify Line can be safely sent across concurrency boundaries
             await Task {
                 _ = line
             }.value
@@ -127,7 +123,7 @@ struct `HTTP.Message.Parser Tests` {
 
         @Test
         func `Parse bare CR rejection`() async throws {
-            // Bare CR (CR not followed by LF) should be rejected per RFC 9112 Section 2.2
+
             let data = Array("Line 1\rLine 2\r\n".utf8).map { Byte($0) }
 
             #expect(throws: RFC_9110.MessageParser.ParsingError.self) {
@@ -167,10 +163,10 @@ struct `HTTP.Message.Parser Tests` {
         @Test
         func `Parse binary data with valid terminators`() async throws {
             var data = [Byte]()
-            data.append(contentsOf: [0xFF, 0xFE, 0xFD])  // Binary content
-            data.append(contentsOf: [0x0D, 0x0A])  // CRLF
-            data.append(contentsOf: [0x00, 0x01, 0x02])  // More binary
-            data.append(contentsOf: [0x0D, 0x0A])  // CRLF
+            data.append(contentsOf: [0xFF, 0xFE, 0xFD])
+            data.append(contentsOf: [0x0D, 0x0A])
+            data.append(contentsOf: [0x00, 0x01, 0x02])
+            data.append(contentsOf: [0x0D, 0x0A])
 
             let lines = try RFC_9110.MessageParser.parseLines(from: data)
 

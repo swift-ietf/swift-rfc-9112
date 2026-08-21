@@ -1,6 +1,3 @@
-// HTTP.Version.Tests.swift
-// swift-rfc-9112
-
 import Testing
 
 @testable import RFC_9112
@@ -168,7 +165,6 @@ struct `HTTP.Version Tests` {
     func `Sendable conformance`() async throws {
         let version = RFC_9110.Version.http11
 
-        // This test verifies that Version can be safely sent across concurrency boundaries
         await Task {
             _ = version
         }.value

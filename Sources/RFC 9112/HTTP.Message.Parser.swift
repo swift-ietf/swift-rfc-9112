@@ -1,22 +1,13 @@
-// HTTP.Message.Parser.swift
-// swift-rfc-9112
-
 public import Byte_Primitives
 import Standard_Library_Extensions
 
 extension RFC_9110 {
-    /// HTTP/1.1 message parser implementing RFC 9112 Section 2
+
     public enum MessageParser {}
 }
 
 extension RFC_9110.MessageParser {
 
-    // MARK: - Line Parsing
-
-    /// Parse lines from HTTP message data
-    /// RFC 9112 Section 2.2: "Each line ending with CRLF"
-    /// Robustness: "A recipient that receives whitespace between the start-line and the first header field
-    /// MUST either reject the message as invalid or consume each whitespace-preceded line without further processing"
     public static func parseLines(from data: [Byte]) throws(ParsingError) -> [Line] {
         var lines: [Line] = []
         var currentIndex = data.startIndex
@@ -39,10 +30,6 @@ extension RFC_9110.MessageParser {
         return lines
     }
 
-    /// Parse a single line from data
-    /// RFC 9112 Section 2.2: "HTTP/1.1 defines the sequence CR LF as the end-of-line marker"
-    /// "A recipient MAY recognize a single LF as a line terminator and ignore any preceding CR"
-    /// "A sender MUST NOT generate a bare CR"
     private static func parseLine(
         from data: [Byte],
         startingAt index: inout Array<Byte>.Index,
@@ -56,21 +43,20 @@ extension RFC_9110.MessageParser {
             let byte = data[index]
 
             switch byte {
-            case 0x0D:  // CR
+            case 0x0D:
                 index = data.index(after: index)
 
-                // Check if followed by LF
                 if index < data.endIndex && data[index] == 0x0A {
-                    // CRLF - proper line ending
+
                     index = data.index(after: index)
                     return Line(content: content, terminator: .crlf, lineNumber: lineNumber)
                 } else {
-                    // Bare CR - RFC 9112 Section 11.1: "reject or strip bare CR"
+
                     throw ParsingError.bareCR(lineNumber: lineNumber)
                 }
 
-            case 0x0A:  // LF
-                // LF without CR - RFC 9112: "MAY recognize a single LF"
+            case 0x0A:
+
                 index = data.index(after: index)
                 return Line(content: content, terminator: .lf, lineNumber: lineNumber)
 
@@ -80,7 +66,6 @@ extension RFC_9110.MessageParser {
             }
         }
 
-        // Reached end without line terminator
         if !content.isEmpty {
             return Line(content: content, terminator: .none, lineNumber: lineNumber)
         }
@@ -88,8 +73,6 @@ extension RFC_9110.MessageParser {
         return nil
     }
 
-    /// Find the blank line that separates headers from body
-    /// RFC 9112 Section 2: "an empty line indicating the end of the header section"
     public static func findHeaderBodySeparator(in lines: [Line]) -> Int? {
         for (index, line) in lines.enumerated() {
             if line.content.isEmpty {

@@ -1,6 +1,3 @@
-// HTTP.Request.Line.Tests.swift
-// swift-rfc-9112
-
 import Testing
 
 @testable import RFC_9112
@@ -53,7 +50,7 @@ struct `HTTP.Request.Line Tests` {
         @Test
         func `Parse - invalid format`() async throws {
             #expect(throws: RFC_9110.Request.Line.ParsingError.self) {
-                try RFC_9110.Request.Line.parse("GET /path")  // Missing version
+                try RFC_9110.Request.Line.parse("GET /path")
             }
         }
 

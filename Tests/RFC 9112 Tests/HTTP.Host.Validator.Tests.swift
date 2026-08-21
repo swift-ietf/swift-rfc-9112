@@ -1,6 +1,3 @@
-// HTTP.Host.Validator.Tests.swift
-// swift-rfc-9112
-
 import Testing
 
 @testable import RFC_9112
@@ -26,7 +23,6 @@ struct `HTTP.Host.Validator Tests` {
                 body: nil
             )
 
-            // Should not throw
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
 
@@ -46,7 +42,6 @@ struct `HTTP.Host.Validator Tests` {
                 body: nil
             )
 
-            // Should not throw
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
 
@@ -66,7 +61,6 @@ struct `HTTP.Host.Validator Tests` {
                 body: nil
             )
 
-            // Should recognize "host" (lowercase) as Host header
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
 
@@ -86,7 +80,6 @@ struct `HTTP.Host.Validator Tests` {
                 body: nil
             )
 
-            // Subdomain should be valid
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
 
@@ -106,7 +99,6 @@ struct `HTTP.Host.Validator Tests` {
                 body: nil
             )
 
-            // IPv4 address should be valid
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
 
@@ -126,7 +118,6 @@ struct `HTTP.Host.Validator Tests` {
                 body: nil
             )
 
-            // localhost with port should be valid
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
     }
@@ -149,7 +140,6 @@ struct `HTTP.Host.Validator Tests` {
                 body: nil
             )
 
-            // Should not throw
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
 
@@ -186,7 +176,6 @@ struct `HTTP.Host.Validator Tests` {
                 body: nil
             )
 
-            // HTTP/1.0 doesn't require Host header - should not throw
             try RFC_9110.Host.Validator.validate(request: request, version: .http10)
         }
 
@@ -268,12 +257,8 @@ struct `HTTP.Host.Validator Tests` {
                 body: nil
             )
 
-            // HTTP/2.0 uses :authority pseudo-header instead of Host
-            // For this validator, we may allow it
             let http2 = RFC_9110.Version(major: 2, minor: 0)
 
-            // Implementation-dependent: may not require Host for HTTP/2
-            // This test documents expected behavior
             #expect(throws: RFC_9110.Host.Validator.Error.missingHost) {
                 try RFC_9110.Host.Validator.validate(request: request, version: http2)
             }
@@ -298,7 +283,6 @@ struct `HTTP.Host.Validator Tests` {
                 body: nil
             )
 
-            // CONNECT requests have special handling
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
 
@@ -313,7 +297,6 @@ struct `HTTP.Host.Validator Tests` {
                 body: nil
             )
 
-            // OPTIONS * with Host header should be valid
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
 
@@ -329,7 +312,6 @@ struct `HTTP.Host.Validator Tests` {
                 body: nil
             )
 
-            // Absolute-form includes host in request-target
             try RFC_9110.Host.Validator.validate(request: request, version: .http11)
         }
 

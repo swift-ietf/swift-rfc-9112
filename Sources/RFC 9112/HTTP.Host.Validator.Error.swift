@@ -1,6 +1,3 @@
-// HTTP.Host.Validator.Error.swift
-// swift-rfc-9112
-
 extension RFC_9110.Host.Validator {
     public enum Error: Swift.Error, Sendable, Equatable {
         case missingHost

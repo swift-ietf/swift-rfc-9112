@@ -1,6 +1,3 @@
-// HTTP.Connection.Tests.swift
-// swift-rfc-9112
-
 import Foundation
 import Testing
 
@@ -52,7 +49,7 @@ struct `HTTP.Connection Tests` {
             var set: Set<HTTP.Connection> = []
 
             set.insert(.close)
-            set.insert(.close)  // Duplicate
+            set.insert(.close)
             set.insert(.keepAlive)
 
             #expect(set.count == 2)

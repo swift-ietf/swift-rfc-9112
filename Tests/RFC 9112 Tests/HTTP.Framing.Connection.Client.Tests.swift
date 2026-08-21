@@ -1,13 +1,3 @@
-// HTTP.Framing.Connection.Client.Tests.swift
-// swift-rfc-9112
-//
-// RFC 9112 Section 9: Connection Management.
-//
-// The drive's failure mode is the framer's: a DESYNC, not a failing test. It
-// returns plausible events and leaves the stream positioned wrongly, so the
-// next message is read from the wrong offset. Every test feeds real octets and
-// asserts on what came back AND on what was left behind.
-
 import Testing
 
 @testable import RFC_9112
@@ -22,16 +12,8 @@ struct `HTTP.Framing.Connection.Client Tests` {
 extension `HTTP.Framing.Connection.Client Tests` {
     static func octets(_ text: String) -> [Byte] { Array(text.utf8) }
 
-    /// A response with no framing headers at all. RFC 9112 Section 6.3 rule 8:
-    /// a response with neither `Content-Length` nor `Transfer-Encoding` is
-    /// delimited by the connection closing.
     static let closeDelimited = "HTTP/1.1 200 OK\r\n\r\n"
 }
-
-// MARK: - C1: close-delimited bodies
-//
-// `nextBody` returns nil for `.untilClose` because the end is not in the byte
-// stream. Delivery is the drive's job, and the close is the terminator.
 
 extension `HTTP.Framing.Connection.Client Tests`.Unit {
     @Test
@@ -49,7 +31,7 @@ extension `HTTP.Framing.Connection.Client Tests`.Unit {
             return
         }
         #expect(head.line.statusCode == 200)
-        // The framing that the framer cannot deliver on its own.
+
         #expect(head.bodyLength == .untilClose)
 
         guard case .body(let payload) = try #require(try client.next()) else {
@@ -58,9 +40,6 @@ extension `HTTP.Framing.Connection.Client Tests`.Unit {
         }
         #expect(payload == `HTTP.Framing.Connection.Client Tests`.octets("hello"))
 
-        // ⭐ The body is NOT complete before the close: the delimiter has not
-        // arrived, so inventing an end here would be inventing a boundary the
-        // stream does not contain.
         #expect(try client.next() == nil)
 
         client.peerClosed()
@@ -70,14 +49,13 @@ extension `HTTP.Framing.Connection.Client Tests`.Unit {
         }
         #expect(trailers.isEmpty)
         #expect(octets == 5)
-        // The close both ended the body and ended the connection.
+
         #expect(client.isReusable == false)
     }
 
     @Test
     func `C1b - a close-delimited body of zero octets still ends at the close`() throws {
-        // The degenerate case, and the one an implementation streaming "whatever
-        // has arrived" gets wrong by never emitting an end at all.
+
         var client = HTTP.Framing.Connection.Client()
         client.expect(.get)
         try client.receive(
@@ -101,14 +79,6 @@ extension `HTTP.Framing.Connection.Client Tests`.Unit {
     }
 }
 
-// MARK: - ⭐ C7: the method queue — a smuggle proof, not a bookkeeping test
-//
-// RFC 9112 Section 6.3 rule 1: a response to HEAD has NO body however large its
-// Content-Length. Section 9.3.2: responses arrive in the order their requests
-// were sent. Put together, the queue is framing-critical — if it pops out of
-// order or not at all, response 1 consumes five octets that are not its body,
-// and those five octets are the front of response 2's status line.
-
 extension `HTTP.Framing.Connection.Client Tests`.Integration {
     @Test
     func `C7 - HEAD then GET - response 1 has no body and response 2 still frames`() throws {
@@ -128,7 +98,7 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
             Issue.record("expected the first head")
             return
         }
-        // Content-Length: 5 is present and MUST be ignored — this answers HEAD.
+
         #expect(first.line.statusCode == 200)
         #expect(first.bodyLength == .none)
         #expect(client.outstanding == 1)
@@ -137,7 +107,7 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
             Issue.record("expected the first message to end with no body")
             return
         }
-        // ⭐ Zero. Consuming 5 here is the smuggle: those octets are response 2.
+
         #expect(firstOctets == 0)
 
         guard case .head(let second) = try #require(try client.next()) else {
@@ -158,8 +128,7 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
 
     @Test
     func `C7b - a response with nothing queued is reported, not guessed`() throws {
-        // Guessing a method would frame the response against a request that was
-        // never sent, and rule 1 makes that guess change the framing.
+
         var client = HTTP.Framing.Connection.Client()
         let bytes = `HTTP.Framing.Connection.Client Tests`.octets(
             "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHELLO"
@@ -169,15 +138,13 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
         #expect(throws: HTTP.Framing.Error.responseWithoutRequest) {
             try client.next()
         }
-        // The reject path leaves the stream byte-for-byte unadvanced.
+
         #expect(client.unconsumed == bytes.count)
     }
 
     @Test
     func `C7c - a failed frame does NOT pop the queue`() throws {
-        // The drive's analogue of the framer's unadvanced buffer: a throw must
-        // leave the drive exactly as it was, or the retry frames the next
-        // response against the wrong request.
+
         var client = HTTP.Framing.Connection.Client()
         client.expect(.get)
         try client.receive(
@@ -189,19 +156,15 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
         #expect(throws: HTTP.Framing.Error.conflictingContentLength(["5", "6"])) {
             try client.next()
         }
-        // Still outstanding: the exchange was never answered.
+
         #expect(client.outstanding == 1)
     }
 }
 
-// MARK: - C9: tunnel
-
 extension `HTTP.Framing.Connection.Client Tests`.`Edge Case` {
     @Test
     func `C9 - a 2xx to CONNECT tunnels, and the residual octets are handed back`() throws {
-        // RFC 9112 Section 9.3.3: the connection stops being a sequence of HTTP
-        // messages. Framing must stop rather than continue reading the tunnel's
-        // payload as though it were a response.
+
         var client = HTTP.Framing.Connection.Client()
         client.expect(.connect)
         try client.receive(
@@ -221,19 +184,13 @@ extension `HTTP.Framing.Connection.Client Tests`.`Edge Case` {
             return
         }
         #expect(client.isReusable == false)
-        // Nothing further is framed; the octets belong to the tunnel now.
+
         #expect(try client.next() == nil)
 
         let residual = client.surrenderTunnel()
         #expect(residual == `HTTP.Framing.Connection.Client Tests`.octets("\u{01}\u{02}not-http"))
     }
 }
-
-// MARK: - C2: the incremental GO condition, lifted to the drive
-//
-// The 2a rule was that a head split at every byte boundary frames identically
-// to one delivered whole. A drive that only works on whole buffers passes every
-// other test in this file.
 
 extension `HTTP.Framing.Connection.Client Tests`.Integration {
     @Test
@@ -265,7 +222,6 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
             }
         }
 
-        // Every octet has arrived, but the delimiter has not.
         #expect(head != nil)
         #expect(ended == false)
 
@@ -280,14 +236,13 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
         #expect(try #require(head).line.statusCode == 200)
         #expect(payload == `HTTP.Framing.Connection.Client Tests`.octets("hello world"))
         #expect(ended)
-        // Byte-at-a-time delivery reports the same wire count as one whole read.
+
         #expect(endOctets == 11)
     }
 
     @Test
     func `C2b - byte-at-a-time and whole-buffer delivery agree exactly`() throws {
-        // The comparison the previous test implies but does not state: two
-        // drives, same octets, different read sizes, identical output.
+
         let text = `HTTP.Framing.Connection.Client Tests`.closeDelimited + "hello world"
         let bytes = `HTTP.Framing.Connection.Client Tests`.octets(text)
 

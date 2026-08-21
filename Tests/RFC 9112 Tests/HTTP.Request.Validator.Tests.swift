@@ -1,6 +1,3 @@
-// HTTP.Request.Validator.Tests.swift
-// swift-rfc-9112
-
 import Byte_Primitives
 import Testing
 
@@ -28,7 +25,6 @@ struct `HTTP.Request.Validator Tests` {
             body: Array("1234567890".utf8).map { Byte($0) }
         )
 
-        // Should not throw
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -48,7 +44,6 @@ struct `HTTP.Request.Validator Tests` {
             body: [Byte]()
         )
 
-        // Should not throw
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -69,7 +64,6 @@ struct `HTTP.Request.Validator Tests` {
             body: [Byte]()
         )
 
-        // RFC 9112 Section 11.2: Request smuggling prevention
         #expect(throws: RFC_9110.Request.Validator.Error.self) {
             try RFC_9110.Request.Validator.validate(request)
         }
@@ -91,7 +85,6 @@ struct `HTTP.Request.Validator Tests` {
             body: [Byte]()
         )
 
-        // Chunked should be the final encoding - should not throw
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -151,7 +144,6 @@ struct `HTTP.Request.Validator Tests` {
             body: nil
         )
 
-        // GET without body should be valid
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -169,7 +161,6 @@ struct `HTTP.Request.Validator Tests` {
             body: nil
         )
 
-        // HEAD requests should not have body
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -187,7 +178,6 @@ struct `HTTP.Request.Validator Tests` {
             body: nil
         )
 
-        // DELETE without body should be valid
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -207,7 +197,6 @@ struct `HTTP.Request.Validator Tests` {
             body: Array("test".utf8).map { Byte($0) }
         )
 
-        // PUT with body should be valid
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -227,7 +216,6 @@ struct `HTTP.Request.Validator Tests` {
             body: Array("patch".utf8).map { Byte($0) }
         )
 
-        // PATCH with body should be valid
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -245,7 +233,6 @@ struct `HTTP.Request.Validator Tests` {
             body: nil
         )
 
-        // TRACE should not have body
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -258,7 +245,6 @@ struct `HTTP.Request.Validator Tests` {
             body: nil
         )
 
-        // OPTIONS * should be valid
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -272,7 +258,6 @@ struct `HTTP.Request.Validator Tests` {
             body: nil
         )
 
-        // CONNECT should be valid
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -293,7 +278,6 @@ struct `HTTP.Request.Validator Tests` {
             body: [Byte]()
         )
 
-        // Multiple Transfer-Encoding headers should be valid if chunked is last
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -313,7 +297,6 @@ struct `HTTP.Request.Validator Tests` {
             body: Array("test".utf8).map { Byte($0) }
         )
 
-        // Identity encoding (deprecated) should be handled
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -333,7 +316,6 @@ struct `HTTP.Request.Validator Tests` {
             body: [Byte]()
         )
 
-        // compress encoding with chunked should be valid
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -353,7 +335,6 @@ struct `HTTP.Request.Validator Tests` {
             body: [Byte]()
         )
 
-        // deflate encoding with chunked should be valid
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -373,7 +354,6 @@ struct `HTTP.Request.Validator Tests` {
             body: [Byte]()
         )
 
-        // Header names and values should be case-insensitive
         try RFC_9110.Request.Validator.validate(request)
     }
 
@@ -393,7 +373,6 @@ struct `HTTP.Request.Validator Tests` {
             body: [Byte]()
         )
 
-        // Whitespace around encoding values should be handled
         try RFC_9110.Request.Validator.validate(request)
     }
 }
