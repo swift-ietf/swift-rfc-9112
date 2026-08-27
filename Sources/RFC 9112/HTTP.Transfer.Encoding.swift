@@ -1,3 +1,5 @@
+import RFC_9110
+
 extension RFC_9112.Transfer {
     public struct Encoding: Equatable, Hashable {
 
@@ -15,13 +17,13 @@ extension RFC_9112.Transfer {
 
 extension RFC_9112.Transfer.Encoding {
 
-    public static let chunked = Self(codingName: "chunked")
+    public static var chunked: Self { Self(codingName: "chunked") }
 
-    public static let gzip = Self(codingName: "gzip")
+    public static var gzip: Self { Self(codingName: "gzip") }
 
-    public static let compress = Self(codingName: "compress")
+    public static var compress: Self { Self(codingName: "compress") }
 
-    public static let deflate = Self(codingName: "deflate")
+    public static var deflate: Self { Self(codingName: "deflate") }
 
     public static func list(_ encodings: [Self]) -> Self {
         Self(storage: .list(encodings))

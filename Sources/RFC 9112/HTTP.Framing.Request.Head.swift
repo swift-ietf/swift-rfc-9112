@@ -1,3 +1,5 @@
+public import RFC_9110
+
 extension RFC_9112.Framing.Request {
     public struct Head: Equatable {
 

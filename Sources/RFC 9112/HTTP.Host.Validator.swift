@@ -1,4 +1,6 @@
-public import RFC_3986
+public import RFC_9110
+
+import RFC_3986
 
 extension RFC_9112.Host {
 

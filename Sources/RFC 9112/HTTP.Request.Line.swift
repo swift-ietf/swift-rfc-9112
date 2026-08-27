@@ -1,3 +1,7 @@
+import RFC_3986
+public import RFC_9110
+import Standard_Library_Extensions
+
 extension RFC_9112.Request {
     public struct Line: Equatable {
         public let method: RFC_9110.Method

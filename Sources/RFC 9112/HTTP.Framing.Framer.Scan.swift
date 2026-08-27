@@ -1,3 +1,5 @@
+public import RFC_9110
+
 extension RFC_9112.Framing.Framer {
 
     internal struct Scan {

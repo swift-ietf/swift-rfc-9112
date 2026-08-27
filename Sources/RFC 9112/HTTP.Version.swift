@@ -1,9 +1,13 @@
+public import RFC_9110
+
 extension RFC_9112 {
     public enum Version {}
 }
 
 extension RFC_9112.Version {
-    public static let value = try! RFC_9110.Version(major: 1, minor: 1)
+    public static var value: RFC_9110.Version {
+        try! RFC_9110.Version(major: 1, minor: 1)
+    }
 
     public static func parse(_ text: String) throws(Error) -> RFC_9110.Version {
         let parts = text.split(separator: "/", omittingEmptySubsequences: false)

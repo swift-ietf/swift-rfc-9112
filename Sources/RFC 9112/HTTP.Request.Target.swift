@@ -1,3 +1,4 @@
+public import RFC_3986
 public import RFC_9110
 
 extension RFC_9112.Request {

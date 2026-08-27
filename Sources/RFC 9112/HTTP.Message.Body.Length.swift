@@ -1,3 +1,5 @@
+public import RFC_9110
+
 import INCITS_4_1986
 
 extension RFC_9112.Message.Body {

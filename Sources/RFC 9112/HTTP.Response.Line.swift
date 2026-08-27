@@ -1,4 +1,7 @@
+public import RFC_9110
+
 public import Byte_Primitive
+import Byte_Protocol_Primitives
 
 extension RFC_9112.Response {
     public struct Line: Equatable {

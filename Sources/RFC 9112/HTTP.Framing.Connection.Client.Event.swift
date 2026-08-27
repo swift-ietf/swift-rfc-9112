@@ -1,3 +1,5 @@
+public import RFC_9110
+
 public import Byte_Primitives
 
 extension RFC_9112.Framing.Connection.Client {

@@ -1,3 +1,5 @@
+public import RFC_9110
+
 public import RFC_5322
 
 extension RFC_9112 {

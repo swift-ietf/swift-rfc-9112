@@ -1,3 +1,5 @@
+import RFC_9110
+
 extension RFC_9112 {
 
     public struct Connection: Equatable, Hashable {
@@ -12,9 +14,9 @@ extension RFC_9112 {
 
 extension RFC_9112.Connection {
 
-    public static let close = Self(options: ["close"])
+    public static var close: Self { Self(options: ["close"]) }
 
-    public static let keepAlive = Self(options: ["keep-alive"])
+    public static var keepAlive: Self { Self(options: ["keep-alive"]) }
 
     public var headerValue: String {
         options.sorted().joined(separator: ", ")

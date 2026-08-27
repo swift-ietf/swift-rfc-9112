@@ -23,9 +23,11 @@ extension RFC_9112.Framing.Limits {
 
 extension RFC_9112.Framing.Limits {
 
-    public static let `default` = Self(
-        startLine: 8_000,
-        fieldSection: 64 * 1_024,
-        body: 16 * 1_024 * 1_024
-    )
+    public static var `default`: Self {
+        Self(
+            startLine: 8_000,
+            fieldSection: 64 * 1_024,
+            body: 16 * 1_024 * 1_024
+        )
+    }
 }
