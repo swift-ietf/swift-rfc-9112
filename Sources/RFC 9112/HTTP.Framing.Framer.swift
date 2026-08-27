@@ -1,7 +1,7 @@
 public import Byte_Primitives
 import INCITS_4_1986
 
-extension RFC_9110.Framing {
+extension RFC_9112.Framing {
 
     public struct Framer: ~Copyable {
 
@@ -16,17 +16,17 @@ extension RFC_9110.Framing {
     }
 }
 
-extension RFC_9110.Framing.Framer {
+extension RFC_9112.Framing.Framer {
 
     public var unconsumed: Int { buffer.count }
 }
 
-extension RFC_9110.Framing.Framer {
+extension RFC_9112.Framing.Framer {
 
     public mutating func append(
         _ bytes: [Byte],
-        accumulating phase: RFC_9110.Framing.Phase
-    ) throws(RFC_9110.Framing.Error) {
+        accumulating phase: RFC_9112.Framing.Phase
+    ) throws(RFC_9112.Framing.Error) {
         let budget = phase.budget(under: limits)
         guard buffer.count + bytes.count <= budget else {
             throw phase.overrun(of: budget)
@@ -35,7 +35,7 @@ extension RFC_9110.Framing.Framer {
     }
 }
 
-extension RFC_9110.Framing.Framer {
+extension RFC_9112.Framing.Framer {
 
     internal mutating func takeBuffered() -> [Byte] {
         defer { buffer.removeAll(keepingCapacity: true) }
@@ -47,88 +47,92 @@ extension RFC_9110.Framing.Framer {
     }
 }
 
-extension RFC_9110.Framing.Framer {
+extension RFC_9112.Framing.Framer {
 
-    public mutating func nextRequestHead() throws(RFC_9110.Framing.Error)
-        -> RFC_9110.Framing.RequestHead?
+    public mutating func nextRequestHead() throws(RFC_9112.Framing.Error)
+        -> RFC_9112.Framing.Request.Head?
     {
         guard let scan = try Self.scanHead(buffer, limits: limits) else { return nil }
 
-        let line: RFC_9110.Request.Line
-        do throws(RFC_9110.Request.Line.ParsingError) {
-            line = try RFC_9110.Request.Line.parse(scan.startLine)
+        let line: RFC_9112.Request.Line
+        do throws(RFC_9112.Request.Line.Error) {
+            line = try RFC_9112.Request.Line.parse(scan.startLine)
         } catch {
             throw .malformedStartLine(scan.startLine)
         }
 
-        let bodyLength = try RFC_9110.Framing.BodyLength.determine(
+        let bodyLength = try RFC_9112.Framing.Body.Length.determine(
             context: .request,
             headers: scan.headers
         )
 
         buffer.removeFirst(scan.octets)
-        return RFC_9110.Framing.RequestHead(
+        return RFC_9112.Framing.Request.Head(
             line: line,
             headers: scan.headers,
-            bodyLength: bodyLength,
+            length: bodyLength,
             octets: scan.octets
         )
     }
 
     public mutating func nextResponseHead(
         answering requestMethod: RFC_9110.Method
-    ) throws(RFC_9110.Framing.Error) -> RFC_9110.Framing.ResponseHead? {
+    ) throws(RFC_9112.Framing.Error) -> RFC_9112.Framing.Response.Head? {
         guard let scan = try Self.scanHead(buffer, limits: limits) else { return nil }
 
-        let line: RFC_9110.Response.Line
-        do throws(RFC_9110.Response.Line.ParsingError) {
-            line = try RFC_9110.Response.Line.parse(scan.startLine)
+        let line: RFC_9112.Response.Line
+        do throws(RFC_9112.Response.Line.Error) {
+            line = try RFC_9112.Response.Line.parse(scan.startLine)
         } catch {
             throw .malformedStartLine(scan.startLine)
         }
 
-        let bodyLength = try RFC_9110.Framing.BodyLength.determine(
-            context: .response(statusCode: line.statusCode, requestMethod: requestMethod),
+        let bodyLength = try RFC_9112.Framing.Body.Length.determine(
+            context: .response(status: line.status.code, request: requestMethod),
             headers: scan.headers
         )
 
         buffer.removeFirst(scan.octets)
-        return RFC_9110.Framing.ResponseHead(
+        return RFC_9112.Framing.Response.Head(
             line: line,
             headers: scan.headers,
-            bodyLength: bodyLength,
+            length: bodyLength,
             octets: scan.octets
         )
     }
 }
 
-extension RFC_9110.Framing.Framer {
+extension RFC_9112.Framing.Framer {
 
-    public consuming func finish() throws(RFC_9110.Framing.Error)
-        -> RFC_9110.Framing.Terminal
+    public consuming func finish() throws(RFC_9112.Framing.Error)
+        -> RFC_9112.Framing.Terminal
     {
         buffer.isEmpty ? .clean : .truncated(unconsumed: buffer.count)
     }
 }
 
-extension RFC_9110.Framing.Framer {
+extension RFC_9112.Framing.Framer {
 
     public mutating func nextBody(
-        _ bodyLength: RFC_9110.Framing.BodyLength
-    ) throws(RFC_9110.Framing.Error) -> RFC_9110.Framing.Body? {
-        switch bodyLength {
+        _ length: RFC_9112.Framing.Body.Length
+    ) throws(RFC_9112.Framing.Error) -> RFC_9112.Framing.Body? {
+        switch length {
         case .none:
-            return RFC_9110.Framing.Body(content: [], octets: 0, trailers: RFC_9110.Headers([]))
+            return RFC_9112.Framing.Body(
+                content: [],
+                octets: 0,
+                trailers: RFC_9110.Message.Trailers()
+            )
 
         case .length(let expected):
             if expected > limits.body { throw .bodyTooLong(limit: limits.body) }
             guard buffer.count >= expected else { return nil }
             let content = Array(buffer[..<expected])
             buffer.removeFirst(expected)
-            return RFC_9110.Framing.Body(
+            return RFC_9112.Framing.Body(
                 content: content,
                 octets: expected,
-                trailers: RFC_9110.Headers([])
+                trailers: RFC_9110.Message.Trailers()
             )
 
         case .chunked:
@@ -136,7 +140,7 @@ extension RFC_9110.Framing.Framer {
                 return nil
             }
             buffer.removeFirst(framed.octets)
-            return RFC_9110.Framing.Body(
+            return RFC_9112.Framing.Body(
                 content: framed.content,
                 octets: framed.octets,
                 trailers: framed.trailers
@@ -148,12 +152,12 @@ extension RFC_9110.Framing.Framer {
     }
 }
 
-extension RFC_9110.Framing.Framer {
+extension RFC_9112.Framing.Framer {
 
     internal static func scanHead(
         _ buffer: borrowing [Byte],
-        limits: RFC_9110.Framing.Limits
-    ) throws(RFC_9110.Framing.Error) -> Self.Scan? {
+        limits: RFC_9112.Framing.Limits
+    ) throws(RFC_9112.Framing.Error) -> Self.Scan? {
         var lines: [[Byte]] = []
         var index = 0
         var lineStart = 0
@@ -198,7 +202,7 @@ extension RFC_9110.Framing.Framer {
             throw .headSectionTooLong(limit: limits.headSection)
         }
 
-        var fields: [RFC_9110.Header.Field] = []
+        var fields: [RFC_9110.Field] = []
         for fieldLine in lines.dropFirst() {
 
             if let first = fieldLine.first, first == 0x20 || first == 0x09 {
@@ -215,8 +219,8 @@ extension RFC_9110.Framing.Framer {
             let name = Self.text(nameBytes)
             let value = Self.text(Array(fieldLine[fieldLine.index(after: colon)...]))
                 .trimming(.ascii.whitespaces)
-            do throws(RFC_9110.Header.Field.Error) {
-                fields.append(try RFC_9110.Header.Field(name: name, value: value))
+            do throws(RFC_9110.Field.Error) {
+                fields.append(try RFC_9110.Field(name: name, value: value))
             } catch {
                 throw .malformedFieldLine(Self.text(fieldLine))
             }
@@ -224,7 +228,7 @@ extension RFC_9110.Framing.Framer {
 
         return Scan(
             startLine: Self.text(startLineBytes),
-            headers: RFC_9110.Headers(fields),
+            headers: RFC_9110.Message.Headers(fields),
             octets: octets
         )
     }

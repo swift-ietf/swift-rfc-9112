@@ -1,11 +1,13 @@
-extension RFC_9110.Request {
+extension RFC_9112.Request {
 
     public enum Validator {}
 }
 
-extension RFC_9110.Request.Validator {
+extension RFC_9112.Request.Validator {
 
-    public static func validate(_ request: RFC_9110.Request) throws(Error) {
+    public static func validate<Content>(
+        _ request: RFC_9112.Message.Request<Content>
+    ) throws(Error) {
         let headers = request.headers
 
         let hasTransferEncoding = headers.contains {
@@ -30,7 +32,7 @@ extension RFC_9110.Request.Validator {
         }
     }
 
-    private static func validateTransferEncoding(headers: [RFC_9110.Header.Field]) throws(Error) {
+    private static func validateTransferEncoding(headers: [RFC_9110.Field]) throws(Error) {
         let transferEncodingHeaders = headers.filter {
             $0.name.description.lowercased() == "transfer-encoding"
         }
@@ -40,7 +42,7 @@ extension RFC_9110.Request.Validator {
         }
 
         for header in transferEncodingHeaders {
-            guard let te = RFC_9110.TransferEncoding.parse(header.value.description) else {
+            guard let te = RFC_9112.Transfer.Encoding.parse(header.value.description) else {
                 throw Error.invalidTransferEncoding(header.value.description)
             }
 
@@ -51,7 +53,7 @@ extension RFC_9110.Request.Validator {
 
         var chunkedCount = 0
         for header in transferEncodingHeaders {
-            if let te = RFC_9110.TransferEncoding.parse(header.value.description) {
+            if let te = RFC_9112.Transfer.Encoding.parse(header.value.description) {
 
                 chunkedCount += te.chunkedCount
             }
@@ -62,7 +64,7 @@ extension RFC_9110.Request.Validator {
         }
     }
 
-    private static func validateContentLength(headers: [RFC_9110.Header.Field]) throws(Error) {
+    private static func validateContentLength(headers: [RFC_9110.Field]) throws(Error) {
         let contentLengthHeaders = headers.filter {
             $0.name.description.lowercased() == "content-length"
         }

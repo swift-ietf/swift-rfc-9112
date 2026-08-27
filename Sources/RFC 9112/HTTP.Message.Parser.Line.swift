@@ -1,13 +1,13 @@
 public import Byte_Primitives
 
-extension RFC_9110.MessageParser {
+extension RFC_9112.Message.Parser {
 
-    public struct Line: Sendable, Equatable {
+    public struct Line: Equatable {
         public let content: [Byte]
-        public let terminator: LineTerminator
+        public let terminator: Terminator
         public let lineNumber: Int
 
-        public init(content: [Byte], terminator: LineTerminator, lineNumber: Int) {
+        public init(content: [Byte], terminator: Terminator, lineNumber: Int) {
             self.content = content
             self.terminator = terminator
             self.lineNumber = lineNumber
@@ -15,7 +15,7 @@ extension RFC_9110.MessageParser {
     }
 }
 
-extension RFC_9110.MessageParser.Line {
+extension RFC_9112.Message.Parser.Line {
 
     public var string: String {
         String(decoding: content, as: UTF8.self)

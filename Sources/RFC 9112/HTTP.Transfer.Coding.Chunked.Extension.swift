@@ -1,9 +1,9 @@
 import INCITS_4_1986
 import Standard_Library_Extensions
 
-extension RFC_9110.ChunkedEncoding {
+extension RFC_9112.Transfer.Coding.Chunked {
 
-    public struct Extension: Sendable, Equatable, Hashable {
+    public struct Extension: Equatable, Hashable {
         public let name: String
         public let value: String?
 
@@ -14,7 +14,7 @@ extension RFC_9110.ChunkedEncoding {
     }
 }
 
-extension RFC_9110.ChunkedEncoding.Extension {
+extension RFC_9112.Transfer.Coding.Chunked.Extension {
 
     public var formatted: String {
         if let value {

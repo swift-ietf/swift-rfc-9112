@@ -1,61 +1,37 @@
-extension RFC_9110 {
-
-    public struct Version: Sendable, Equatable, Hashable {
-        public let major: Int
-        public let minor: Int
-
-        public init(major: Int, minor: Int) {
-            self.major = major
-            self.minor = minor
-        }
-    }
+extension RFC_9112 {
+    public enum Version {}
 }
 
-extension RFC_9110.Version {
+extension RFC_9112.Version {
+    public static let value = try! RFC_9110.Version(major: 1, minor: 1)
 
-    public static let http10 = Self(major: 1, minor: 0)
-
-    public static let http11 = Self(major: 1, minor: 1)
-
-    public static func parse(_ string: String) throws(ParsingError) -> Self {
-
-        let parts = string.split(separator: "/")
+    public static func parse(_ text: String) throws(Error) -> RFC_9110.Version {
+        let parts = text.split(separator: "/", omittingEmptySubsequences: false)
         guard parts.count == 2 else {
-            throw ParsingError.invalidFormat(reason: "Expected format HTTP/M.m")
+            throw .format(text)
         }
-
         guard parts[0] == "HTTP" else {
-            throw ParsingError.invalidHTTPName(String(parts[0]))
+            throw .name(String(parts[0]))
         }
 
-        let versionParts = parts[1].split(separator: ".")
-        guard versionParts.count == 2 else {
-            throw ParsingError.invalidFormat(reason: "Expected format M.m")
-        }
-
-        guard let major = Int(versionParts[0]),
-            let minor = Int(versionParts[1])
+        let components = parts[1].split(separator: ".", omittingEmptySubsequences: false)
+        guard components.count == 2,
+            components[0].count == 1,
+            components[1].count == 1,
+            let major = UInt(components[0]),
+            let minor = UInt(components[1])
         else {
-            throw ParsingError.invalidVersionNumber
+            throw .number(String(parts[1]))
         }
 
-        return Self(major: major, minor: minor)
+        do throws(RFC_9110.Version.Error) {
+            return try RFC_9110.Version(major: major, minor: minor)
+        } catch {
+            throw .number(String(parts[1]))
+        }
     }
 
-    public var formatted: String {
-        "HTTP/\(major).\(minor)"
+    public static func format(_ version: RFC_9110.Version) -> String {
+        "HTTP/\(version.major).\(version.minor)"
     }
-
-    public var isHTTP11: Bool {
-        self == .http11
-    }
-
-    public var isHTTP10: Bool {
-        self == .http10
-    }
-
-    public var isHTTP11OrHigher: Bool {
-        major > 1 || (major == 1 && minor >= 1)
-    }
-
 }

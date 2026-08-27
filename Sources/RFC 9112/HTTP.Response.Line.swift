@@ -1,85 +1,65 @@
-extension RFC_9110.Response {
+public import Byte_Primitive
 
-    public struct Line: Sendable, Equatable {
+extension RFC_9112.Response {
+    public struct Line: Equatable {
         public let version: RFC_9110.Version
-        public let statusCode: Int
-        public let reasonPhrase: String?
+        public let status: RFC_9110.Status
+        public let reason: RFC_9110.Status.Reason?
 
-        public init(version: RFC_9110.Version, statusCode: Int, reasonPhrase: String? = nil) {
+        public init(
+            version: RFC_9110.Version,
+            status: RFC_9110.Status,
+            reason: RFC_9110.Status.Reason? = nil
+        ) {
             self.version = version
-            self.statusCode = statusCode
-            self.reasonPhrase = reasonPhrase
-        }
-
-        public init(version: RFC_9110.Version, status: RFC_9110.Status, reasonPhrase: String? = nil)
-        {
-            self.version = version
-            self.statusCode = status.code
-            self.reasonPhrase = reasonPhrase ?? status.reasonPhrase
+            self.status = status
+            self.reason = reason
         }
     }
 }
 
-extension RFC_9110.Response.Line {
-
-    public static func parse(_ line: String) throws(ParsingError) -> Self {
-
+extension RFC_9112.Response.Line {
+    public static func parse(_ line: String) throws(Error) -> Self {
         let components = line.split(
             separator: " ",
             maxSplits: 2,
             omittingEmptySubsequences: false
         )
-
         guard components.count >= 2 else {
-            throw ParsingError.invalidFormat(
-                reason: "Expected at least version and status code"
-            )
+            throw .invalidFormat(reason: "Expected a version and status code")
         }
 
-        let versionString = String(components[0])
         let version: RFC_9110.Version
-        do throws(RFC_9110.Version.ParsingError) {
-            version = try RFC_9110.Version.parse(versionString)
+        do throws(RFC_9112.Version.Error) {
+            version = try RFC_9112.Version.parse(String(components[0]))
         } catch {
-            throw ParsingError.invalidFormat(reason: "Invalid HTTP version: \(versionString)")
+            throw .invalidFormat(reason: "Invalid HTTP version")
         }
 
-        let statusString = String(components[1])
-        guard let statusCode = Int(statusString), statusString.count == 3 else {
-            throw ParsingError.invalidStatusCode(statusString)
+        let statusText = String(components[1])
+        guard statusText.count == 3, let code = Int(statusText) else {
+            throw .invalidStatusCode(statusText)
+        }
+        guard (100...599).contains(code) else {
+            throw .statusCodeOutOfRange(code)
         }
 
-        guard statusCode >= 100 && statusCode <= 999 else {
-            throw ParsingError.statusCodeOutOfRange(statusCode)
-        }
-
-        var reasonPhrase: String?
-        if components.count == 3 {
-            let phrase = String(components[2])
-            reasonPhrase = phrase.isEmpty ? nil : phrase
-        }
-
-        return Self(version: version, statusCode: statusCode, reasonPhrase: reasonPhrase)
-    }
-
-    public var formatted: String {
-        if let reason = reasonPhrase {
-            return "\(version.formatted) \(statusCode) \(reason)"
+        let reason: RFC_9110.Status.Reason?
+        if components.count == 3, !components[2].isEmpty {
+            reason = .init(components[2].utf8.map(Byte.init))
         } else {
-            return "\(version.formatted) \(statusCode) "
+            reason = nil
         }
+
+        return Self(version: version, status: .init(code), reason: reason)
     }
 
-    public var status: RFC_9110.Status? {
-        RFC_9110.Status.from(code: statusCode)
-    }
-
-}
-
-extension RFC_9110.Status {
-
-    internal static func from(code: Int) -> RFC_9110.Status? {
-
-        return RFC_9110.Status(code)
+    public var bytes: [Byte] {
+        var result = "\(RFC_9112.Version.format(version)) \(status.code)".utf8.map(Byte.init)
+        if let reason {
+            result.append(0x20)
+            result.append(contentsOf: reason.bytes)
+        }
+        return result
     }
 }

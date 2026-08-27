@@ -1,21 +1,17 @@
 public import Byte_Primitives
-import Standard_Library_Extensions
 
-extension RFC_9110.Response {
-
-    public struct Deserializer {}
+extension RFC_9112.Response {
+    public enum Deserializer {}
 }
 
-extension RFC_9110.Response.Deserializer {
-
+extension RFC_9112.Response.Deserializer {
     public static func deserialize(
         _ data: [Byte],
-        requestMethod: RFC_9110.Method
-    ) throws(Error) -> (response: RFC_9110.Response, bytesConsumed: Int) {
-
-        let lines: [RFC_9110.MessageParser.Line]
-        do throws(RFC_9110.MessageParser.ParsingError) {
-            lines = try RFC_9110.MessageParser.parseLines(from: data)
+        request method: RFC_9110.Method
+    ) throws(Error) -> (response: RFC_9112.Message.Response<[Byte]>, bytesConsumed: Int) {
+        let lines: [RFC_9112.Message.Parser.Line]
+        do throws(RFC_9112.Message.Parser.Error) {
+            lines = try RFC_9112.Message.Parser.parseLines(from: data)
         } catch {
             throw .messageParsing(error)
         }
@@ -23,102 +19,78 @@ extension RFC_9110.Response.Deserializer {
         guard !lines.isEmpty else {
             throw .emptyMessage
         }
-
-        guard let separatorIndex = RFC_9110.MessageParser.findHeaderBodySeparator(in: lines)
-        else {
+        guard let separator = RFC_9112.Message.Parser.findHeaderBodySeparator(in: lines) else {
             throw .missingHeaderBodySeparator
         }
 
-        let statusLineString = lines[0].string
-        let statusLine: RFC_9110.Response.Line
-        do throws(RFC_9110.Response.Line.ParsingError) {
-            statusLine = try RFC_9110.Response.Line.parse(statusLineString)
+        let line: RFC_9112.Response.Line
+        do throws(RFC_9112.Response.Line.Error) {
+            line = try RFC_9112.Response.Line.parse(lines[0].string)
         } catch {
             throw .responseLine(error)
         }
 
-        let headerLines = lines[1..<separatorIndex].map { $0.string }
-        let headerPairs: [(name: String, value: String)]
-        do throws(RFC_9110.Header.Parser.ParsingError) {
-            headerPairs = try RFC_9110.Header.Parser.parseFieldLines(headerLines)
+        let pairs: [(name: String, value: String)]
+        do throws(RFC_9112.Field.Parser.Error) {
+            pairs = try RFC_9112.Field.Parser.parseFieldLines(
+                lines[1..<separator].map(\.string)
+            )
         } catch {
             throw .headerParsing(error)
         }
 
-        var headers: [RFC_9110.Header.Field] = []
-        for (name, value) in headerPairs {
-            do throws(RFC_9110.Header.Field.Error) {
-                headers.append(try RFC_9110.Header.Field(name: name, value: value))
+        var fields = [RFC_9110.Field]()
+        for pair in pairs {
+            do throws(RFC_9110.Field.Error) {
+                fields.append(try RFC_9110.Field(name: pair.name, value: pair.value))
             } catch {
                 throw .headerValidation(error)
             }
         }
 
-        var bytesConsumed = 0
-        for line in lines[0...separatorIndex] {
-            bytesConsumed += line.content.count
+        var consumed = lines[0...separator].reduce(into: 0) { count, line in
+            count += line.content.count
             switch line.terminator {
-            case .crlf:
-                bytesConsumed += 2
-
-            case .lf:
-                bytesConsumed += 1
-
-            case .none:
-                break
+            case .crlf: count += 2
+            case .lf: count += 1
+            case .none: break
             }
         }
 
-        let preliminaryResponse = RFC_9110.Response(
-            status: RFC_9110.Status(statusLine.statusCode),
-            headers: RFC_9110.Headers(headers),
-            body: nil
+        var response = RFC_9112.Message.Response<[Byte]>(
+            version: line.version,
+            status: line.status,
+            reason: line.reason,
+            headers: .init(fields)
+        )
+        let length = RFC_9112.Message.Body.Length.calculate(
+            for: response,
+            requestMethod: method
         )
 
-        let bodyLength = RFC_9110.MessageBodyLength.calculate(
-            for: preliminaryResponse,
-            requestMethod: requestMethod
-        )
-
-        var body: [Byte]?
-        if let fixedLength = bodyLength.fixedLength {
-            guard data.count >= bytesConsumed + fixedLength else {
-                throw .incompleteBody(
-                    expected: fixedLength,
-                    available: data.count - bytesConsumed
-                )
+        if let count = length.fixedLength {
+            guard data.count >= consumed + count else {
+                throw .incompleteBody(expected: count, available: data.count - consumed)
             }
-            body = Array(data[bytesConsumed..<(bytesConsumed + fixedLength)])
-            bytesConsumed += fixedLength
-
-        } else if bodyLength.isChunked {
-
-            let chunkedData = data[bytesConsumed...]
-            let result: RFC_9110.ChunkedEncoding.DecodeResult
-            do throws(RFC_9110.ChunkedEncoding.ChunkedDecodingError) {
-                result = try RFC_9110.ChunkedEncoding.decode(Array(chunkedData))
+            if count > 0 {
+                response.content = Array(data[consumed..<(consumed + count)])
+            }
+            consumed += count
+        } else if length.isChunked {
+            let result: RFC_9112.Transfer.Coding.Chunked.Result
+            do throws(RFC_9112.Transfer.Coding.Chunked.Error) {
+                result = try RFC_9112.Transfer.Coding.Chunked.decode(Array(data[consumed...]))
             } catch {
                 throw .chunkedDecoding(error)
             }
-            body = result.data
-
-            for trailer in result.trailers {
-                headers.append(trailer)
-            }
-            bytesConsumed += chunkedData.count
-
-        } else if bodyLength.isUntilClose {
-
-            body = Array(data[bytesConsumed...])
-            bytesConsumed = data.count
+            response.content = result.data
+            response.trailers = .init(result.trailers)
+            consumed = data.count
+        } else if length.isUntilClose {
+            response.content = Array(data[consumed...])
+            consumed = data.count
         }
 
-        let response = RFC_9110.Response(
-            status: RFC_9110.Status(statusLine.statusCode),
-            headers: RFC_9110.Headers(headers),
-            body: body
-        )
-
-        return (response, bytesConsumed)
+        return (response, consumed)
     }
 }

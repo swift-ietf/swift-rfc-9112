@@ -1,4 +1,4 @@
-extension RFC_9110 {
+extension RFC_9112 {
 
     public enum Host {}
 }

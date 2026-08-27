@@ -1,8 +1,7 @@
 import INCITS_4_1986
 
-extension RFC_9110.Framing {
-
-    public enum BodyLength: Sendable, Equatable, Hashable {
+extension RFC_9112.Framing.Body {
+    public enum Length: Equatable, Hashable {
 
         case none
 
@@ -16,21 +15,21 @@ extension RFC_9110.Framing {
     }
 }
 
-extension RFC_9110.Framing.BodyLength {
+extension RFC_9112.Framing.Body.Length {
 
     public static func determine(
-        context: RFC_9110.Framing.Context,
-        headers: RFC_9110.Headers
-    ) throws(RFC_9110.Framing.Error) -> Self {
+        context: RFC_9112.Framing.Context,
+        headers: RFC_9110.Message.Headers
+    ) throws(RFC_9112.Framing.Error) -> Self {
 
-        if case .response(let statusCode, let requestMethod) = context {
-            if requestMethod == .head { return .none }
+        if case .response(let status, let request) = context {
+            if request == .head { return .none }
 
-            switch statusCode {
+            switch status {
             case 100..<200, 204, 304:
                 return .none
 
-            case 200..<300 where requestMethod == .connect:
+            case 200..<300 where request == .connect:
                 return .tunnel
 
             default:
@@ -38,8 +37,8 @@ extension RFC_9110.Framing.BodyLength {
             }
         }
 
-        let transferEncodings = headers.values("Transfer-Encoding")
-        let contentLengths = headers.values("Content-Length")
+        let transferEncodings = headers.values(.transferEncoding)
+        let contentLengths = headers.values(.contentLength)
 
         if !transferEncodings.isEmpty {
 
@@ -49,7 +48,7 @@ extension RFC_9110.Framing.BodyLength {
 
             let combined = transferEncodings.map(\.description).joined(separator: ", ")
 
-            guard let coding = RFC_9110.TransferEncoding.parse(combined) else {
+            guard let coding = RFC_9112.Transfer.Encoding.parse(combined) else {
                 throw .malformedTransferEncoding(combined)
             }
 
@@ -96,7 +95,7 @@ extension RFC_9110.Framing.BodyLength {
     }
 }
 
-extension RFC_9110.Framing.BodyLength {
+extension RFC_9112.Framing.Body.Length {
 
     private static func isDigits(_ token: String) -> Bool {
         guard !token.isEmpty else { return false }

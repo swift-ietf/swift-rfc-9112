@@ -1,14 +1,14 @@
-extension RFC_9110.Framing {
+extension RFC_9112.Framing {
 
-    public enum Context: Sendable, Equatable, Hashable {
+    public enum Context: Equatable, Hashable {
 
         case request
 
-        case response(statusCode: Int, requestMethod: RFC_9110.Method)
+        case response(status: Int, request: RFC_9110.Method)
     }
 }
 
-extension RFC_9110.Framing.Context {
+extension RFC_9112.Framing.Context {
 
     public var isRequest: Bool {
         switch self {

@@ -1,8 +1,7 @@
 import INCITS_4_1986
 
-extension RFC_9110 {
-
-    public enum MessageBodyLength: Sendable, Equatable {
+extension RFC_9112.Message.Body {
+    public enum Length: Equatable {
 
         case none
 
@@ -14,10 +13,10 @@ extension RFC_9110 {
     }
 }
 
-extension RFC_9110.MessageBodyLength {
+extension RFC_9112.Message.Body.Length {
 
-    public static func calculate(
-        for response: RFC_9110.Response,
+    public static func calculate<Content>(
+        for response: RFC_9112.Message.Response<Content>,
         requestMethod: RFC_9110.Method
     ) -> Self {
 
@@ -37,8 +36,8 @@ extension RFC_9110.MessageBodyLength {
             return .none
         }
 
-        if let teHeader = response.headers["Transfer-Encoding"]?.first?.description,
-            let te = RFC_9110.TransferEncoding.parse(teHeader)
+        if let teHeader = response.headers[.transferEncoding].first?.description,
+            let te = RFC_9112.Transfer.Encoding.parse(teHeader)
         {
 
             if te.hasChunked {
@@ -46,7 +45,8 @@ extension RFC_9110.MessageBodyLength {
             }
         }
 
-        if let clHeaders = response.headers["Content-Length"], !clHeaders.isEmpty {
+        let clHeaders = response.headers[.contentLength]
+        if !clHeaders.isEmpty {
 
             if clHeaders.count > 1 {
 
@@ -70,17 +70,20 @@ extension RFC_9110.MessageBodyLength {
         return .untilClose
     }
 
-    public static func calculate(for request: RFC_9110.Request) -> Self {
+    public static func calculate<Content>(
+        for request: RFC_9112.Message.Request<Content>
+    ) -> Self {
 
-        if let teHeader = request.headers["Transfer-Encoding"]?.first?.description,
-            let te = RFC_9110.TransferEncoding.parse(teHeader)
+        if let teHeader = request.headers[.transferEncoding].first?.description,
+            let te = RFC_9112.Transfer.Encoding.parse(teHeader)
         {
             if te.hasChunked {
                 return .chunked
             }
         }
 
-        if let clHeaders = request.headers["Content-Length"], !clHeaders.isEmpty {
+        let clHeaders = request.headers[.contentLength]
+        if !clHeaders.isEmpty {
 
             if clHeaders.count > 1 {
                 let values = clHeaders.map { $0.description }

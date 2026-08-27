@@ -1,6 +1,6 @@
-extension RFC_9110.Framing {
+extension RFC_9112.Framing {
 
-    public struct Limits: Sendable, Equatable, Hashable {
+    public struct Limits: Equatable, Hashable {
 
         public var startLine: Int
 
@@ -16,12 +16,12 @@ extension RFC_9110.Framing {
     }
 }
 
-extension RFC_9110.Framing.Limits {
+extension RFC_9112.Framing.Limits {
 
     public var headSection: Int { startLine + fieldSection }
 }
 
-extension RFC_9110.Framing.Limits {
+extension RFC_9112.Framing.Limits {
 
     public static let `default` = Self(
         startLine: 8_000,

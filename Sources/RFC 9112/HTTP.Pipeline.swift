@@ -1,6 +1,6 @@
 public import RFC_5322
 
-extension RFC_9110 {
+extension RFC_9112 {
 
     public actor Pipeline {
         private var pendingRequests: [PendingRequest] = []
@@ -12,9 +12,12 @@ extension RFC_9110 {
     }
 }
 
-extension RFC_9110.Pipeline {
+extension RFC_9112.Pipeline {
 
-    public func addRequest(_ request: RFC_9110.Request, now: RFC_9110.Date) -> Bool {
+    public func append<Content>(
+        _ request: RFC_9112.Message.Request<Content>,
+        now: RFC_9110.Date
+    ) -> Bool {
 
         if !allowPipelining {
 
@@ -66,7 +69,7 @@ extension RFC_9110.Pipeline {
         method.isIdempotent
     }
 
-    public func shouldWaitForResponse(after request: RFC_9110.Request) -> Bool {
+    public func waits<Content>(after request: RFC_9112.Message.Request<Content>) -> Bool {
 
         !request.method.isIdempotent
     }

@@ -1,7 +1,7 @@
 import Byte_Primitives
 import INCITS_4_1986
 
-extension RFC_9110.Framing.Framer {
+extension RFC_9112.Framing.Framer {
 
     internal struct ChunkedScan {
 
@@ -9,13 +9,13 @@ extension RFC_9110.Framing.Framer {
 
         let octets: Int
 
-        let trailers: RFC_9110.Headers
+        let trailers: RFC_9110.Message.Trailers
     }
 
     internal static func scanChunkedBody(
         _ buffer: borrowing [Byte],
         limit: Int
-    ) throws(RFC_9110.Framing.Error) -> ChunkedScan? {
+    ) throws(RFC_9112.Framing.Error) -> ChunkedScan? {
         var content: [Byte] = []
         var index = 0
 
@@ -37,7 +37,7 @@ extension RFC_9110.Framing.Framer {
 
             if size == 0 {
 
-                var fields: [RFC_9110.Header.Field] = []
+                var fields: [RFC_9110.Field] = []
                 while true {
                     if buffer.indices.contains(index + 1), buffer[index] == 0x0D,
                         buffer[index + 1] == 0x0A
@@ -46,7 +46,7 @@ extension RFC_9110.Framing.Framer {
                         return ChunkedScan(
                             content: content,
                             octets: index,
-                            trailers: RFC_9110.Headers(fields)
+                            trailers: RFC_9110.Message.Trailers(fields)
                         )
                     }
                     guard let lineEnd = Self.indexOfCRLF(buffer, from: index) else { return nil }
@@ -61,8 +61,8 @@ extension RFC_9110.Framing.Framer {
                     let name = Self.text(nameBytes)
                     let value = Self.text(Array(line[line.index(after: colon)...]))
                         .trimming(.ascii.whitespaces)
-                    do throws(RFC_9110.Header.Field.Error) {
-                        fields.append(try RFC_9110.Header.Field(name: name, value: value))
+                    do throws(RFC_9110.Field.Error) {
+                        fields.append(try RFC_9110.Field(name: name, value: value))
                     } catch {
                         throw .malformedChunk(Self.text(line))
                     }

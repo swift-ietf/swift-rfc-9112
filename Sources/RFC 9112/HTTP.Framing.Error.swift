@@ -1,6 +1,6 @@
-extension RFC_9110.Framing {
+extension RFC_9112.Framing {
 
-    public enum Error: Swift.Error, Sendable, Equatable, Hashable {
+    public enum Error: Swift.Error, Equatable, Hashable {
 
         case invalidContentLength(String)
 

@@ -34,7 +34,7 @@ extension `HTTP.Framing.Connection.Server Tests`.Integration {
             Issue.record("expected a head")
             return
         }
-        #expect(head.bodyLength == .length(length))
+        #expect(head.length == .length(length))
 
         let payload = [Byte](repeating: Byte(0x41), count: length)
         var offset = 0
@@ -44,7 +44,7 @@ extension `HTTP.Framing.Connection.Server Tests`.Integration {
             offset = end
         }
 
-        guard case .body(let content) = try #require(try server.next()) else {
+        guard case .content(let content) = try #require(try server.next()) else {
             Issue.record("expected body octets")
             return
         }
@@ -94,7 +94,7 @@ extension `HTTP.Framing.Connection.Server Tests`.Integration {
         while let event = try server.next() {
             switch event {
             case .head(let head): targets.append(head.line.target)
-            case .body(let content): payloads.append(content)
+            case .content(let content): payloads.append(content)
             case .end(_, let octets): bodyOctets.append(octets)
             }
         }
@@ -127,7 +127,7 @@ extension `HTTP.Framing.Connection.Server Tests`.Integration {
         let readingBody = server.isReadingBody
         #expect(readingBody)
 
-        guard case .body(let content) = try #require(try server.next()) else {
+        guard case .content(let content) = try #require(try server.next()) else {
             Issue.record("expected the outstanding body, not the next head")
             return
         }
@@ -183,7 +183,7 @@ extension `HTTP.Framing.Connection.Server Tests`.`Edge Case` {
     @Test
     func `C4 - a blank line already buffered does NOT disable the body budget`() throws {
 
-        let limits = HTTP.Framing.Limits(startLine: 8_000, fieldSection: 65_536, body: 16_384)
+        let limits = HTTP.Framing.Limits(startLine: 8_000, fieldSection: 65_536, content: 16_384)
         var server = HTTP.Framing.Connection.Server(limits: limits)
 
         try server.receive(
@@ -231,7 +231,7 @@ extension `HTTP.Framing.Connection.Server Tests`.`Edge Case` {
     @Test
     func `C4b - the body budget is what fires, not the head budget`() throws {
 
-        let limits = HTTP.Framing.Limits(startLine: 8_000, fieldSection: 65_536, body: 512)
+        let limits = HTTP.Framing.Limits(startLine: 8_000, fieldSection: 65_536, content: 512)
         var server = HTTP.Framing.Connection.Server(limits: limits)
 
         try server.receive(

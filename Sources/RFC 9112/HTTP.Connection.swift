@@ -1,6 +1,6 @@
-extension RFC_9110 {
+extension RFC_9112 {
 
-    public struct Connection: Sendable, Equatable, Hashable {
+    public struct Connection: Equatable, Hashable {
 
         public let options: Set<String>
 
@@ -10,7 +10,7 @@ extension RFC_9110 {
     }
 }
 
-extension RFC_9110.Connection {
+extension RFC_9112.Connection {
 
     public static let close = Self(options: ["close"])
 
@@ -55,13 +55,13 @@ extension RFC_9110.Connection {
     }
 }
 
-extension RFC_9110.Connection: CustomStringConvertible {
+extension RFC_9112.Connection: CustomStringConvertible {
     public var description: String {
         headerValue
     }
 }
 
-extension RFC_9110.Connection: Codable {
+extension RFC_9112.Connection: Codable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         let string = try container.decode(String.self)
@@ -82,7 +82,7 @@ extension RFC_9110.Connection: Codable {
     }
 }
 
-extension RFC_9110.Connection: LosslessStringConvertible {
+extension RFC_9112.Connection: LosslessStringConvertible {
 
     public init?(_ description: String) {
         guard let parsed = Self.parse(description) else { return nil }
@@ -90,8 +90,8 @@ extension RFC_9110.Connection: LosslessStringConvertible {
     }
 }
 
-extension RFC_9110.Connection: ExpressibleByStringLiteral {
+extension RFC_9112.Connection: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
-        self = Self.parse(value) ?? RFC_9110.Connection(options: [value])
+        self = Self.parse(value) ?? RFC_9112.Connection(options: [value])
     }
 }

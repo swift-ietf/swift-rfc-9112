@@ -1,5 +1,5 @@
-extension RFC_9110.Host.Validator {
-    public enum Error: Swift.Error, Sendable, Equatable {
+extension RFC_9112.Host.Validator {
+    public enum Error: Swift.Error, Equatable {
         case missingHost
         case multipleHostHeaders(count: Int)
         case invalidHostFormat(String, reason: String)

@@ -1,10 +1,10 @@
-extension RFC_9110.Framing.Connection.Client {
+extension RFC_9112.Framing.Connection.Client {
 
-    internal enum State: Sendable, Equatable {
+    internal enum State: Equatable {
 
         case head
 
-        case body(RFC_9110.Framing.BodyLength)
+        case body(RFC_9112.Framing.Body.Length)
 
         case tunnelled
 
@@ -12,9 +12,9 @@ extension RFC_9110.Framing.Connection.Client {
     }
 }
 
-extension RFC_9110.Framing.Connection.Client.State {
+extension RFC_9112.Framing.Connection.Client.State {
 
-    internal var phase: RFC_9110.Framing.Phase {
+    internal var phase: RFC_9112.Framing.Phase {
         switch self {
         case .head, .tunnelled, .finished: .head
         case .body: .body

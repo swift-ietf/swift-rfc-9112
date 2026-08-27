@@ -1,18 +1,18 @@
-@_exported import RFC_3986
+public import RFC_3986
 
-extension RFC_9110.Host {
+extension RFC_9112.Host {
 
     public enum Validator {}
 }
 
-extension RFC_9110.Host.Validator {
+extension RFC_9112.Host.Validator {
 
-    public static func validate(
-        request: RFC_9110.Request,
+    public static func validate<Content>(
+        request: RFC_9112.Message.Request<Content>,
         version: RFC_9110.Version
     ) throws(Error) {
 
-        guard version.isHTTP11OrHigher else {
+        guard version >= RFC_9112.Version.value else {
             return
         }
 

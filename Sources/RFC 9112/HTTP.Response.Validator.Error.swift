@@ -1,5 +1,5 @@
-extension RFC_9110.Response.Validator {
-    public enum Error: Swift.Error, Sendable, Equatable {
+extension RFC_9112.Response.Validator {
+    public enum Error: Swift.Error, Equatable {
         case invalidTransferEncoding(String)
         case invalidContentLength(reason: String)
         case multipleContentLengthValues([Int])

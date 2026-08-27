@@ -1,6 +1,6 @@
-extension RFC_9110.Framing {
+extension RFC_9112.Framing {
 
-    public enum Terminal: Sendable, Equatable, Hashable {
+    public enum Terminal: Equatable, Hashable {
 
         case clean
 

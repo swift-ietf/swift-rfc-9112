@@ -1,5 +1,5 @@
-extension RFC_9110.Header.Parser {
-    public enum ParsingError: Swift.Error, Sendable, Equatable {
+extension RFC_9112.Field.Parser {
+    public enum Error: Swift.Error, Equatable {
         case missingColon
         case emptyFieldName
         case whitespaceBeforeColon

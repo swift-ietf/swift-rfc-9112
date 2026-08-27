@@ -1,6 +1,5 @@
-extension RFC_9110 {
-
-    public struct TransferEncoding: Sendable, Equatable, Hashable {
+extension RFC_9112.Transfer {
+    public struct Encoding: Equatable, Hashable {
 
         private let storage: Storage
 
@@ -14,7 +13,7 @@ extension RFC_9110 {
     }
 }
 
-extension RFC_9110.TransferEncoding {
+extension RFC_9112.Transfer.Encoding {
 
     public static let chunked = Self(codingName: "chunked")
 
@@ -103,13 +102,13 @@ extension RFC_9110.TransferEncoding {
     }
 }
 
-extension RFC_9110.TransferEncoding: CustomStringConvertible {
+extension RFC_9112.Transfer.Encoding: CustomStringConvertible {
     public var description: String {
         headerValue
     }
 }
 
-extension RFC_9110.TransferEncoding: Codable {
+extension RFC_9112.Transfer.Encoding: Codable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         let string = try container.decode(String.self)
@@ -130,7 +129,7 @@ extension RFC_9110.TransferEncoding: Codable {
     }
 }
 
-extension RFC_9110.TransferEncoding: LosslessStringConvertible {
+extension RFC_9112.Transfer.Encoding: LosslessStringConvertible {
 
     public init?(_ description: String) {
         guard let parsed = Self.parse(description) else { return nil }
@@ -138,7 +137,7 @@ extension RFC_9110.TransferEncoding: LosslessStringConvertible {
     }
 }
 
-extension RFC_9110.TransferEncoding: ExpressibleByStringLiteral {
+extension RFC_9112.Transfer.Encoding: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
         self = Self.parse(value) ?? Self(codingName: value)
     }

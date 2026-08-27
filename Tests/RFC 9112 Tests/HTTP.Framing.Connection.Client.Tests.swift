@@ -30,11 +30,11 @@ extension `HTTP.Framing.Connection.Client Tests`.Unit {
             Issue.record("expected a head")
             return
         }
-        #expect(head.line.statusCode == 200)
+        #expect(head.line.status.code == 200)
 
-        #expect(head.bodyLength == .untilClose)
+        #expect(head.length == .untilClose)
 
-        guard case .body(let payload) = try #require(try client.next()) else {
+        guard case .content(let payload) = try #require(try client.next()) else {
             Issue.record("expected body octets")
             return
         }
@@ -99,8 +99,8 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
             return
         }
 
-        #expect(first.line.statusCode == 200)
-        #expect(first.bodyLength == .none)
+        #expect(first.line.status.code == 200)
+        #expect(first.length == .none)
         #expect(client.outstanding == 1)
 
         guard case .end(_, let firstOctets) = try #require(try client.next()) else {
@@ -114,10 +114,10 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
             Issue.record("response 2 did not frame — response 1 consumed its octets")
             return
         }
-        #expect(second.line.statusCode == 200)
-        #expect(second.bodyLength == .length(2))
+        #expect(second.line.status.code == 200)
+        #expect(second.length == .length(2))
 
-        guard case .body(let payload) = try #require(try client.next()) else {
+        guard case .content(let payload) = try #require(try client.next()) else {
             Issue.record("expected response 2's body")
             return
         }
@@ -177,7 +177,7 @@ extension `HTTP.Framing.Connection.Client Tests`.`Edge Case` {
             Issue.record("expected a head")
             return
         }
-        #expect(head.bodyLength == .tunnel)
+        #expect(head.length == .tunnel)
 
         guard case .tunnel = try #require(try client.next()) else {
             Issue.record("expected the tunnel event")
@@ -201,7 +201,7 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
         var client = HTTP.Framing.Connection.Client()
         client.expect(.get)
 
-        var head: HTTP.Framing.ResponseHead?
+        var head: HTTP.Framing.Response.Head?
         var payload: [Byte] = []
         var ended = false
         var endOctets = 0
@@ -211,7 +211,7 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
             while let event = try client.next() {
                 switch event {
                 case .head(let framed): head = framed
-                case .body(let chunk): payload.append(contentsOf: chunk)
+                case .content(let chunk): payload.append(contentsOf: chunk)
 
                 case .end(_, let octets):
                     ended = true
@@ -233,7 +233,7 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
             }
         }
 
-        #expect(try #require(head).line.statusCode == 200)
+        #expect(try #require(head).line.status.code == 200)
         #expect(payload == `HTTP.Framing.Connection.Client Tests`.octets("hello world"))
         #expect(ended)
 
@@ -258,13 +258,13 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
                 try client.receive(Array(bytes[offset..<end]))
                 offset = end
                 while let event = try client.next() {
-                    if case .body(let chunk) = event { payload.append(contentsOf: chunk) }
+                    if case .content(let chunk) = event { payload.append(contentsOf: chunk) }
                 }
             }
             client.peerClosed()
             while let event = try client.next() {
                 switch event {
-                case .body(let chunk): payload.append(contentsOf: chunk)
+                case .content(let chunk): payload.append(contentsOf: chunk)
                 case .end(_, let count): octets = count
                 default: break
                 }

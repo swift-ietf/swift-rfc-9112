@@ -2,22 +2,21 @@ public import Byte_Primitives
 import INCITS_4_1986
 import Standard_Library_Extensions
 
-extension RFC_9110 {
-
-    public enum ChunkedEncoding {}
+extension RFC_9112.Transfer.Coding {
+    public enum Chunked {}
 }
 
-extension RFC_9110.ChunkedEncoding {
+extension RFC_9112.Transfer.Coding.Chunked {
 
     public static func encode(
         _ data: [Byte],
         chunkSize: Int = 8192,
-        chunkExtensions: [Extension] = [],
-        trailers: [RFC_9110.Header.Field] = []
+        extensions: [Extension] = [],
+        trailers: [RFC_9110.Field] = []
     ) -> [Byte] {
         var result = [Byte]()
 
-        let extensionsString = chunkExtensions.map { $0.formatted }.joined()
+        let extensionsString = extensions.map { $0.formatted }.joined()
 
         var offset = 0
         while offset < data.count {
@@ -26,7 +25,7 @@ extension RFC_9110.ChunkedEncoding {
             let size = chunkData.count
 
             result.append(contentsOf: String(size, radix: 16).utf8)
-            if !chunkExtensions.isEmpty {
+            if !extensions.isEmpty {
                 result.append(contentsOf: extensionsString.utf8)
             }
             result.append(contentsOf: [0x0D, 0x0A])
@@ -38,7 +37,7 @@ extension RFC_9110.ChunkedEncoding {
         }
 
         result.append(contentsOf: "0".utf8)
-        if !chunkExtensions.isEmpty {
+        if !extensions.isEmpty {
             result.append(contentsOf: extensionsString.utf8)
         }
         result.append(contentsOf: [0x0D, 0x0A])
@@ -53,10 +52,10 @@ extension RFC_9110.ChunkedEncoding {
         return result
     }
 
-    public static func decode(_ data: [Byte]) throws(ChunkedDecodingError) -> DecodeResult {
+    public static func decode(_ data: [Byte]) throws(Error) -> Result {
         var result = [Byte]()
-        var allChunkExtensions: [[Extension]] = []
-        var trailers: [RFC_9110.Header.Field] = []
+        var allExtensions: [[Extension]] = []
+        var trailers: [RFC_9110.Field] = []
         var offset = 0
 
         while offset < data.count {
@@ -65,7 +64,7 @@ extension RFC_9110.ChunkedEncoding {
                 data.index(after: crlfIndex) < data.endIndex,
                 data[crlfIndex + 1] == 0x0A
             else {
-                throw ChunkedDecodingError.invalidFormat
+                throw Error.invalidFormat
             }
 
             let sizeLine = data[offset..<crlfIndex]
@@ -75,21 +74,21 @@ extension RFC_9110.ChunkedEncoding {
             let sizeComponent = String(components[0]).trimming(.ascii.whitespaces)
 
             guard let size = Int(sizeComponent, radix: 16) else {
-                throw ChunkedDecodingError.invalidChunkSize
+                throw Error.invalidChunkSize
             }
 
-            var chunkExtensions: [Extension] = []
+            var extensions: [Extension] = []
             if components.count > 1 {
                 let extensionsString = String(components[1])
-                chunkExtensions = Extension.parseExtensions(extensionsString)
+                extensions = Extension.parseExtensions(extensionsString)
             }
 
             offset = crlfIndex + 2
 
             if size == 0 {
 
-                if !chunkExtensions.isEmpty {
-                    allChunkExtensions.append(chunkExtensions)
+                if !extensions.isEmpty {
+                    allExtensions.append(extensions)
                 }
 
                 while offset < data.count {
@@ -105,7 +104,7 @@ extension RFC_9110.ChunkedEncoding {
                         data.index(after: nextCrlf) < data.endIndex,
                         data[nextCrlf + 1] == 0x0A
                     else {
-                        throw ChunkedDecodingError.invalidFormat
+                        throw Error.invalidFormat
                     }
 
                     let trailerLine = data[offset..<nextCrlf]
@@ -116,8 +115,8 @@ extension RFC_9110.ChunkedEncoding {
                         if parts.count == 2 {
                             let name = String(parts[0]).trimming(.ascii.whitespaces)
                             let value = String(parts[1]).trimming(.ascii.whitespaces)
-                            do throws(RFC_9110.Header.Field.Error) {
-                                let trailer = try RFC_9110.Header.Field(
+                            do throws(RFC_9110.Field.Error) {
+                                let trailer = try RFC_9110.Field(
                                     name: name,
                                     value: value
                                 )
@@ -134,10 +133,10 @@ extension RFC_9110.ChunkedEncoding {
                 break
             }
 
-            allChunkExtensions.append(chunkExtensions)
+            allExtensions.append(extensions)
 
             guard offset + size + 2 <= data.count else {
-                throw ChunkedDecodingError.incompleteChunk
+                throw Error.incompleteChunk
             }
 
             let chunkData = data[offset..<(offset + size)]
@@ -146,15 +145,15 @@ extension RFC_9110.ChunkedEncoding {
             guard data[offset + size] == 0x0D,
                 data[offset + size + 1] == 0x0A
             else {
-                throw ChunkedDecodingError.missingCRLF
+                throw Error.missingCRLF
             }
 
             offset += size + 2
         }
 
-        return DecodeResult(
+        return Result(
             data: result,
-            chunkExtensions: allChunkExtensions,
+            extensions: allExtensions,
             trailers: trailers
         )
     }

@@ -1,6 +1,6 @@
-extension RFC_9110.ChunkedEncoding {
+extension RFC_9112.Transfer.Coding.Chunked {
 
-    public enum ChunkedDecodingError: Swift.Error, Sendable, Equatable {
+    public enum Error: Swift.Error, Equatable {
 
         case invalidFormat
 

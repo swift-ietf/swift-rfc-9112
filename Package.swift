@@ -31,6 +31,7 @@ let package = Package(
         .target(
             name: "RFC 9112",
             dependencies: [
+                .product(name: "Byte Primitive", package: "swift-byte-primitives"),
                 .product(name: "Byte Primitives", package: "swift-byte-primitives"),
                 .product(name: "RFC 9110", package: "swift-rfc-9110"),
                 .product(

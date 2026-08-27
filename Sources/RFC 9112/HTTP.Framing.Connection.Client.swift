@@ -1,10 +1,10 @@
 public import Byte_Primitives
 
-extension RFC_9110.Framing.Connection {
+extension RFC_9112.Framing.Connection {
 
     public struct Client: ~Copyable {
 
-        private var framer: RFC_9110.Framing.Framer
+        private var framer: RFC_9112.Framing.Framer
 
         private var state: State
 
@@ -18,8 +18,8 @@ extension RFC_9110.Framing.Connection {
 
         private var closeAfterMessage: Bool
 
-        public init(limits: RFC_9110.Framing.Limits = .default) {
-            self.framer = RFC_9110.Framing.Framer(limits: limits)
+        public init(limits: RFC_9112.Framing.Limits = .default) {
+            self.framer = RFC_9112.Framing.Framer(limits: limits)
             self.state = .head
             self.expected = []
             self.closed = false
@@ -30,7 +30,7 @@ extension RFC_9110.Framing.Connection {
     }
 }
 
-extension RFC_9110.Framing.Connection.Client {
+extension RFC_9112.Framing.Connection.Client {
 
     public mutating func expect(_ method: RFC_9110.Method) {
         expected.append(method)
@@ -48,9 +48,9 @@ extension RFC_9110.Framing.Connection.Client {
     }
 }
 
-extension RFC_9110.Framing.Connection.Client {
+extension RFC_9112.Framing.Connection.Client {
 
-    public mutating func receive(_ bytes: [Byte]) throws(RFC_9110.Framing.Error) {
+    public mutating func receive(_ bytes: [Byte]) throws(RFC_9112.Framing.Error) {
         try framer.append(bytes, accumulating: state.phase)
     }
 
@@ -59,10 +59,10 @@ extension RFC_9110.Framing.Connection.Client {
     }
 }
 
-extension RFC_9110.Framing.Connection.Client {
+extension RFC_9112.Framing.Connection.Client {
 
-    public mutating func next() throws(RFC_9110.Framing.Error)
-        -> RFC_9110.Framing.Connection.Client.Event?
+    public mutating func next() throws(RFC_9112.Framing.Error)
+        -> RFC_9112.Framing.Connection.Client.Event?
     {
         if let queued = pending {
             pending = nil
@@ -81,8 +81,8 @@ extension RFC_9110.Framing.Connection.Client {
         }
     }
 
-    private mutating func nextHead() throws(RFC_9110.Framing.Error)
-        -> RFC_9110.Framing.Connection.Client.Event?
+    private mutating func nextHead() throws(RFC_9112.Framing.Error)
+        -> RFC_9112.Framing.Connection.Client.Event?
     {
         guard let method = expected.first else {
             throw .responseWithoutRequest
@@ -93,21 +93,21 @@ extension RFC_9110.Framing.Connection.Client {
 
         delivered = 0
         closeAfterMessage = Self.requestsClose(head.headers)
-        state = .body(head.bodyLength)
+        state = .body(head.length)
         return .head(head)
     }
 
-    private static func requestsClose(_ headers: RFC_9110.Headers) -> Bool {
+    private static func requestsClose(_ headers: RFC_9110.Message.Headers) -> Bool {
 
-        headers.values("Connection")
-            .compactMap { RFC_9110.Connection.parse($0.description) }
+        headers.values(.connection)
+            .compactMap { RFC_9112.Connection.parse($0.description) }
             .contains { $0.hasClose }
     }
 
     private mutating func nextBody(
-        _ bodyLength: RFC_9110.Framing.BodyLength
-    ) throws(RFC_9110.Framing.Error) -> RFC_9110.Framing.Connection.Client.Event? {
-        switch bodyLength {
+        _ length: RFC_9112.Framing.Body.Length
+    ) throws(RFC_9112.Framing.Error) -> RFC_9112.Framing.Connection.Client.Event? {
+        switch length {
         case .tunnel:
 
             state = .tunnelled
@@ -118,7 +118,7 @@ extension RFC_9110.Framing.Connection.Client {
 
         case .none, .length, .chunked:
 
-            guard let body = try framer.nextBody(bodyLength) else { return nil }
+            guard let body = try framer.nextBody(length) else { return nil }
             let end = Event.end(trailers: body.trailers, octets: body.octets)
             state = closeAfterMessage ? .finished : .head
             closeAfterMessage = false
@@ -129,7 +129,7 @@ extension RFC_9110.Framing.Connection.Client {
     }
 
     private mutating func deliverUntilClose()
-        -> RFC_9110.Framing.Connection.Client.Event?
+        -> RFC_9112.Framing.Connection.Client.Event?
     {
         let chunk = framer.takeBuffered()
         if !chunk.isEmpty {
@@ -142,18 +142,18 @@ extension RFC_9110.Framing.Connection.Client {
         delivered = 0
 
         state = .finished
-        return .end(trailers: RFC_9110.Headers([]), octets: octets)
+        return .end(trailers: RFC_9110.Message.Trailers(), octets: octets)
     }
 }
 
-extension RFC_9110.Framing.Connection.Client {
+extension RFC_9112.Framing.Connection.Client {
 
     public consuming func surrenderTunnel() -> [Byte] {
         framer.surrenderUnconsumed()
     }
 
-    public consuming func finish() throws(RFC_9110.Framing.Error)
-        -> RFC_9110.Framing.Terminal
+    public consuming func finish() throws(RFC_9112.Framing.Error)
+        -> RFC_9112.Framing.Terminal
     {
         try framer.finish()
     }

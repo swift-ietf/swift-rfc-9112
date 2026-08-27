@@ -1,14 +1,13 @@
 public import Byte_Primitives
 import Standard_Library_Extensions
 
-extension RFC_9110 {
-
-    public enum MessageParser {}
+extension RFC_9112.Message {
+    public enum Parser {}
 }
 
-extension RFC_9110.MessageParser {
+extension RFC_9112.Message.Parser {
 
-    public static func parseLines(from data: [Byte]) throws(ParsingError) -> [Line] {
+    public static func parseLines(from data: [Byte]) throws(Error) -> [Line] {
         var lines: [Line] = []
         var currentIndex = data.startIndex
         var lineNumber = 1
@@ -34,7 +33,7 @@ extension RFC_9110.MessageParser {
         from data: [Byte],
         startingAt index: inout Array<Byte>.Index,
         lineNumber: Int
-    ) throws(ParsingError) -> Line? {
+    ) throws(Error) -> Line? {
         guard index < data.endIndex else { return nil }
 
         var content = [Byte]()
@@ -52,7 +51,7 @@ extension RFC_9110.MessageParser {
                     return Line(content: content, terminator: .crlf, lineNumber: lineNumber)
                 } else {
 
-                    throw ParsingError.bareCR(lineNumber: lineNumber)
+                    throw Error.bareCR(lineNumber: lineNumber)
                 }
 
             case 0x0A:

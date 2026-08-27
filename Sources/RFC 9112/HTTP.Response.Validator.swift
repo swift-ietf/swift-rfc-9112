@@ -1,11 +1,13 @@
-extension RFC_9110.Response {
+extension RFC_9112.Response {
 
     public enum Validator {}
 }
 
-extension RFC_9110.Response.Validator {
+extension RFC_9112.Response.Validator {
 
-    public static func validate(_ response: RFC_9110.Response) throws(Error) {
+    public static func validate<Content>(
+        _ response: RFC_9112.Message.Response<Content>
+    ) throws(Error) {
         let headers = response.headers
 
         try validateContentLength(headers: Array(headers))
@@ -38,7 +40,7 @@ extension RFC_9110.Response.Validator {
         }
     }
 
-    private static func validateTransferEncoding(headers: [RFC_9110.Header.Field]) throws(Error) {
+    private static func validateTransferEncoding(headers: [RFC_9110.Field]) throws(Error) {
         let transferEncodingHeaders = headers.filter {
             $0.name.description.lowercased() == "transfer-encoding"
         }
@@ -48,7 +50,7 @@ extension RFC_9110.Response.Validator {
         }
 
         for header in transferEncodingHeaders {
-            guard let te = RFC_9110.TransferEncoding.parse(header.value.description) else {
+            guard let te = RFC_9112.Transfer.Encoding.parse(header.value.description) else {
                 throw Error.invalidTransferEncoding(header.value.description)
             }
 
@@ -58,7 +60,7 @@ extension RFC_9110.Response.Validator {
         }
 
         let chunkedCount = transferEncodingHeaders.filter { header in
-            RFC_9110.TransferEncoding.parse(header.value.description)?.hasChunked ?? false
+            RFC_9112.Transfer.Encoding.parse(header.value.description)?.hasChunked ?? false
         }.count
 
         if chunkedCount > 1 {
@@ -66,7 +68,7 @@ extension RFC_9110.Response.Validator {
         }
     }
 
-    private static func validateContentLength(headers: [RFC_9110.Header.Field]) throws(Error) {
+    private static func validateContentLength(headers: [RFC_9110.Field]) throws(Error) {
         let contentLengthHeaders = headers.filter {
             $0.name.description.lowercased() == "content-length"
         }
