@@ -1,4 +1,4 @@
-public import Byte_Primitives
+public import Byte
 import Standard_Library_Extensions
 
 extension RFC_9110.Response {

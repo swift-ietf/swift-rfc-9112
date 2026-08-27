@@ -1,4 +1,4 @@
-import Byte_Primitives
+import Byte
 import INCITS_4_1986
 
 extension RFC_9110.Framing.Framer {
