@@ -1,3 +1,5 @@
+import RFC_9110
+import Byte
 import Testing
 
 @testable import RFC_9112
@@ -10,7 +12,7 @@ struct `HTTP.Framing.Connection.Client Tests` {
 }
 
 extension `HTTP.Framing.Connection.Client Tests` {
-    static func octets(_ text: String) -> [Byte] { Array(text.utf8) }
+    static func octets(_ text: String) -> [Byte] { text.utf8.map(Byte.init(bitPattern:)) }
 
     static let closeDelimited = "HTTP/1.1 200 OK\r\n\r\n"
 }
@@ -34,7 +36,7 @@ extension `HTTP.Framing.Connection.Client Tests`.Unit {
 
         #expect(head.length == .untilClose)
 
-        guard case .content(let payload) = try #require(try client.next()) else {
+        guard case .body(let payload) = try #require(try client.next()) else {
             Issue.record("expected body octets")
             return
         }
@@ -117,7 +119,7 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
         #expect(second.line.status.code == 200)
         #expect(second.length == .length(2))
 
-        guard case .content(let payload) = try #require(try client.next()) else {
+        guard case .body(let payload) = try #require(try client.next()) else {
             Issue.record("expected response 2's body")
             return
         }
@@ -211,7 +213,7 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
             while let event = try client.next() {
                 switch event {
                 case .head(let framed): head = framed
-                case .content(let chunk): payload.append(contentsOf: chunk)
+                case .body(let chunk): payload.append(contentsOf: chunk)
 
                 case .end(_, let octets):
                     ended = true
@@ -258,13 +260,13 @@ extension `HTTP.Framing.Connection.Client Tests`.Integration {
                 try client.receive(Array(bytes[offset..<end]))
                 offset = end
                 while let event = try client.next() {
-                    if case .content(let chunk) = event { payload.append(contentsOf: chunk) }
+                    if case .body(let chunk) = event { payload.append(contentsOf: chunk) }
                 }
             }
             client.peerClosed()
             while let event = try client.next() {
                 switch event {
-                case .content(let chunk): payload.append(contentsOf: chunk)
+                case .body(let chunk): payload.append(contentsOf: chunk)
                 case .end(_, let count): octets = count
                 default: break
                 }

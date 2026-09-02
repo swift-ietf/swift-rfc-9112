@@ -1,4 +1,5 @@
-public import Byte_Primitives
+public import Byte
+import Byte_Standard_Library_Integration
 import INCITS_4_1986
 import Standard_Library_Extensions
 

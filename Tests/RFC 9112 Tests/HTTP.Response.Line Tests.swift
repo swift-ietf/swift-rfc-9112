@@ -1,3 +1,6 @@
+import Byte
+import Byte_Standard_Library_Integration
+import RFC_9110
 import RFC_9112
 import Testing
 
@@ -9,7 +12,7 @@ struct `HTTP.Response.Line Tests` {
         #expect(parsed.version == HTTP.Version.value)
         #expect(parsed.status == .ok)
         #expect(String(decoding: parsed.reason?.bytes ?? [], as: UTF8.self) == "OK")
-        #expect(String(decoding: parsed.bytes.map(\.underlying), as: UTF8.self) == "HTTP/1.1 200 OK")
+        #expect(String(decoding: parsed.bytes.map(\.bitPattern), as: UTF8.self) == "HTTP/1.1 200 OK")
     }
 
     @Test

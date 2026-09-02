@@ -1,6 +1,7 @@
 public import RFC_9110
 
-public import Byte_Primitives
+public import Byte
+import Byte_Standard_Library_Integration
 import INCITS_4_1986
 import Standard_Library_Extensions
 
@@ -26,30 +27,30 @@ extension RFC_9112.Transfer.Coding.Chunked {
             let chunkData = data[offset..<end]
             let size = chunkData.count
 
-            result.append(contentsOf: String(size, radix: 16).utf8)
+            result.append(contentsOf: String(size, radix: 16).utf8.lazy.map(Byte.init(bitPattern:)))
             if !extensions.isEmpty {
-                result.append(contentsOf: extensionsString.utf8)
+                result.append(contentsOf: extensionsString.utf8.lazy.map(Byte.init(bitPattern:)))
             }
-            result.append(contentsOf: [0x0D, 0x0A])
+            result.append(contentsOf: [Byte(bitPattern: 0x0D), Byte(bitPattern: 0x0A)])
 
             result.append(contentsOf: chunkData)
-            result.append(contentsOf: [0x0D, 0x0A])
+            result.append(contentsOf: [Byte(bitPattern: 0x0D), Byte(bitPattern: 0x0A)])
 
             offset = end
         }
 
-        result.append(contentsOf: "0".utf8)
+        result.append(contentsOf: "0".utf8.lazy.map(Byte.init(bitPattern:)))
         if !extensions.isEmpty {
-            result.append(contentsOf: extensionsString.utf8)
+            result.append(contentsOf: extensionsString.utf8.lazy.map(Byte.init(bitPattern:)))
         }
-        result.append(contentsOf: [0x0D, 0x0A])
+        result.append(contentsOf: [Byte(bitPattern: 0x0D), Byte(bitPattern: 0x0A)])
 
         for trailer in trailers {
             let line = "\(trailer.name): \(trailer.value)\r\n"
-            result.append(contentsOf: line.utf8)
+            result.append(contentsOf: line.utf8.lazy.map(Byte.init(bitPattern:)))
         }
 
-        result.append(contentsOf: [0x0D, 0x0A])
+        result.append(contentsOf: [Byte(bitPattern: 0x0D), Byte(bitPattern: 0x0A)])
 
         return result
     }
@@ -62,9 +63,9 @@ extension RFC_9112.Transfer.Coding.Chunked {
 
         while offset < data.count {
 
-            guard let crlfIndex = data[offset...].firstIndex(of: 0x0D),
+            guard let crlfIndex = data[offset...].firstIndex(of: Byte(bitPattern: 0x0D)),
                 data.index(after: crlfIndex) < data.endIndex,
-                data[crlfIndex + 1] == 0x0A
+                data[crlfIndex + 1] == Byte(bitPattern: 0x0A)
             else {
                 throw Error.invalidFormat
             }
@@ -95,16 +96,17 @@ extension RFC_9112.Transfer.Coding.Chunked {
 
                 while offset < data.count {
 
-                    if data.index(after: offset) < data.endIndex && data[offset] == 0x0D
-                        && data[offset + 1] == 0x0A
+                    if data.index(after: offset) < data.endIndex
+                        && data[offset] == Byte(bitPattern: 0x0D)
+                        && data[offset + 1] == Byte(bitPattern: 0x0A)
                     {
 
                         break
                     }
 
-                    guard let nextCrlf = data[offset...].firstIndex(of: 0x0D),
+                    guard let nextCrlf = data[offset...].firstIndex(of: Byte(bitPattern: 0x0D)),
                         data.index(after: nextCrlf) < data.endIndex,
-                        data[nextCrlf + 1] == 0x0A
+                        data[nextCrlf + 1] == Byte(bitPattern: 0x0A)
                     else {
                         throw Error.invalidFormat
                     }
@@ -144,8 +146,8 @@ extension RFC_9112.Transfer.Coding.Chunked {
             let chunkData = data[offset..<(offset + size)]
             result.append(contentsOf: chunkData)
 
-            guard data[offset + size] == 0x0D,
-                data[offset + size + 1] == 0x0A
+            guard data[offset + size] == Byte(bitPattern: 0x0D),
+                data[offset + size + 1] == Byte(bitPattern: 0x0A)
             else {
                 throw Error.missingCRLF
             }

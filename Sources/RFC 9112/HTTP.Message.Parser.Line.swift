@@ -1,5 +1,5 @@
-public import Byte_Primitives
-import Byte_Primitives_Standard_Library_Integration
+public import Byte
+import Byte_Standard_Library_Integration
 
 extension RFC_9112.Message.Parser {
 

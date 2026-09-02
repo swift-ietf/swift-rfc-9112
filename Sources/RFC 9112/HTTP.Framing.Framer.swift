@@ -1,6 +1,7 @@
 public import RFC_9110
 
-public import Byte_Primitives
+public import Byte
+import Byte_Standard_Library_Integration
 import INCITS_4_1986
 
 extension RFC_9112.Framing {
@@ -166,11 +167,11 @@ extension RFC_9112.Framing.Framer {
         var headEnd: Int?
 
         scan: while index < buffer.count {
-            switch buffer[index] {
+            switch buffer[index].bitPattern {
             case 0x0D:
 
                 guard buffer.indices.contains(index + 1) else { return nil }
-                guard buffer[index + 1] == 0x0A else { throw .bareCarriageReturn }
+                guard buffer[index + 1] == Byte(bitPattern: 0x0A) else { throw .bareCarriageReturn }
                 let line = Array(buffer[lineStart..<index])
                 index += 2
                 if line.isEmpty {
@@ -207,10 +208,12 @@ extension RFC_9112.Framing.Framer {
         var fields: [RFC_9110.Field] = []
         for fieldLine in lines.dropFirst() {
 
-            if let first = fieldLine.first, first == 0x20 || first == 0x09 {
+            if let first = fieldLine.first,
+                first == Byte(bitPattern: 0x20) || first == Byte(bitPattern: 0x09)
+            {
                 throw .obsoleteLineFolding
             }
-            guard let colon = fieldLine.firstIndex(of: 0x3A) else {
+            guard let colon = fieldLine.firstIndex(of: Byte(bitPattern: 0x3A)) else {
                 throw .malformedFieldLine(Self.text(fieldLine))
             }
 
@@ -245,7 +248,7 @@ extension RFC_9112.Framing.Framer {
     }
 
     private static func isTchar(_ byte: Byte) -> Bool {
-        switch byte {
+        switch byte.bitPattern {
         case 0x21, 0x23, 0x24, 0x25, 0x26, 0x27, 0x2A, 0x2B,
             0x2D, 0x2E, 0x5E, 0x5F, 0x60, 0x7C, 0x7E:
             true

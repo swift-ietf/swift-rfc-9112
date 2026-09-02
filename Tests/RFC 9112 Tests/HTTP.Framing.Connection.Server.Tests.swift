@@ -1,3 +1,5 @@
+import RFC_9110
+import Byte
 import Testing
 
 @testable import RFC_9112
@@ -10,7 +12,7 @@ struct `HTTP.Framing.Connection.Server Tests` {
 }
 
 extension `HTTP.Framing.Connection.Server Tests` {
-    static func octets(_ text: String) -> [Byte] { Array(text.utf8) }
+    static func octets(_ text: String) -> [Byte] { text.utf8.map(Byte.init(bitPattern:)) }
 
     static let largeBodyLength = 1_048_576
 
@@ -36,7 +38,7 @@ extension `HTTP.Framing.Connection.Server Tests`.Integration {
         }
         #expect(head.length == .length(length))
 
-        let payload = [Byte](repeating: Byte(0x41), count: length)
+        let payload = [Byte](repeating: Byte(bitPattern: 0x41), count: length)
         var offset = 0
         while offset < length {
             let end = min(offset + 65_536, length)
@@ -44,7 +46,7 @@ extension `HTTP.Framing.Connection.Server Tests`.Integration {
             offset = end
         }
 
-        guard case .content(let content) = try #require(try server.next()) else {
+        guard case .body(let content) = try #require(try server.next()) else {
             Issue.record("expected body octets")
             return
         }
@@ -62,7 +64,7 @@ extension `HTTP.Framing.Connection.Server Tests`.Integration {
 
         var framer = HTTP.Framing.Framer()
         let oversized = [Byte](
-            repeating: Byte(0x41),
+            repeating: Byte(bitPattern: 0x41),
             count: `HTTP.Framing.Connection.Server Tests`.largeBodyLength
         )
 
@@ -93,8 +95,8 @@ extension `HTTP.Framing.Connection.Server Tests`.Integration {
 
         while let event = try server.next() {
             switch event {
-            case .head(let head): targets.append(head.line.target)
-            case .content(let content): payloads.append(content)
+            case .head(let head): targets.append(originPath(head.line.target) ?? "")
+            case .body(let content): payloads.append(content)
             case .end(_, let octets): bodyOctets.append(octets)
             }
         }
@@ -122,12 +124,12 @@ extension `HTTP.Framing.Connection.Server Tests`.Integration {
             Issue.record("expected a head")
             return
         }
-        #expect(first.line.target == "/1")
+        #expect(originPath(first.line.target) == "/1")
 
         let readingBody = server.isReadingBody
         #expect(readingBody)
 
-        guard case .content(let content) = try #require(try server.next()) else {
+        guard case .body(let content) = try #require(try server.next()) else {
             Issue.record("expected the outstanding body, not the next head")
             return
         }
@@ -143,7 +145,7 @@ extension `HTTP.Framing.Connection.Server Tests`.Integration {
             Issue.record("expected the second head only after the first body ended")
             return
         }
-        #expect(second.line.target == "/2")
+        #expect(originPath(second.line.target) == "/2")
     }
 }
 
@@ -163,7 +165,7 @@ extension `HTTP.Framing.Connection.Server Tests`.`Edge Case` {
             Issue.record("expected a head")
             return
         }
-        #expect(head.line.target == "/1")
+        #expect(originPath(head.line.target) == "/1")
 
         let reusableBeforeEnd = server.isReusable
         #expect(reusableBeforeEnd)
@@ -183,7 +185,7 @@ extension `HTTP.Framing.Connection.Server Tests`.`Edge Case` {
     @Test
     func `C4 - a blank line already buffered does NOT disable the body budget`() throws {
 
-        let limits = HTTP.Framing.Limits(startLine: 8_000, fieldSection: 65_536, content: 16_384)
+        let limits = HTTP.Framing.Limits(startLine: 8_000, fieldSection: 65_536, body: 16_384)
         var server = HTTP.Framing.Connection.Server(limits: limits)
 
         try server.receive(
@@ -201,7 +203,7 @@ extension `HTTP.Framing.Connection.Server Tests`.`Edge Case` {
         try server.receive(prefix)
         #expect(server.unconsumed == prefix.count)
 
-        let flood = [Byte](repeating: Byte(0x41), count: 100_000)
+        let flood = [Byte](repeating: Byte(bitPattern: 0x41), count: 100_000)
         #expect(throws: HTTP.Framing.Error.bodyTooLong(limit: 16_384)) {
             try server.receive(flood)
         }
@@ -231,7 +233,7 @@ extension `HTTP.Framing.Connection.Server Tests`.`Edge Case` {
     @Test
     func `C4b - the body budget is what fires, not the head budget`() throws {
 
-        let limits = HTTP.Framing.Limits(startLine: 8_000, fieldSection: 65_536, content: 512)
+        let limits = HTTP.Framing.Limits(startLine: 8_000, fieldSection: 65_536, body: 512)
         var server = HTTP.Framing.Connection.Server(limits: limits)
 
         try server.receive(
@@ -241,10 +243,17 @@ extension `HTTP.Framing.Connection.Server Tests`.`Edge Case` {
         )
         _ = try server.next()
 
-        let body = [Byte](repeating: Byte(0x41), count: 1_024)
+        let body = [Byte](repeating: Byte(bitPattern: 0x41), count: 1_024)
         #expect(throws: HTTP.Framing.Error.bodyTooLong(limit: 512)) {
             try server.receive(body)
         }
         #expect(server.unconsumed == 0)
     }
+}
+
+private func originPath(_ target: RFC_9112.Request.Target) -> String? {
+    if case .origin(let path, _) = target {
+        return "\(path)"
+    }
+    return nil
 }

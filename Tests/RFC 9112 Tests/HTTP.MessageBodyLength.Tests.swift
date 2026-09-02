@@ -1,3 +1,6 @@
+import Byte
+import RFC_3986
+import RFC_9110
 import Testing
 
 @testable import RFC_9112
@@ -9,7 +12,7 @@ struct `HTTP.Message.Body.Length Tests` {
     struct Unit {
         @Test
         func `Response - Transfer-Encoding: chunked`() async throws {
-            let response = HTTP.Message.Response(
+            let response = HTTP.Message.Response<[Byte]>(
                 status: .ok,
                 headers: [
                     try .init(name: "Transfer-Encoding", value: "chunked")
@@ -26,7 +29,7 @@ struct `HTTP.Message.Body.Length Tests` {
 
         @Test
         func `Response - Content-Length`() async throws {
-            let response = HTTP.Message.Response(
+            let response = HTTP.Message.Response<[Byte]>(
                 status: .ok,
                 headers: [
                     try .init(name: "Content-Length", value: "42")
@@ -43,7 +46,7 @@ struct `HTTP.Message.Body.Length Tests` {
 
         @Test
         func `Request - Transfer-Encoding: chunked`() async throws {
-            let request = HTTP.Message.Request(
+            let request = HTTP.Message.Request<[Byte]>(
                 method: .post,
                 target: .origin(path: try .init("/api/data"), query: nil),
                 headers: [
@@ -58,7 +61,7 @@ struct `HTTP.Message.Body.Length Tests` {
 
         @Test
         func `Request - Content-Length`() async throws {
-            let request = HTTP.Message.Request(
+            let request = HTTP.Message.Request<[Byte]>(
                 method: .post,
                 target: .origin(path: try .init("/api/data"), query: nil),
                 headers: [
@@ -144,7 +147,7 @@ struct `HTTP.Message.Body.Length Tests` {
     struct `Edge Case` {
         @Test
         func `Response - HEAD request has no body`() async throws {
-            let response = HTTP.Message.Response(
+            let response = HTTP.Message.Response<[Byte]>(
                 status: .ok,
                 headers: [
                     try .init(name: "Content-Length", value: "100")
@@ -161,7 +164,7 @@ struct `HTTP.Message.Body.Length Tests` {
 
         @Test
         func `Response - 1xx status has no body`() async throws {
-            let response = HTTP.Message.Response(
+            let response = HTTP.Message.Response<[Byte]>(
                 status: RFC_9110.Status(100),
                 headers: []
             )
@@ -176,7 +179,7 @@ struct `HTTP.Message.Body.Length Tests` {
 
         @Test
         func `Response - 204 status has no body`() async throws {
-            let response = HTTP.Message.Response(
+            let response = HTTP.Message.Response<[Byte]>(
                 status: RFC_9110.Status(204),
                 headers: []
             )
@@ -191,7 +194,7 @@ struct `HTTP.Message.Body.Length Tests` {
 
         @Test
         func `Response - 304 status has no body`() async throws {
-            let response = HTTP.Message.Response(
+            let response = HTTP.Message.Response<[Byte]>(
                 status: RFC_9110.Status(304),
                 headers: []
             )
@@ -206,7 +209,7 @@ struct `HTTP.Message.Body.Length Tests` {
 
         @Test
         func `Response - successful CONNECT has no body`() async throws {
-            let response = HTTP.Message.Response(
+            let response = HTTP.Message.Response<[Byte]>(
                 status: .ok,
                 headers: []
             )
@@ -221,7 +224,7 @@ struct `HTTP.Message.Body.Length Tests` {
 
         @Test
         func `Response - multiple Content-Length with same value`() async throws {
-            let response = HTTP.Message.Response(
+            let response = HTTP.Message.Response<[Byte]>(
                 status: .ok,
                 headers: [
                     try .init(name: "Content-Length", value: "42"),
@@ -239,7 +242,7 @@ struct `HTTP.Message.Body.Length Tests` {
 
         @Test
         func `Response - multiple Content-Length with different values`() async throws {
-            let response = HTTP.Message.Response(
+            let response = HTTP.Message.Response<[Byte]>(
                 status: .ok,
                 headers: [
                     try .init(name: "Content-Length", value: "42"),
@@ -257,7 +260,7 @@ struct `HTTP.Message.Body.Length Tests` {
 
         @Test
         func `Response - no length indicators`() async throws {
-            let response = HTTP.Message.Response(
+            let response = HTTP.Message.Response<[Byte]>(
                 status: .ok,
                 headers: []
             )
@@ -272,7 +275,7 @@ struct `HTTP.Message.Body.Length Tests` {
 
         @Test
         func `Request - no length indicators`() async throws {
-            let request = HTTP.Message.Request(
+            let request = HTTP.Message.Request<[Byte]>(
                 method: .post,
                 target: try .origin(path: .init("/api/data"), query: nil),
                 headers: []
@@ -288,7 +291,7 @@ struct `HTTP.Message.Body.Length Tests` {
     struct Integration {
         @Test
         func `Response - Transfer-Encoding takes precedence over Content-Length`() async throws {
-            let response = HTTP.Message.Response(
+            let response = HTTP.Message.Response<[Byte]>(
                 status: .ok,
                 headers: [
                     try .init(name: "Transfer-Encoding", value: "chunked"),

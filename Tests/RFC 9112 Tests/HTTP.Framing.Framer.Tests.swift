@@ -1,3 +1,5 @@
+import RFC_9110
+import Byte
 import Testing
 
 @testable import RFC_9112
@@ -10,7 +12,7 @@ struct `HTTP.Framing.Framer Tests` {
 }
 
 extension `HTTP.Framing.Framer Tests` {
-    static func octets(_ text: String) -> [Byte] { Array(text.utf8) }
+    static func octets(_ text: String) -> [Byte] { text.utf8.map(Byte.init(bitPattern:)) }
 
     static let simpleRequest = "GET /path HTTP/1.1\r\nHost: example.com\r\n\r\n"
     static let simpleResponse = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\n"
@@ -29,7 +31,7 @@ extension `HTTP.Framing.Framer Tests`.Unit {
         let unwrapped = try #require(head)
 
         #expect(unwrapped.line.method == .get)
-        #expect(unwrapped.headers.contains("Host"))
+        #expect(unwrapped.headers.contains { $0.name.rawValue.lowercased() == "Host".lowercased() })
         #expect(unwrapped.length == .none)
 
         #expect(unwrapped.octets == bytes.count)
@@ -170,7 +172,7 @@ extension `HTTP.Framing.Framer Tests`.`Edge Case` {
     @Test
     func `an over-long head is refused BEFORE the octets are retained`() throws {
 
-        let limits = HTTP.Framing.Limits(startLine: 32, fieldSection: 32, content: 16)
+        let limits = HTTP.Framing.Limits(startLine: 32, fieldSection: 32, body: 16)
         var framer = HTTP.Framing.Framer(limits: limits)
 
         let oversized = `HTTP.Framing.Framer Tests`.octets(String(repeating: "A", count: 128))
@@ -218,10 +220,10 @@ extension `HTTP.Framing.Framer Tests`.Integration {
         )
 
         let first = try #require(try framer.nextRequestHead())
-        #expect(first.line.target == "/first")
+        #expect(originPath(first.line.target) == "/first")
 
         let second = try #require(try framer.nextRequestHead())
-        #expect(second.line.target == "/second")
+        #expect(originPath(second.line.target) == "/second")
 
         #expect(framer.unconsumed == 0)
         #expect(try framer.nextRequestHead() == nil)
@@ -299,7 +301,7 @@ extension `HTTP.Framing.Framer Tests`.Integration {
         var framer = HTTP.Framing.Framer()
         try framer.append(
             `HTTP.Framing.Framer Tests`.octets("5\r\nhello\r\n0\r\n\r\n"),
-            accumulating: .content
+            accumulating: .body
         )
 
         let body = try #require(try framer.nextBody(.chunked))
@@ -315,7 +317,7 @@ extension `HTTP.Framing.Framer Tests`.Integration {
         var framer = HTTP.Framing.Framer()
         try framer.append(
             `HTTP.Framing.Framer Tests`.octets("5;ext=1\r\nhello\r\n0\r\n\r\n"),
-            accumulating: .content
+            accumulating: .body
         )
 
         let body = try #require(try framer.nextBody(.chunked))
@@ -331,14 +333,14 @@ extension `HTTP.Framing.Framer Tests`.Integration {
         var framer = HTTP.Framing.Framer()
         try framer.append(
             `HTTP.Framing.Framer Tests`.octets("5\r\nhello\r\n0\r\nX-Trailer: v\r\n\r\n"),
-            accumulating: .content
+            accumulating: .body
         )
 
         let body = try #require(try framer.nextBody(.chunked))
         #expect(body.content == `HTTP.Framing.Framer Tests`.octets("hello"))
         #expect(body.octets == 29)
         #expect(body.trailers.count == 1)
-        #expect(body.trailers.contains("X-Trailer"))
+        #expect(body.trailers.contains { $0.name.rawValue.lowercased() == "X-Trailer".lowercased() })
         #expect(framer.unconsumed == 0)
     }
 
@@ -355,14 +357,14 @@ extension `HTTP.Framing.Framer Tests`.Integration {
         )
 
         let head1 = try #require(try framer.nextRequestHead())
-        #expect(head1.line.target == "/1")
+        #expect(originPath(head1.line.target) == "/1")
         #expect(head1.length == .chunked)
         let body1 = try #require(try framer.nextBody(head1.length))
         #expect(body1.content == `HTTP.Framing.Framer Tests`.octets("hello"))
         #expect(body1.octets == 15)
 
         let head2 = try #require(try framer.nextRequestHead())
-        #expect(head2.line.target == "/2")
+        #expect(originPath(head2.line.target) == "/2")
         #expect(head2.length == .chunked)
         let body2 = try #require(try framer.nextBody(head2.length))
         #expect(body2.content == `HTTP.Framing.Framer Tests`.octets("bye"))
@@ -430,7 +432,14 @@ extension `HTTP.Framing.Framer Tests`.Unit {
         )
 
         let head = try #require(try framer.nextRequestHead())
-        #expect(head.headers.contains("Content-Length"))
+        #expect(head.headers.contains { $0.name.rawValue.lowercased() == "Content-Length".lowercased() })
         #expect(head.length == .length(5))
     }
+}
+
+private func originPath(_ target: RFC_9112.Request.Target) -> String? {
+    if case .origin(let path, _) = target {
+        return "\(path)"
+    }
+    return nil
 }

@@ -1,5 +1,6 @@
-import Byte_Primitives
-import Byte_Primitives_Standard_Library_Integration
+import RFC_9110
+import Byte
+import Byte_Standard_Library_Integration
 import Testing
 
 @testable import RFC_9112
@@ -11,7 +12,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
     struct Unit {
         @Test
         func `Encode - simple data`() async throws {
-            let data = Array("Hello, World!".utf8).map { Byte($0) }
+            let data = Array("Hello, World!".utf8).map { Byte(bitPattern: $0) }
             let chunked = HTTP.Transfer.Coding.Chunked.encode(data)
 
             let expected = "d\r\nHello, World!\r\n0\r\n\r\n"
@@ -29,7 +30,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
 
         @Test
         func `Decode - simple data`() async throws {
-            let chunked = Array("d\r\nHello, World!\r\n0\r\n\r\n".utf8).map { Byte($0) }
+            let chunked = Array("d\r\nHello, World!\r\n0\r\n\r\n".utf8).map { Byte(bitPattern: $0) }
             let result = try HTTP.Transfer.Coding.Chunked.decode(chunked)
             let decoded = result.data
             let trailers = result.trailers
@@ -40,7 +41,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
 
         @Test
         func `Decode - empty data`() async throws {
-            let chunked = Array("0\r\n\r\n".utf8).map { Byte($0) }
+            let chunked = Array("0\r\n\r\n".utf8).map { Byte(bitPattern: $0) }
             let result = try HTTP.Transfer.Coding.Chunked.decode(chunked)
             let decoded = result.data
             let trailers = result.trailers
@@ -60,7 +61,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
     struct `Edge Case` {
         @Test
         func `Encode - multiple chunks`() async throws {
-            let data = Array("Hello, World! This is a longer message.".utf8).map { Byte($0) }
+            let data = Array("Hello, World! This is a longer message.".utf8).map { Byte(bitPattern: $0) }
             let chunked = HTTP.Transfer.Coding.Chunked.encode(data, chunkSize: 10)
 
             let decoded = try HTTP.Transfer.Coding.Chunked.decode(chunked)
@@ -69,7 +70,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
 
         @Test
         func `Encode - with trailers`() async throws {
-            let data = Array("Hello".utf8).map { Byte($0) }
+            let data = Array("Hello".utf8).map { Byte(bitPattern: $0) }
             let trailers = [
                 try RFC_9110.Field(name: "X-Checksum", value: "abc123")
             ]
@@ -83,7 +84,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
 
         @Test
         func `Decode - multiple chunks`() async throws {
-            let chunked = Array("5\r\nHello\r\n8\r\n, World!\r\n0\r\n\r\n".utf8).map { Byte($0) }
+            let chunked = Array("5\r\nHello\r\n8\r\n, World!\r\n0\r\n\r\n".utf8).map { Byte(bitPattern: $0) }
             let result = try HTTP.Transfer.Coding.Chunked.decode(chunked)
             let decoded = result.data
             let trailers = result.trailers
@@ -95,7 +96,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
         @Test
         func `Decode - with trailers`() async throws {
             let chunked = Array("5\r\nHello\r\n0\r\nX-Checksum: abc123\r\n\r\n".utf8).map {
-                Byte($0)
+                Byte(bitPattern: $0)
             }
             let result = try HTTP.Transfer.Coding.Chunked.decode(chunked)
             let decoded = result.data
@@ -111,7 +112,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
         func `Decode - multiple trailers`() async throws {
             let chunked = Array(
                 "5\r\nHello\r\n0\r\nX-Checksum: abc123\r\nX-Signature: xyz\r\n\r\n".utf8
-            ).map { Byte($0) }
+            ).map { Byte(bitPattern: $0) }
             let result = try HTTP.Transfer.Coding.Chunked.decode(chunked)
             let decoded = result.data
             let trailers = result.trailers
@@ -122,7 +123,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
 
         @Test
         func `Decode - invalid format`() async throws {
-            let chunked = Array("invalid".utf8).map { Byte($0) }
+            let chunked = Array("invalid".utf8).map { Byte(bitPattern: $0) }
 
             #expect(throws: HTTP.Transfer.Coding.Chunked.Error.invalidFormat) {
                 try HTTP.Transfer.Coding.Chunked.decode(chunked)
@@ -131,7 +132,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
 
         @Test
         func `Decode - invalid chunk size`() async throws {
-            let chunked = Array("xyz\r\ndata\r\n0\r\n\r\n".utf8).map { Byte($0) }
+            let chunked = Array("xyz\r\ndata\r\n0\r\n\r\n".utf8).map { Byte(bitPattern: $0) }
 
             #expect(throws: HTTP.Transfer.Coding.Chunked.Error.invalidChunkSize) {
                 try HTTP.Transfer.Coding.Chunked.decode(chunked)
@@ -141,7 +142,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
         @Test
         func `Decode - incomplete chunk`() async throws {
 
-            let chunked = Array("10\r\nshort".utf8).map { Byte($0) }
+            let chunked = Array("10\r\nshort".utf8).map { Byte(bitPattern: $0) }
 
             #expect(throws: HTTP.Transfer.Coding.Chunked.Error.incompleteChunk) {
                 try HTTP.Transfer.Coding.Chunked.decode(chunked)
@@ -151,7 +152,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
         @Test
         func `Decode - missing CRLF`() async throws {
 
-            let chunked = Array("5\r\nHelloXX0\r\n\r\n".utf8).map { Byte($0) }
+            let chunked = Array("5\r\nHelloXX0\r\n\r\n".utf8).map { Byte(bitPattern: $0) }
 
             #expect(throws: HTTP.Transfer.Coding.Chunked.Error.missingCRLF) {
                 try HTTP.Transfer.Coding.Chunked.decode(chunked)
@@ -163,7 +164,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
     struct Integration {
         @Test
         func `Round trip - simple`() async throws {
-            let original = Array("Hello, World!".utf8).map { Byte($0) }
+            let original = Array("Hello, World!".utf8).map { Byte(bitPattern: $0) }
             let chunked = HTTP.Transfer.Coding.Chunked.encode(original)
             let decoded = try HTTP.Transfer.Coding.Chunked.decode(chunked).data
 
@@ -172,7 +173,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
 
         @Test
         func `Round trip - large data`() async throws {
-            let original = [Byte](repeating: 0x41, count: 100000)
+            let original = [Byte](repeating: Byte(bitPattern: 0x41), count: 100000)
             let chunked = HTTP.Transfer.Coding.Chunked.encode(original, chunkSize: 8192)
             let decoded = try HTTP.Transfer.Coding.Chunked.decode(chunked).data
 
@@ -181,7 +182,7 @@ struct `HTTP.Transfer.Coding.Chunked Tests` {
 
         @Test
         func `Round trip - with trailers`() async throws {
-            let original = Array("Test data".utf8).map { Byte($0) }
+            let original = Array("Test data".utf8).map { Byte(bitPattern: $0) }
             let originalTrailers = [
                 try RFC_9110.Field(name: "X-Test", value: "value")
             ]

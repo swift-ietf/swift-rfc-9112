@@ -1,4 +1,4 @@
-public import Byte_Primitives
+public import Byte
 
 extension RFC_9112.Message.Parser {
     public enum Error: Swift.Error, Equatable {

@@ -1,7 +1,6 @@
 public import RFC_9110
 
-public import Byte_Primitive
-import Byte_Protocol_Primitives
+public import Byte
 
 extension RFC_9112.Response {
     public struct Line: Equatable {
@@ -49,7 +48,7 @@ extension RFC_9112.Response.Line {
 
         let reason: RFC_9110.Status.Reason?
         if components.count == 3, !components[2].isEmpty {
-            reason = .init(components[2].utf8.map(Byte.init))
+            reason = .init(components[2].utf8.map(Byte.init(bitPattern:)))
         } else {
             reason = nil
         }
@@ -58,9 +57,9 @@ extension RFC_9112.Response.Line {
     }
 
     public var bytes: [Byte] {
-        var result = "\(RFC_9112.Version.format(version)) \(status.code)".utf8.map(Byte.init)
+        var result = "\(RFC_9112.Version.format(version)) \(status.code)".utf8.map(Byte.init(bitPattern:))
         if let reason {
-            result.append(0x20)
+            result.append(Byte(bitPattern: 0x20))
             result.append(contentsOf: reason.bytes)
         }
         return result

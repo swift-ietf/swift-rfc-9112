@@ -1,6 +1,6 @@
 public import RFC_9110
 
-import Byte_Primitives
+import Byte
 import INCITS_4_1986
 
 extension RFC_9112.Framing.Framer {
@@ -27,7 +27,7 @@ extension RFC_9112.Framing.Framer {
             let sizeLine = Array(buffer[index..<sizeLineEnd])
 
             let sizeToken: [Byte]
-            if let semicolon = sizeLine.firstIndex(of: 0x3B) {
+            if let semicolon = sizeLine.firstIndex(of: Byte(bitPattern: 0x3B)) {
                 sizeToken = Array(sizeLine[sizeLine.startIndex..<semicolon])
             } else {
                 sizeToken = sizeLine
@@ -41,8 +41,8 @@ extension RFC_9112.Framing.Framer {
 
                 var fields: [RFC_9110.Field] = []
                 while true {
-                    if buffer.indices.contains(index + 1), buffer[index] == 0x0D,
-                        buffer[index + 1] == 0x0A
+                    if buffer.indices.contains(index + 1), buffer[index] == Byte(bitPattern: 0x0D),
+                        buffer[index + 1] == Byte(bitPattern: 0x0A)
                     {
                         index += 2
                         return ChunkedScan(
@@ -53,7 +53,7 @@ extension RFC_9112.Framing.Framer {
                     }
                     guard let lineEnd = Self.indexOfCRLF(buffer, from: index) else { return nil }
                     let line = Array(buffer[index..<lineEnd])
-                    guard let colon = line.firstIndex(of: 0x3A) else {
+                    guard let colon = line.firstIndex(of: Byte(bitPattern: 0x3A)) else {
                         throw .malformedChunk(Self.text(line))
                     }
                     let nameBytes = Array(line[line.startIndex..<colon])
@@ -75,7 +75,9 @@ extension RFC_9112.Framing.Framer {
             guard index + size + 2 <= buffer.count else { return nil }
             content.append(contentsOf: buffer[index..<(index + size)])
             if content.count > limit { throw .bodyTooLong(limit: limit) }
-            guard buffer[index + size] == 0x0D, buffer[index + size + 1] == 0x0A else {
+            guard buffer[index + size] == Byte(bitPattern: 0x0D),
+                buffer[index + size + 1] == Byte(bitPattern: 0x0A)
+            else {
                 throw .malformedChunk("missing CRLF after chunk data")
             }
             index += size + 2
@@ -85,7 +87,9 @@ extension RFC_9112.Framing.Framer {
     internal static func indexOfCRLF(_ buffer: borrowing [Byte], from: Int) -> Int? {
         var index = from
         while buffer.indices.contains(index + 1) {
-            if buffer[index] == 0x0D, buffer[index + 1] == 0x0A { return index }
+            if buffer[index] == Byte(bitPattern: 0x0D), buffer[index + 1] == Byte(bitPattern: 0x0A) {
+                return index
+            }
             index += 1
         }
         return nil

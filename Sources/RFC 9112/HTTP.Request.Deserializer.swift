@@ -1,6 +1,6 @@
 import RFC_9110
 
-public import Byte_Primitives
+public import Byte
 
 extension RFC_9112.Request {
     public enum Deserializer {}

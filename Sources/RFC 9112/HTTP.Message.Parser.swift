@@ -1,4 +1,4 @@
-public import Byte_Primitives
+public import Byte
 import Standard_Library_Extensions
 
 extension RFC_9112.Message {
@@ -41,11 +41,11 @@ extension RFC_9112.Message.Parser {
         while index < data.endIndex {
             let byte = data[index]
 
-            switch byte {
+            switch byte.bitPattern {
             case 0x0D:
                 index = data.index(after: index)
 
-                if index < data.endIndex && data[index] == 0x0A {
+                if index < data.endIndex && data[index] == Byte(bitPattern: 0x0A) {
 
                     index = data.index(after: index)
                     return Line(content: content, terminator: .crlf, lineNumber: lineNumber)

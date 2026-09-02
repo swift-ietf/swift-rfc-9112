@@ -1,5 +1,4 @@
-public import Byte_Primitive
-import Byte_Protocol_Primitives
+public import Byte
 import RFC_9110
 
 extension RFC_9112.Response {
@@ -15,14 +14,14 @@ extension RFC_9112.Response.Serializer {
             status: response.status,
             reason: response.reason
         ).bytes
-        bytes.append(contentsOf: [0x0D, 0x0A])
+        bytes.append(contentsOf: [Byte(bitPattern: 0x0D), Byte(bitPattern: 0x0A)])
 
         for field in response.headers {
-            bytes.append(contentsOf: "\(field.name): \(field.value)".utf8.map(Byte.init))
-            bytes.append(contentsOf: [0x0D, 0x0A])
+            bytes.append(contentsOf: "\(field.name): \(field.value)".utf8.map(Byte.init(bitPattern:)))
+            bytes.append(contentsOf: [Byte(bitPattern: 0x0D), Byte(bitPattern: 0x0A)])
         }
 
-        bytes.append(contentsOf: [0x0D, 0x0A])
+        bytes.append(contentsOf: [Byte(bitPattern: 0x0D), Byte(bitPattern: 0x0A)])
         if let content = response.content {
             bytes.append(contentsOf: content)
         }
