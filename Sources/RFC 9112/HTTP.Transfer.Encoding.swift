@@ -1,4 +1,5 @@
 import RFC_9110
+import RFC_9110_Coder
 
 extension RFC_9112.Transfer {
     public struct Encoding: Equatable, Hashable {
@@ -41,7 +42,7 @@ extension RFC_9112.Transfer.Encoding {
 
     public static func parse(_ headerValue: String) -> Self? {
         let encodings =
-            RFC_9110.Parse.tokens(in: headerValue)
+            RFC_9110.Field.Value.tokens(in: headerValue)
             .map { name -> Self in
                 switch name.lowercased() {
                 case "chunked": return .chunked

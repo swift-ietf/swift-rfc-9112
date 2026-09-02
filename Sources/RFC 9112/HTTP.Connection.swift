@@ -1,4 +1,5 @@
 import RFC_9110
+import RFC_9110_Coder
 
 extension RFC_9112 {
 
@@ -23,7 +24,7 @@ extension RFC_9112.Connection {
     }
 
     public static func parse(_ headerValue: String) -> Self? {
-        let opts = RFC_9110.Parse.tokens(in: headerValue).map { $0.lowercased() }
+        let opts = RFC_9110.Field.Value.tokens(in: headerValue).map { $0.lowercased() }
 
         guard !opts.isEmpty else {
             return nil
