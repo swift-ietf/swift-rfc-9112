@@ -207,7 +207,7 @@ struct `HTTP.Host.Validator Tests` {
     struct Integration {
         @Test
         func `Validate CONNECT request`() async throws {
-            let request = try RFC_9112.Message.Request<[Byte]>(
+            let request = RFC_9112.Message.Request<[Byte]>(
                 method: .connect,
                 target: .asterisk,
                 headers: [
