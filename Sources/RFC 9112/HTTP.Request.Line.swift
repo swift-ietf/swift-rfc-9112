@@ -21,45 +21,6 @@ extension RFC_9112.Request {
 }
 
 extension RFC_9112.Request.Line {
-    public static func parse(_ line: String) throws(Error) -> Self {
-        guard let firstSpace = line.firstIndex(of: " ") else {
-            throw .invalidFormat(reason: "Missing space after method")
-        }
-
-        let methodText = String(line[..<firstSpace])
-        guard !methodText.isEmpty else {
-            throw .emptyMethod
-        }
-        let method = RFC_9110.Method(rawValue: methodText)
-
-        let afterMethod = line.index(after: firstSpace)
-        guard let versionRange = line.range(of: " HTTP/") else {
-            throw .invalidFormat(reason: "Missing HTTP version")
-        }
-
-        let targetText = String(line[afterMethod..<versionRange.lowerBound])
-        guard !targetText.isEmpty else {
-            throw .emptyTarget
-        }
-        guard !targetText.contains(where: \.isWhitespace) else {
-            throw .targetContainsWhitespace
-        }
-
-        let versionText = String(line[line.index(after: versionRange.lowerBound)...])
-        let version: RFC_9110.Version
-        do throws(RFC_9112.Version.Error) {
-            version = try RFC_9112.Version.parse(versionText)
-        } catch {
-            throw .invalidVersion(versionText)
-        }
-
-        return Self(
-            method: method,
-            target: try target(targetText, method: method),
-            version: version
-        )
-    }
-
     public var formatted: String {
         "\(method) \(target.text) \(RFC_9112.Version.format(version))"
     }
@@ -71,7 +32,7 @@ extension RFC_9112.Request.Line {
         }
     }
 
-    private static func target(
+    package static func target(
         _ text: String,
         method: RFC_9110.Method
     ) throws(Error) -> RFC_9112.Request.Target {

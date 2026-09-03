@@ -10,14 +10,14 @@ extension RFC_9112.Framing {
 
 extension RFC_9112.Framing.Phase {
 
-    internal func budget(under limits: RFC_9112.Framing.Limits) -> Int {
+    package func budget(under limits: RFC_9112.Framing.Limits) -> Int {
         switch self {
         case .head: limits.headSection
         case .body: limits.body
         }
     }
 
-    internal func overrun(of budget: Int) -> RFC_9112.Framing.Error {
+    package func overrun(of budget: Int) -> RFC_9112.Framing.Error {
         switch self {
         case .head: .headSectionTooLong(limit: budget)
         case .body: .bodyTooLong(limit: budget)

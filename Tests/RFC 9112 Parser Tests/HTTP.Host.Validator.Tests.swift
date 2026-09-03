@@ -1,0 +1,270 @@
+import RFC_3986
+import Byte
+import RFC_9110
+import Testing
+
+@testable import RFC_9112
+@testable import RFC_9112_Parser
+@testable import RFC_9112_Serializer
+
+@Suite
+struct `HTTP.Host.Validator Tests` {
+
+    @Suite
+    struct Unit {
+        @Test
+        func `Validate request with single Host header`() async throws {
+            let request = try RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .origin(path: RFC_3986.URI.Path("/"), query: nil),
+                headers: [
+                    try RFC_9110.Field(name: "Host", value: "example.com")
+                ],
+                content: nil
+            )
+
+            try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+        }
+
+        @Test
+        func `Validate request with Host header including port`() async throws {
+            let request = try RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .origin(path: RFC_3986.URI.Path("/"), query: nil),
+                headers: [
+                    try RFC_9110.Field(name: "Host", value: "example.com:8080")
+                ],
+                content: nil
+            )
+
+            try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+        }
+
+        @Test
+        func `Validate request with case-insensitive Host header`() async throws {
+            let request = try RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .origin(path: RFC_3986.URI.Path("/"), query: nil),
+                headers: [
+                    try RFC_9110.Field(name: "host", value: "example.com")
+                ],
+                content: nil
+            )
+
+            try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+        }
+
+        @Test
+        func `Validate request with valid subdomain`() async throws {
+            let request = try RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .origin(path: RFC_3986.URI.Path("/"), query: nil),
+                headers: [
+                    try RFC_9110.Field(name: "Host", value: "api.example.com")
+                ],
+                content: nil
+            )
+
+            try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+        }
+
+        @Test
+        func `Validate request with IPv4 address`() async throws {
+            let request = try RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .origin(path: RFC_3986.URI.Path("/"), query: nil),
+                headers: [
+                    try RFC_9110.Field(name: "Host", value: "192.168.1.1")
+                ],
+                content: nil
+            )
+
+            try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+        }
+
+        @Test
+        func `Validate request with localhost`() async throws {
+            let request = try RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .origin(path: RFC_3986.URI.Path("/"), query: nil),
+                headers: [
+                    try RFC_9110.Field(name: "Host", value: "localhost:8080")
+                ],
+                content: nil
+            )
+
+            try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+        }
+    }
+
+    @Suite
+    struct `Edge Case` {
+        @Test
+        func `Validate request with IPv6 Host`() async throws {
+            let request = try RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .origin(path: RFC_3986.URI.Path("/"), query: nil),
+                headers: [
+                    try RFC_9110.Field(name: "Host", value: "[::1]")
+                ],
+                content: nil
+            )
+
+            try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+        }
+
+        @Test
+        func `Validate HTTP/1.1 request missing Host header`() async throws {
+            let request = try RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .origin(path: RFC_3986.URI.Path("/"), query: nil),
+                headers: [],
+                content: nil
+            )
+
+            #expect(throws: RFC_9112.Host.Validator.Error.missingHost) {
+                try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+            }
+        }
+
+        @Test
+        func `Validate HTTP/1.0 request missing Host header`() async throws {
+            let request = try RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .origin(path: RFC_3986.URI.Path("/"), query: nil),
+                headers: [],
+                content: nil
+            )
+
+            try RFC_9112.Host.Validator.validate(request: request, version: http10)
+        }
+
+        @Test
+        func `Validate request with multiple Host headers`() async throws {
+            let request = try RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .origin(path: RFC_3986.URI.Path("/"), query: nil),
+                headers: [
+                    try RFC_9110.Field(name: "Host", value: "example.com"),
+                    try RFC_9110.Field(name: "Host", value: "another.com"),
+                ],
+                content: nil
+            )
+
+            #expect(throws: RFC_9112.Host.Validator.Error.self) {
+                try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+            }
+        }
+
+        @Test
+        func `Validate request with empty Host value`() async throws {
+            let request = try RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .origin(path: RFC_3986.URI.Path("/"), query: nil),
+                headers: [
+                    try RFC_9110.Field(name: "Host", value: "")
+                ],
+                content: nil
+            )
+
+            #expect(throws: RFC_9112.Host.Validator.Error.self) {
+                try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+            }
+        }
+
+        @Test
+        func `Validate request with whitespace-only Host`() async throws {
+            let request = try RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .origin(path: RFC_3986.URI.Path("/"), query: nil),
+                headers: [
+                    try RFC_9110.Field(name: "Host", value: "   ")
+                ],
+                content: nil
+            )
+
+            #expect(throws: RFC_9112.Host.Validator.Error.self) {
+                try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+            }
+        }
+
+        @Test
+        func `Validate HTTP/2.0 request without Host`() async throws {
+            let request = try RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .origin(path: RFC_3986.URI.Path("/"), query: nil),
+                headers: [],
+                content: nil
+            )
+
+            let http2 = try RFC_9110.Version(major: 2, minor: 0)
+
+            #expect(throws: RFC_9112.Host.Validator.Error.missingHost) {
+                try RFC_9112.Host.Validator.validate(request: request, version: http2)
+            }
+        }
+    }
+
+    @Suite
+    struct Integration {
+        @Test
+        func `Validate CONNECT request`() async throws {
+            let request = RFC_9112.Message.Request<[Byte]>(
+                method: .connect,
+                target: .asterisk,
+                headers: [
+                    try RFC_9110.Field(name: "Host", value: "example.com:443")
+                ],
+                content: nil
+            )
+
+            try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+        }
+
+        @Test
+        func `Validate OPTIONS * request`() async throws {
+            let request = RFC_9112.Message.Request<[Byte]>(
+                method: .options,
+                target: .asterisk,
+                headers: [
+                    try RFC_9110.Field(name: "Host", value: "example.com")
+                ],
+                content: nil
+            )
+
+            try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+        }
+
+        @Test
+        func `Validate request with absolute-form target`() async throws {
+            let uri = try RFC_3986.URI("http://example.com/path")
+            let request = RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .absolute(uri),
+                headers: [
+                    try RFC_9110.Field(name: "Host", value: "example.com")
+                ],
+                content: nil
+            )
+
+            try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+        }
+
+        @Test
+        func `Validate request with mismatched Host and target`() async throws {
+            let uri = try RFC_3986.URI("http://example.com/path")
+            let request = RFC_9112.Message.Request<[Byte]>(
+                method: .get,
+                target: .absolute(uri),
+                headers: [
+                    try RFC_9110.Field(name: "Host", value: "different.com")
+                ],
+                content: nil
+            )
+
+            #expect(throws: RFC_9112.Host.Validator.Error.self) {
+                try RFC_9112.Host.Validator.validate(request: request, version: HTTP.Version.value)
+            }
+        }
+    }
+}

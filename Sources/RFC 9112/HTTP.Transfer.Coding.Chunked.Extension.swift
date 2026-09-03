@@ -29,7 +29,7 @@ extension RFC_9112.Transfer.Coding.Chunked.Extension {
         }
     }
 
-    static func parseExtensions(_ string: String) -> [Self] {
+    package static func parseExtensions(_ string: String) -> [Self] {
         var extensions: [Self] = []
         let parts = string.split(separator: ";", omittingEmptySubsequences: true)
 
