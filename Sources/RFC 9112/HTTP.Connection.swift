@@ -1,4 +1,4 @@
-import RFC_9110
+public import RFC_9110
 
 extension RFC_9112 {
 
@@ -18,10 +18,6 @@ extension RFC_9112.Connection {
 
     public static var keepAlive: Self { Self(options: ["keep-alive"]) }
 
-    public var headerValue: String {
-        options.sorted().joined(separator: ", ")
-    }
-
     public var hasClose: Bool {
         options.contains("close")
     }
@@ -30,28 +26,16 @@ extension RFC_9112.Connection {
         options.contains("keep-alive")
     }
 
-    public func shouldPersist(version: String = "HTTP/1.1") -> Bool {
-        if hasClose {
-            return false
-        }
-
-        if version.hasPrefix("HTTP/1.1") {
-            return true
-        }
-
-        if version.hasPrefix("HTTP/1.0") {
-            return hasKeepAlive
-        }
-
-        return false
+    public func persists(over version: RFC_9110.Version) -> Bool {
+        if hasClose { return false }
+        if version >= RFC_9112.Version.value { return true }
+        return hasKeepAlive
     }
 }
 
 extension RFC_9112.Connection: CustomStringConvertible {
+
     public var description: String {
-        headerValue
+        options.sorted().joined(separator: ", ")
     }
 }
-
-
-

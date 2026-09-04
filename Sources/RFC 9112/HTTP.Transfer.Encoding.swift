@@ -1,4 +1,3 @@
-import RFC_9110
 
 extension RFC_9112.Transfer {
     public struct Encoding: Equatable, Hashable {
@@ -29,13 +28,13 @@ extension RFC_9112.Transfer.Encoding {
         Self(storage: .list(encodings))
     }
 
-    public var headerValue: String {
+    public var codings: [String] {
         switch storage {
         case .single(let name):
-            return name
+            return [name]
 
         case .list(let encodings):
-            return encodings.map { $0.headerValue }.joined(separator: ", ")
+            return encodings.flatMap { $0.codings }
         }
     }
 
@@ -82,7 +81,7 @@ extension RFC_9112.Transfer.Encoding {
 
 extension RFC_9112.Transfer.Encoding: CustomStringConvertible {
     public var description: String {
-        headerValue
+        codings.joined(separator: ", ")
     }
 }
 

@@ -46,23 +46,4 @@ extension RFC_9112.Request.Target {
             return .asterisk
         }
     }
-
-    public var text: String {
-        switch self {
-        case .origin(let path, let query):
-            if let query {
-                return "\(path)?\(query)"
-            }
-            return "\(path)"
-
-        case .absolute(let uri):
-            return uri.value
-
-        case .authority(let authority):
-            return authority.rawValue
-
-        case .asterisk:
-            return "*"
-        }
-    }
 }

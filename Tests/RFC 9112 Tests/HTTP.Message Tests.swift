@@ -18,7 +18,7 @@ struct `HTTP.Message Tests` {
         let representation = try RFC_9112.Message.Request(semantic)
 
         #expect(representation.version == RFC_9112.Version.value)
-        #expect(representation.target.text == "/greeting?name=Ada")
+        #expect(representation.target == .origin(path: try RFC_3986.URI.Path("/greeting"), query: try RFC_3986.URI.Query("name=Ada")))
         #expect(representation.semantic == semantic)
     }
 
