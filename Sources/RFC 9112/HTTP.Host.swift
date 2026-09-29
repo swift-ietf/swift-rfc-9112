@@ -1,4 +1,5 @@
 public import RFC_3986
+import ASCII
 
 extension RFC_9112 {
 
@@ -39,6 +40,8 @@ extension RFC_9112.Host {
 
     public init?(_ uri: RFC_3986.URI) {
         guard let host = uri.host else { return nil }
-        self.init(name: host.description, port: uri.port)
+        var codes: [ASCII.Code] = []
+        RFC_3986.URI.Host.Text().serialize(host, into: &codes)
+        self.init(name: String(decoding: codes.map(\.underlying), as: UTF8.self), port: uri.port)
     }
 }

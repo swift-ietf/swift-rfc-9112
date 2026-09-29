@@ -16,7 +16,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/swift-atoms/swift-byte.git", branch: "main"),
-        .package(url: "https://github.com/swift-ietf/swift-rfc-3986.git", branch: "main"),
+        .package(url: "https://github.com/swift-ietf/swift-rfc-3986.git", branch: "main", traits: ["Coder"]),
+        .package(url: "https://github.com/swift-atoms/swift-ascii.git", branch: "main"),
         .package(url: "https://github.com/swift-ietf/swift-rfc-5322.git", branch: "main"),
         .package(url: "https://github.com/swift-ietf/swift-rfc-9110.git", branch: "main"),
     ],
@@ -24,6 +25,7 @@ let package = Package(
         .target(
             name: "RFC 9112",
             dependencies: [
+                .product(name: "ASCII", package: "swift-ascii"),
                 .product(name: "Byte", package: "swift-byte"),
                 .product(name: "RFC 3986", package: "swift-rfc-3986"),
                 .product(name: "RFC 5322", package: "swift-rfc-5322"),
