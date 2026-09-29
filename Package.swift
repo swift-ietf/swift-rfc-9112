@@ -9,6 +9,7 @@ let package = Package(
         .iOS(.v27),
         .tvOS(.v27),
         .watchOS(.v27),
+        .visionOS(.v27),
     ],
     products: [
         .library(name: "RFC 9112", targets: ["RFC 9112"])
