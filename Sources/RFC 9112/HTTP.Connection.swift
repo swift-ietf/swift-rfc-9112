@@ -7,7 +7,7 @@ extension RFC_9112 {
         public let options: Set<String>
 
         public init(options: Set<String>) {
-            self.options = Set(options.map { $0.lowercased() })
+            self.options = Set(options.map(RFC_9112.asciiLowercased))
         }
     }
 }
