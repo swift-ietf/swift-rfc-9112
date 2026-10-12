@@ -1,6 +1,6 @@
 extension RFC_9112.Connection.Client {
 
-    public enum Error: Swift.Error, Equatable {
+    public enum Error: Swift::Error, Equatable {
 
         case responseWithoutRequest
 

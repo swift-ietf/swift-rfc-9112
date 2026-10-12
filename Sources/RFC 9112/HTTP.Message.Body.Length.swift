@@ -38,7 +38,7 @@ extension RFC_9112.Message.Body.Length.Context {
 
 extension RFC_9112.Message.Body.Length {
 
-    public enum Error: Swift.Error, Equatable {
+    public enum Error: Swift::Error, Equatable {
 
         case transferEncodingWithContentLength
 
