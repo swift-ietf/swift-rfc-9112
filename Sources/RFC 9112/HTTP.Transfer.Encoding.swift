@@ -1,4 +1,3 @@
-
 extension RFC_9112.Transfer {
     public struct Encoding: Equatable, Hashable {
 
@@ -88,8 +87,12 @@ extension RFC_9112.Transfer.Encoding: CustomStringConvertible {
 extension RFC_9112 {
 
     static func asciiLowercased(_ token: String) -> String {
-        String(String.UnicodeScalarView(token.unicodeScalars.map {
-            (0x41...0x5A).contains($0.value) ? Unicode.Scalar($0.value + 0x20)! : $0
-        }))
+        String(
+            String.UnicodeScalarView(
+                token.unicodeScalars.map {
+                    (0x41...0x5A).contains($0.value) ? Unicode.Scalar(UInt8(truncatingIfNeeded: $0.value + 0x20)) : $0
+                }
+            )
+        )
     }
 }

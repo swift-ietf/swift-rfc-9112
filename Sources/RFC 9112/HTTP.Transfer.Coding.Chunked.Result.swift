@@ -1,6 +1,5 @@
-public import RFC_9110
-
 public import Byte
+public import RFC_9110
 
 extension RFC_9112.Transfer.Coding.Chunked {
 
