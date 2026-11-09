@@ -24,7 +24,17 @@ extension RFC_9112.Transfer.Encoding {
     public static var deflate: Self { Self(codingName: "deflate") }
 
     public static func list(_ encodings: [Self]) -> Self {
-        Self(storage: .list(encodings))
+        Self(storage: .list(encodings.flatMap(\.elements)))
+    }
+
+    private var elements: [Self] {
+        switch storage {
+        case .single:
+            return [self]
+
+        case .list(let encodings):
+            return encodings
+        }
     }
 
     public var codings: [String] {
