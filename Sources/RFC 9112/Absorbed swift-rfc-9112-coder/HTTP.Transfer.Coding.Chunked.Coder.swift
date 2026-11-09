@@ -95,7 +95,7 @@
 
                 for trailer in output.trailers {
                     buffer.append(
-                        contentsOf: Scanning.bytes("\(trailer.name.rawValue): \(trailer.value.rawValue)")
+                        contentsOf: Scanning.bytes("\(trailer.name.rawValue): \(trailer.value.description)")
                     )
                     buffer.append(contentsOf: Scanning.crlf)
                 }

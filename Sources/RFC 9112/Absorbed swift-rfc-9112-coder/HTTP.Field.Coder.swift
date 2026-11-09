@@ -53,7 +53,7 @@
                 buffer.append(contentsOf: Scanning.bytes(output.name.rawValue))
                 buffer.append(Byte(bitPattern: 0x3A))
                 buffer.append(Scanning.space)
-                buffer.append(contentsOf: Scanning.bytes(output.value.rawValue))
+                buffer.append(contentsOf: Scanning.bytes(output.value.description))
             }
 
             private borrowing func fold(_ input: inout Input, into value: inout String) throws(Failure) {
