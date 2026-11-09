@@ -14,9 +14,9 @@
 
             public typealias Failure = RFC_9112.Transfer.Coding.Chunked.Error
 
-            public let size: Int
+            public let size: RFC_9112.Transfer.Coding.Chunked.Size
 
-            public init(size: Int = 8192) {
+            public init(size: RFC_9112.Transfer.Coding.Chunked.Size = .default) {
                 self.size = size
             }
 
@@ -73,7 +73,7 @@
                 var chunk = 0
 
                 while offset < output.data.endIndex {
-                    let end = min(offset + size, output.data.endIndex)
+                    let end = min(offset + size.rawValue, output.data.endIndex)
                     let slice = output.data[offset..<end]
 
                     buffer.append(contentsOf: Scanning.bytes(String(slice.count, radix: 16)))
