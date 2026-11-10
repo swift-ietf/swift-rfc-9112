@@ -13,6 +13,9 @@ extension RFC_9112.Request {
 extension RFC_9112.Request.Target {
     public init(_ target: RFC_9110.Target) throws(Error) {
         switch target {
+        case .origin(let path, let query):
+            self = .origin(path: path, query: query)
+
         case .resource(let resource):
             if resource.scheme != nil {
                 self = .absolute(resource)
@@ -33,8 +36,7 @@ extension RFC_9112.Request.Target {
     public var semantic: RFC_9110.Target {
         switch self {
         case .origin(let path, let query):
-            let suffix = query.map { "?\($0)" } ?? ""
-            return .resource(RFC_3986.URI(unchecked: "\(path)\(suffix)"))
+            return .origin(path: path, query: query)
 
         case .absolute(let resource):
             return .resource(resource)

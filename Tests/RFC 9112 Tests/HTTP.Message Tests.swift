@@ -8,10 +8,9 @@ import Testing
 struct `HTTP.Message Tests` {
     @Test
     func `semantic request gains an HTTP 1.1 representation`() throws {
-        let resource = try RFC_3986.URI("/greeting?name=Ada")
         let semantic = RFC_9110.Message.Request<String>(
             method: .get,
-            target: .resource(resource),
+            target: .origin(path: try RFC_3986.URI.Path("/greeting"), query: try RFC_3986.URI.Query("name=Ada")),
             content: "hello"
         )
 
